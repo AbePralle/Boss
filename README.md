@@ -1,2 +1,2 @@
 # Boss
-A statically-typed, general-purpose control language.
+A statically-typed, interpreted, general-purpose, Roguelike control language.
