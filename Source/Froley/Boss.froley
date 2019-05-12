@@ -17,8 +17,9 @@ CR    '\r'
 structural
 
 #---------------------------------------------------------------------
-[tokens_with_content]
+[tokens]
 #---------------------------------------------------------------------
+EOL            "\n"
 BINARY_INTEGER integer      [content]
 OCTAL_INTEGER  integer      [content]
 HEX_INTEGER    integer      [content]
@@ -101,6 +102,14 @@ SYMBOL_SEMICOLON            ;
 SYMBOL_SLASH                /
 SYMBOL_TILDE                ~
 SYMBOL_VERTICAL_BAR         |
+
+SYMBOL_PLUS_EQUALS          +=
+SYMBOL_MINUS_EQUALS         -=
+SYMBOL_TIMES_EQUALS         *=
+SYMBOL_DIVIDE_EQUALS        /=
+SYMBOL_MOD_EQUALS           %=
+SYMBOL_AND_EQUALS           &=
+SYMBOL_OR_EQUALS            |=
 
 #---------------------------------------------------------------------
 [tokenizer]
@@ -336,5 +345,107 @@ while (hasAnother)
 endWhile
 
 #---------------------------------------------------------------------
-#[parser]
+[parser]
 #---------------------------------------------------------------------
+- parse_element
+  while (consume(EOL)) noAction
+  if (not hasAnother) return
+  parse_statement_with_eol
+
+- parse_statement_with_eol
+  parse_statement
+  mustConsume( EOL )
+
+- consume_eols
+  while (consume(EOL)) noAction
+
+- parse_statement
+  on "local"
+    beginList
+    consume_eols
+    parse_local_declaration
+    while (consume(','))
+      consume_eols
+      parse_local_declaration
+    endWhile
+    createList
+    if (consume(':'))
+      parse_type
+    else
+      createNull
+    endIf
+    produce CmdLocalDeclarations( declarations, type )
+  endOn
+  syntaxError
+
+- parse_local_declaration
+  on IDENTIFIER
+    if (consume('=')) consume_eols; parse_expression
+    else              createNull
+    produce CmdLocalDeclaration( name=t.content:String, initial_value )
+  endOn
+  mustConsume IDENTIFIER
+
+- parse_type
+  on IDENTIFIER -> CmdType( name=t.content:String )
+  mustConsume IDENTIFIER
+
+- parse_expression
+
++ parse_assign : RightAssociativeBinaryParseRule
+  on "="  -> CmdAssign
+  on "+=" -> CmdAddAndAssign
+  on "-=" -> CmdSubtractAndAssign
+  on "*=" -> CmdMultiplyAndAssign
+  on "/=" -> CmdDivideAndAssign
+  on "%=" -> CmdModAndAssign
+  on "&=" -> CmdAndAndAssign
+  on "|=" -> CmdOrAndAssign
+
++ parse_logical_xor  : BinaryParseRule
+
++ parse_logical_or   : BinaryParseRule
+
++ parse_logical_and  : BinaryParseRule
+
++ parse_comparison : BinaryParseRule
+  on "==" -> CmdCompareEQ
+  on "!=" -> CmdCompareNE
+  on "<"  -> CmdCompareLT
+  on ">"  -> CmdCompareGT
+  on "<=" -> CmdCompareLE
+  on ">=" -> CmdCompareGE
+
++ parse_bitwise_xor : BinaryParseRule
+
++ parse_bitwise_or  : BinaryParseRule
+
++ parse_bitwise_and : BinaryParseRule
+
++ parse_bitwise_shift : BinaryParseRule
+
++ parse_add_subtract : BinaryParseRule
+  on "+" -> CmdAdd
+  on "-" -> CmdSubtract
+
++ parse_multiply_divide : BinaryParseRule
+  on "*" -> CmdMultiply
+  on "/" -> CmdDivide
+
++ parse_pre_unary : PreUnaryParseRule
+  on "-"  -> CmdNegate
+  on "++" -> CmdPreIncrement
+  on "--" -> CmdPreDecrement
+
++ parse_post_unary : PostUnaryParseRule
+  on "++" -> CmdPostIncrement
+  on "--" -> CmdPostDecrement
+
++ access : BinaryParseRule
+
++ term
+  on IDENTIFIER -> CmdAccess( value=t.content:String )
+  on INTEGER    -> CmdLiteralInt32( value=t.content:Int32 )
+  on '(', expression, ')': return
+  syntaxError
+

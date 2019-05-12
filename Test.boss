@@ -1,1 +1,5 @@
-local x = .25e2
+local x = 5, y, z=2 : Int32
+local
+ x =
+ 4
+
