@@ -11,6 +11,7 @@
 # "rogo_default" will run in the absence of any other command line argument.
 
 routine rogo_default
+  rogo_update_parser
   if (java_needs_build)
     rogo_build_java
     rogo_java
@@ -33,9 +34,13 @@ routine rogo_build_java
   endIf
 endRoutine
 
+routine rogo_rm
+  execute "rm -r Source/Java"   # FIXME - dangerous
+endRoutine
+
 routine rogo_java
   rogo_build_java
-  execute "java -cp Build/Java boss.vm.Boss"
+  execute "java -cp Build/Java boss.vm.Boss Test.boss"
 endRoutine
 
 routine java_needs_build->Logical

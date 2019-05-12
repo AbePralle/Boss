@@ -17,14 +17,14 @@ CR    '\r'
 structural
 
 #---------------------------------------------------------------------
-[tokens]
+[tokens_with_content]
 #---------------------------------------------------------------------
-BINARY_INTEGER integer     [content]
-OCTAL_INTEGER  integer     [content]
-HEX_INTEGER    integer     [content]
-INTEGER        integer     [content]
-STRING         string      [content]
-IDENTIFIER     identifier  [content]
+BINARY_INTEGER integer      [content]
+OCTAL_INTEGER  integer      [content]
+HEX_INTEGER    integer      [content]
+INTEGER        integer      [content]
+STRING         string       [content]
+IDENTIFIER     identifier   [content]
 
 
 #---------------------------------------------------------------------
@@ -110,7 +110,10 @@ which (input)
 endWhich
 
 markSourcePosition
-if (not hasAnother) halt
+if (not hasAnother)
+  create EOL
+  halt
+endIf
 
 <tokenize_identifier>
 if (scanIdentifier)
@@ -150,19 +153,24 @@ endWhich
 which (input)
   produceAny [symbols]
   case '\n': produce EOL
+  case "#{": consume_comment_span; restart
   case '#'
     ch = read
     while (ch != '\n') ch = read
     discard
   case '"'
-    goto scan_string
+    goto tokenize_string
+  case "'"
+    goto tokenize_single_quote_string
   case "''"
-    goto scan_two_quote_string
+    goto tokenize_two_quote_string
   case '\''
     clear buffer
     scan_character
     consume('\'')
     produce CHARACTER
+  case "@|"
+    tokenize_verbatim_string
 endWhich
 
 syntaxError
@@ -177,14 +185,23 @@ endWhile
 return
 
 
-<scan_string>
+<tokenize_string>
 clear buffer
 while (hasAnother and not nextIs('"'))
   scan_character
 endWhile
+mustConsume '"'
 produce STRING
 
-<scan_two_quote_string>
+<tokenize_single_quote_string>
+clear buffer
+while (hasAnother and not nextIs('\''))
+  scan_character
+endWhile
+mustConsume '\''
+produce STRING
+
+<tokenize_two_quote_string>
 clear buffer
 while (hasAnother)
   if (nextIs('\''))
@@ -201,6 +218,9 @@ error "Unterminated two-quote string - expected '', found end of input."
 
 <scan_character>
 ch = read
+if (ch == '\n')
+  error "Unterminated string - unexpected end of line."
+endIf
 if (ch == '\\')
   if (consume('b')) collect 8; return
   if (consume('e')) collect 27; return
@@ -240,6 +260,33 @@ if (ch == '\\')
 endIf
 collect ch
 return
+
+<tokenize_verbatim_string>
+clear buffer
+while (hasAnother)
+  if (consume('\n'))
+    collect '\n'
+    while (consume(' '))
+    endWhile
+    if (not consume('|')) produce STRING
+  else
+    ch = read
+    collect ch
+  endIf
+endWhile
+produce STRING
+
+<consume_comment_span>
+while (hasAnother)
+  which (input)
+    case "#{"
+      consume_comment_span
+    case "}#"
+      return
+    others
+      ch = read  # discard
+  endWhich
+endWhile
 
 #---------------------------------------------------------------------
 #[parser]
