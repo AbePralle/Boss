@@ -34,6 +34,7 @@ IDENTIFIER     identifier   [content]
 #---------------------------------------------------------------------
 KEYWORD_AUGMENT     augment
 KEYWORD_CLASS       class
+KEYWORD_MODULE      module
 KEYWORD_ELSE        else
 KEYWORD_ELSE_IF     elseIf
 KEYWORD_END_CLASS   endClass
@@ -55,6 +56,7 @@ KEYWORD_ROUTINE     routine
 KEYWORD_THIS_CALL   thisCall
 KEYWORD_TRUE        true
 KEYWORD_UNDEFINED   undefined
+KEYWORD_USES        uses
 KEYWORD_WHILE       while
 
 #---------------------------------------------------------------------
@@ -350,44 +352,71 @@ endWhile
 - parse_element
   while (consume(EOL)) noAction
   if (not hasAnother) return
+
+  on "class", parse_class -> CmdClassDefinition(
+                               name,
+                               global_properties, global_methods,
+                               properties, methods
+                             )
+  on "module", parse_module_name, EOL -> CmdModuleDeclaration( name )
+
   parse_statement_with_eol
+
+- consume_eols
+  while (consume(EOL)) noAction
+
+- parse_class
+  parse_identifier
+  createNull
+  createNull
+  createNull
+  createNull
+  consume_eols
+  mustConsume "endClass"
+
+- parse_identifier
+  on IDENTIFIER -> CmdIdentifier( value=t.content:String )
+
+- parse_module_name : BinaryParseRule
+  on "::" -> CmdScope
+
++ parse_module_segment
+  parse_identifier
+
+- parse_statement
+  on "global", parse_var_declarations -> CmdGlobalDeclarations( declarations, type )
+  on "local",  parse_var_declarations -> CmdLocalDeclarations( declarations, type )
+  syntaxError
 
 - parse_statement_with_eol
   parse_statement
   mustConsume( EOL )
 
-- consume_eols
-  while (consume(EOL)) noAction
+- parse_type
+  on IDENTIFIER -> CmdType( name=t.content:String )
+  mustConsume IDENTIFIER
 
-- parse_statement
-  on "local"
-    beginList
+- parse_var_declarations
+  beginList
+  consume_eols
+  parse_var_declaration
+  while (consume(','))
     consume_eols
-    parse_local_declaration
-    while (consume(','))
-      consume_eols
-      parse_local_declaration
-    endWhile
-    createList
-    if (consume(':'))
-      parse_type
-    else
-      createNull
-    endIf
-    produce CmdLocalDeclarations( declarations, type )
-  endOn
-  syntaxError
+    parse_var_declaration
+  endWhile
+  createList
+  if (consume(':'))
+    parse_type
+  else
+    createNull
+  endIf
 
-- parse_local_declaration
+- parse_var_declaration
   on IDENTIFIER
     if (consume('=')) consume_eols; parse_expression
     else              createNull
     produce CmdLocalDeclaration( name=t.content:String, initial_value )
   endOn
-  mustConsume IDENTIFIER
-
-- parse_type
-  on IDENTIFIER -> CmdType( name=t.content:String )
   mustConsume IDENTIFIER
 
 - parse_expression

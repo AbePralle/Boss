@@ -1,5 +1,11 @@
+module Boss::Test::Module
+
+global a, b=3
+
 local x = 5, y, z=2 : Int32
 local
  x =
  4
 
+class Test
+endClass
