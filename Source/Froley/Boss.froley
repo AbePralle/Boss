@@ -23,6 +23,7 @@ BINARY_INTEGER integer      [content]
 OCTAL_INTEGER  integer      [content]
 HEX_INTEGER    integer      [content]
 INTEGER        integer      [content]
+REAL_NUMBER    real         [content]
 STRING         string       [content]
 IDENTIFIER     identifier   [content]
 
@@ -123,6 +124,9 @@ if (scanIdentifier)
   endWhich
 endIf
 
+clear buffer
+tokenize_decimal
+
 <tokenize_numbers>
 which (input)
   case "0b"
@@ -145,7 +149,13 @@ which (input)
     if (ch is digit)
       count = 10
       scan_integer
-      produce INTEGER
+      if (nextIs('.'))
+        tokenize_decimal
+      elseIf (nextIs('e') or nextIs('E'))
+        tokenize_exponent
+      else
+        produce INTEGER
+      endIf
     endIf
 endWhich
 
@@ -176,14 +186,51 @@ endWhich
 syntaxError
 
 <scan_integer>
-while (ch is digit base count or ch == '_')
-  ch = read
-  if (ch != '_') collect ch
-  if (not hasAnother) return
+while (hasAnother)
   ch = peek
+  if (ch is digit base count or ch == '_')
+    ch = read
+    if (ch != '_') collect ch
+  else
+    return
+  endIf
 endWhile
 return
 
+<tokenize_decimal>
+ch = peek
+if (ch != '.') return
+ch = peek( 1 )
+if (ch is not digit) return
+ch = read
+collect ch
+ch = read
+collect ch
+
+# Real number starting from .
+while (hasAnother)
+  ch = peek
+  if (ch is digit)
+    ch = read
+    collect ch
+  elseIf (ch == 'e' or ch == 'E')
+    tokenize_exponent
+  else
+    produce REAL_NUMBER
+  endIf
+endWhile
+produce REAL_NUMBER
+
+<tokenize_exponent>
+ch = read  # 'e' or 'E'
+collect ch
+if (consume('-'))     collect '-'
+elseIf (consume('+')) collect '+'
+ch = peek
+if (ch is not digit) error "Syntax error - at least one digit is expected after the exponent."
+count = 10  # base 10
+scan_integer
+produce REAL_NUMBER
 
 <tokenize_string>
 clear buffer
