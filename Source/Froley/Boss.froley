@@ -364,8 +364,8 @@ endWhile
   while (consume(EOL)) noAction
   if (not hasAnother) return
 
-  on "class", class -> CmdClassDefinition( name, base_types, attributes, elements )
-  on "module", module_name, EOL -> CmdModuleDeclaration(name )
+  on "class", class -> ClassDefinition( name, base_types, attributes, elements )
+  on "module", module_name, EOL -> ModuleDeclaration(name )
 
   statement_with_eol
 
@@ -439,17 +439,17 @@ endWhile
   endOn
   if (not nextIs("endClass")) syntaxError
 
-- identifier
-  on IDENTIFIER -> CmdIdentifier( value=t.content:String )
-  mustConsume IDENTIFIER
+- name
+  on IDENTIFIER -> Name( value=t.content:String )
+  mustConsume IDENTIFIER  # previous line didn't match; throw an error
 
 - global_method
-  on "method", identifier, method_parameters, method_return_type, method_body ->
-    CmdGlobalMethod(_name,parameters,return_type,body)
+  on "method", name, method_parameters, method_return_type, method_body ->
+    GlobalMethod(_name,parameters,return_type,body)
 
 - method
-  on "method", identifier, method_parameters, method_return_type, method_body ->
-    CmdMethod(_name,parameters,return_type,body)
+  on "method", name, method_parameters, method_return_type, method_body ->
+    Method(_name,parameters,return_type,body)
 
 - method_parameters
   beginList
@@ -461,9 +461,9 @@ endWhile
 
 - method_parameter
   consume_eols
-  on IDENTIFIER, optional_initial_value, optional_type -> CmdParameter(name=t.content:String,initial_value,type)
+  on IDENTIFIER, optional_initial_value, optional_type -> Parameter(name=t.content:String,initial_value,type)
   on '&'
-    on IDENTIFIER, optional_initial_value, optional_type -> CmdFlagParameter(name=t.content:String,initial_value,type)
+    on IDENTIFIER, optional_initial_value, optional_type -> FlagParameter(name=t.content:String,initial_value,type)
   endOn
   mustConsume IDENTIFIER  # thow an error
 
@@ -476,22 +476,22 @@ endWhile
   produceStatements
 
 - module_name : BinaryParseRule
-  on "::" -> CmdScope
+  on "::" -> Scope
 
 + module_segment
   identifier
 
 - global_properties
   consume_eols
-  onPeek IDENTIFIER, var_declarations, mustConsume(EOL) -> CmdGlobalProperties( declarations, type )
+  onPeek IDENTIFIER, var_declarations, mustConsume(EOL) -> GlobalProperties( declarations, type )
 
 - properties
   consume_eols
-  onPeek IDENTIFIER, var_declarations, mustConsume(EOL) -> CmdProperties( declarations, type )
+  onPeek IDENTIFIER, var_declarations, mustConsume(EOL) -> Properties( declarations, type )
 
 - statement
-  on "global", var_declarations -> CmdGlobalDeclarations( declarations, type )
-  on "local",  var_declarations -> CmdLocalDeclarations( declarations, type )
+  on "global", var_declarations -> GlobalDeclarations( declarations, type )
+  on "local",  var_declarations -> LocalDeclarations( declarations, type )
   syntaxError
 
 - statement_with_eol
@@ -499,7 +499,7 @@ endWhile
   mustConsume( EOL )
 
 - type
-  on IDENTIFIER -> CmdType( name=t.content:String )
+  on IDENTIFIER -> Type( name=t.content:String )
   mustConsume IDENTIFIER
 
 - optional_type
@@ -519,7 +519,7 @@ endWhile
   optional_type
 
 - var_declaration
-  on IDENTIFIER, optional_initial_value -> CmdVarDeclaration( name=t.content:String, initial_value )
+  on IDENTIFIER, optional_initial_value -> VarDeclaration( name=t.content:String, initial_value )
   mustConsume IDENTIFIER
 
 - optional_initial_value
@@ -529,14 +529,14 @@ endWhile
 - expression
 
 + assign : RightAssociativeBinaryParseRule
-  on "="  -> CmdAssign
-  on "+=" -> CmdAddAndAssign
-  on "-=" -> CmdSubtractAndAssign
-  on "*=" -> CmdMultiplyAndAssign
-  on "/=" -> CmdDivideAndAssign
-  on "%=" -> CmdModAndAssign
-  on "&=" -> CmdAndAndAssign
-  on "|=" -> CmdOrAndAssign
+  on "="  -> Assign
+  on "+=" -> AddAndAssign
+  on "-=" -> SubtractAndAssign
+  on "*=" -> MultiplyAndAssign
+  on "/=" -> DivideAndAssign
+  on "%=" -> ModAndAssign
+  on "&=" -> AndAndAssign
+  on "|=" -> OrAndAssign
 
 + logical_xor  : BinaryParseRule
 
@@ -545,12 +545,12 @@ endWhile
 + logical_and  : BinaryParseRule
 
 + comparison : BinaryParseRule
-  on "==" -> CmdCompareEQ
-  on "!=" -> CmdCompareNE
-  on "<"  -> CmdCompareLT
-  on ">"  -> CmdCompareGT
-  on "<=" -> CmdCompareLE
-  on ">=" -> CmdCompareGE
+  on "==" -> CompareEQ
+  on "!=" -> CompareNE
+  on "<"  -> CompareLT
+  on ">"  -> CompareGT
+  on "<=" -> CompareLE
+  on ">=" -> CompareGE
 
 + bitwise_xor : BinaryParseRule
 
@@ -561,27 +561,27 @@ endWhile
 + bitwise_shift : BinaryParseRule
 
 + add_subtract : BinaryParseRule
-  on "+" -> CmdAdd
-  on "-" -> CmdSubtract
+  on "+" -> Add
+  on "-" -> Subtract
 
 + multiply_divide : BinaryParseRule
-  on "*" -> CmdMultiply
-  on "/" -> CmdDivide
+  on "*" -> Multiply
+  on "/" -> Divide
 
 + pre_unary : PreUnaryParseRule
-  on "-"  -> CmdNegate
-  on "++" -> CmdPreIncrement
-  on "--" -> CmdPreDecrement
+  on "-"  -> Negate
+  on "++" -> PreIncrement
+  on "--" -> PreDecrement
 
 + post_unary : PostUnaryParseRule
-  on "++" -> CmdPostIncrement
-  on "--" -> CmdPostDecrement
+  on "++" -> PostIncrement
+  on "--" -> PostDecrement
 
 + access : BinaryParseRule
 
 + term
-  on IDENTIFIER -> CmdAccess( value=t.content:String )
-  on INTEGER    -> CmdLiteralInt32( value=t.content:Int32 )
+  on IDENTIFIER -> Access( value=t.content:String )
+  on INTEGER    -> LiteralInt32( value=t.content:Int32 )
   on '(', expression, ')': return
   syntaxError
 
