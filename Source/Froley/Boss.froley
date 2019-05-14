@@ -33,24 +33,26 @@ IDENTIFIER     identifier   [content]
 [keywords]
 #---------------------------------------------------------------------
 KEYWORD_AUGMENT     augment
-KEYWORD_CLASS       class
+KEYWORD_CLASS       class       [structural]
 KEYWORD_MODULE      module
-KEYWORD_ELSE        else
+KEYWORD_ELSE        else        [structural]
 KEYWORD_ELSE_IF     elseIf
-KEYWORD_END_CLASS   endClass
-KEYWORD_END_IF      endIf
-KEYWORD_END_ROUTINE endRoutine
-KEYWORD_END_WHILE   endWhile
+KEYWORD_END_CLASS   endClass    [structural]
+KEYWORD_END_IF      endIf       [structural]
+KEYWORD_END_ROUTINE endRoutine  [structural]
+KEYWORD_END_WHILE   endWhile    [structural]
 KEYWORD_FALSE       false
 KEYWORD_GLOBAL      global
+KEYWORD_GLOBAL_PROPERTIES "GLOBAL PROPERTIES" [structural]
+KEYWORD_GLOBAL_METHODS    "GLOBAL METHODS"    [structural]
 KEYWORD_IF          if
 KEYWORD_IMPORT      import
 KEYWORD_LOCAL       local
 KEYWORD_METHOD      method
-KEYWORD_METHODS     METHODS
+KEYWORD_METHODS     METHODS     [structural]
 KEYWORD_NULL        null
 KEYWORD_PRINTLN     println
-KEYWORD_PROPERTIES  PROPERTIES
+KEYWORD_PROPERTIES  PROPERTIES  [structural]
 KEYWORD_RETURN      return
 KEYWORD_ROUTINE     routine
 KEYWORD_THIS_CALL   thisCall
@@ -130,6 +132,15 @@ endIf
 <tokenize_identifier>
 if (scanIdentifier)
   which (buffer)
+    case "GLOBAL"
+      while (consume(' ')) noAction
+      if (scanIdentifier)
+        which (buffer)
+          case "PROPERTIES": produce KEYWORD_GLOBAL_PROPERTIES
+          case "METHODS":    produce KEYWORD_GLOBAL_METHODS
+        endWhich
+      endIf
+      syntaxError "Expected 'GLOBAL PROPERTIES' or 'GLOBAL METHODS'."
     produceAny [keywords]
     others: produce IDENTIFIER
   endWhich
@@ -238,7 +249,7 @@ collect ch
 if (consume('-'))     collect '-'
 elseIf (consume('+')) collect '+'
 ch = peek
-if (ch is not digit) error "Syntax error - at least one digit is expected after the exponent."
+if (ch is not digit) syntaxError "Syntax error - at least one digit is expected after the exponent."
 count = 10  # base 10
 scan_integer
 produce REAL_NUMBER
@@ -272,12 +283,12 @@ while (hasAnother)
   endIf
   scan_character
 endWhile
-error "Unterminated two-quote string - expected '', found end of input."
+syntaxError "Unterminated two-quote string - expected '', found end of input."
 
 <scan_character>
 ch = read
 if (ch == '\n')
-  error "Unterminated string - unexpected end of line."
+  syntaxError "Unterminated string - unexpected end of line."
 endIf
 if (ch == '\\')
   if (consume('b')) collect 8; return
@@ -295,11 +306,11 @@ if (ch == '\\')
   if (consume('"')) collect '"'; return
   if (consume('x'))
     if (ch = scanDigits 2 base 16) collect ch; return
-    error "Expected 2-digit hex code after '\\x'."
+    syntaxError "Expected 2-digit hex code after '\\x'."
   endIf
   if (consume('u'))
     if (ch = scanDigits 4 base 16) collect ch; return
-    error "Expected 4-digit hex code after '\\u'."
+    syntaxError "Expected 4-digit hex code after '\\u'."
   endIf
   if (consume('['))
     if (ch = scanDigits 1..6 base 16)
@@ -307,14 +318,14 @@ if (ch == '\\')
       collect ch
       return
     endIf
-    error "Expected hex code with 1-6 digits after '\\['."
+    syntaxError "Expected hex code with 1-6 digits after '\\['."
   endIf
   clear buffer
   collect "Invalid escape sequence '"
   collect '\\'
   collect ch
   collect "'. Supported: \\b \\e \\f \\n \\r \\t \\v \\0 \\? \\/ \\' \\\\ \\\" \\xHH \\uHHHH \\[H*]."
-  error buffer
+  syntaxError buffer
 endIf
 collect ch
 return
@@ -353,12 +364,8 @@ endWhile
   while (consume(EOL)) noAction
   if (not hasAnother) return
 
-  on "class", parse_class -> CmdClassDefinition(
-                               name,
-                               global_properties, global_methods,
-                               properties, methods
-                             )
-  on "module", parse_module_name, EOL -> CmdModuleDeclaration( name )
+  on "class", parse_class -> CmdClassDefinition( name, base_classes, attributes, elements )
+  on "module", parse_module_name, EOL -> CmdModuleDeclaration(name )
 
   parse_statement_with_eol
 
@@ -367,21 +374,99 @@ endWhile
 
 - parse_class
   parse_identifier
-  createNull
-  createNull
-  createNull
-  createNull
-  consume_eols
+  parse_base_classes
+  parse_class_attributes
+  parse_class_sections
   mustConsume "endClass"
+
+- parse_base_classes
+  beginList
+  if (not consume(':')) produceList
+  parse_type
+  while (consume(','))
+    consume_eols
+    parse_type
+  endWhile
+  produceList
+
+- parse_class_attributes
+  beginList
+  if (not consume('[')) produceList
+  parse_identifier
+  consume_eols
+  while (not nextIs(']'))
+    parse_identifier
+    consume_eols
+  endWhile
+  mustConsume ']'
+  produceList
+
+- parse_class_sections
+  beginList
+  if (not consume(';'))
+    while (not nextIs("endClass")) parse_class_section
+  endIf
+  produceList
+
+- parse_class_section
+  consume_eols
+  on "GLOBAL PROPERTIES"
+    consume_eols
+    while (not nextHasAttribute(structural))
+      parse_properties
+    endWhile
+    return
+  elseOn "GLOBAL METHODS"
+    consume_eols
+    while (nextIs("method"))
+      parse_method
+      consume_eols
+    endWhile
+    return
+  elseOn "PROPERTIES"
+    consume_eols
+    while (not nextHasAttribute(structural))
+      parse_properties
+    endWhile
+    return
+  elseOn "METHODS"
+    consume_eols
+    while (nextIs("method"))
+      parse_method
+      consume_eols
+    endWhile
+    return
+  endOn
+  if (not nextIs("endClass")) syntaxError
 
 - parse_identifier
   on IDENTIFIER -> CmdIdentifier( value=t.content:String )
+  mustConsume IDENTIFIER
+
+- parse_method
+  on "method", parse_identifier, parse_method_parameters, parse_method_return_type, parse_method_body ->
+    CmdMethod(_name,parameters,return_type,body)
+
+- parse_method_parameters
+  beginList
+  produceList
+
+- parse_method_return_type
+  produceNull
+
+- parse_method_body
+  beginList
+  produceStatements
 
 - parse_module_name : BinaryParseRule
   on "::" -> CmdScope
 
 + parse_module_segment
   parse_identifier
+
+- parse_properties
+  consume_eols
+  onPeek IDENTIFIER, parse_var_declarations, mustConsume(EOL) -> CmdProperties( declarations, type )
 
 - parse_statement
   on "global", parse_var_declarations -> CmdGlobalDeclarations( declarations, type )
@@ -415,7 +500,7 @@ endWhile
   on IDENTIFIER
     if (consume('=')) consume_eols; parse_expression
     else              createNull
-    produce CmdLocalDeclaration( name=t.content:String, initial_value )
+    produce CmdVarDeclaration( name=t.content:String, initial_value )
   endOn
   mustConsume IDENTIFIER
 

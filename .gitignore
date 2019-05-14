@@ -3,6 +3,8 @@ Build
 BuildLocal.rogue
 Test.rogue
 
+*.swn
+*.swo
 *.swp
 .DS_Store
 

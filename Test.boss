@@ -7,5 +7,14 @@ local
  x =
  4
 
-class Test
+class Test : Base, Other [singleton API]
+  GLOBAL PROPERTIES
+  GLOBAL METHODS
+
+  PROPERTIES
+    value = 4
+    x,y   : Int32
+
+  METHODS
+    method yarr
 endClass
