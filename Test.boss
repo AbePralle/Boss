@@ -1,20 +1,12 @@
-module Boss::Test::Module
-
-global a, b=3
-
-local x = 5, y, z=2 : Int32
-local
- x =
- 4
-
 class Test : Base, Other [singleton API]
+#{
   GLOBAL PROPERTIES
   GLOBAL METHODS
 
   PROPERTIES
     value = 4
     x,y   : Int32
-
+}#
   METHODS
-    method yarr
+    method yarr( revenge:Int32, &stuff )->Int32
 endClass

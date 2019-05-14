@@ -360,153 +360,175 @@ endWhile
 #---------------------------------------------------------------------
 [parser]
 #---------------------------------------------------------------------
-- parse_element
+- element
   while (consume(EOL)) noAction
   if (not hasAnother) return
 
-  on "class", parse_class -> CmdClassDefinition( name, base_classes, attributes, elements )
-  on "module", parse_module_name, EOL -> CmdModuleDeclaration(name )
+  on "class", class -> CmdClassDefinition( name, base_types, attributes, elements )
+  on "module", module_name, EOL -> CmdModuleDeclaration(name )
 
-  parse_statement_with_eol
+  statement_with_eol
 
 - consume_eols
   while (consume(EOL)) noAction
 
-- parse_class
-  parse_identifier
-  parse_base_classes
-  parse_class_attributes
-  parse_class_sections
+- class
+  type
+  base_types
+  class_attributes
+  class_sections
   mustConsume "endClass"
 
-- parse_base_classes
+- base_types
   beginList
   if (not consume(':')) produceList
-  parse_type
+  type
   while (consume(','))
     consume_eols
-    parse_type
+    type
   endWhile
   produceList
 
-- parse_class_attributes
+- class_attributes
   beginList
   if (not consume('[')) produceList
-  parse_identifier
+  type
   consume_eols
   while (not nextIs(']'))
-    parse_identifier
+    type
     consume_eols
   endWhile
   mustConsume ']'
   produceList
 
-- parse_class_sections
+- class_sections
   beginList
   if (not consume(';'))
-    while (not nextIs("endClass")) parse_class_section
+    while (not nextIs("endClass")) class_section
   endIf
   produceList
 
-- parse_class_section
+- class_section
   consume_eols
   on "GLOBAL PROPERTIES"
     consume_eols
     while (not nextHasAttribute(structural))
-      parse_properties
+      global_properties
     endWhile
     return
   elseOn "GLOBAL METHODS"
     consume_eols
     while (nextIs("method"))
-      parse_method
+      global_method
       consume_eols
     endWhile
     return
   elseOn "PROPERTIES"
     consume_eols
     while (not nextHasAttribute(structural))
-      parse_properties
+      properties
     endWhile
     return
   elseOn "METHODS"
     consume_eols
     while (nextIs("method"))
-      parse_method
+      method
       consume_eols
     endWhile
     return
   endOn
   if (not nextIs("endClass")) syntaxError
 
-- parse_identifier
+- identifier
   on IDENTIFIER -> CmdIdentifier( value=t.content:String )
   mustConsume IDENTIFIER
 
-- parse_method
-  on "method", parse_identifier, parse_method_parameters, parse_method_return_type, parse_method_body ->
+- global_method
+  on "method", identifier, method_parameters, method_return_type, method_body ->
+    CmdGlobalMethod(_name,parameters,return_type,body)
+
+- method
+  on "method", identifier, method_parameters, method_return_type, method_body ->
     CmdMethod(_name,parameters,return_type,body)
 
-- parse_method_parameters
+- method_parameters
   beginList
+  if (not consume('(')) produceList
+  method_parameter
+  while (consume(',')) method_parameter
+  mustConsume ')'
   produceList
 
-- parse_method_return_type
-  produceNull
+- method_parameter
+  consume_eols
+  on IDENTIFIER, optional_initial_value, optional_type -> CmdParameter(name=t.content:String,initial_value,type)
+  on '&'
+    on IDENTIFIER, optional_initial_value, optional_type -> CmdFlagParameter(name=t.content:String,initial_value,type)
+  endOn
+  mustConsume IDENTIFIER  # thow an error
 
-- parse_method_body
+- method_return_type
+  if (not consume('->')) produceNull
+  type
+
+- method_body
   beginList
   produceStatements
 
-- parse_module_name : BinaryParseRule
+- module_name : BinaryParseRule
   on "::" -> CmdScope
 
-+ parse_module_segment
-  parse_identifier
++ module_segment
+  identifier
 
-- parse_properties
+- global_properties
   consume_eols
-  onPeek IDENTIFIER, parse_var_declarations, mustConsume(EOL) -> CmdProperties( declarations, type )
+  onPeek IDENTIFIER, var_declarations, mustConsume(EOL) -> CmdGlobalProperties( declarations, type )
 
-- parse_statement
-  on "global", parse_var_declarations -> CmdGlobalDeclarations( declarations, type )
-  on "local",  parse_var_declarations -> CmdLocalDeclarations( declarations, type )
+- properties
+  consume_eols
+  onPeek IDENTIFIER, var_declarations, mustConsume(EOL) -> CmdProperties( declarations, type )
+
+- statement
+  on "global", var_declarations -> CmdGlobalDeclarations( declarations, type )
+  on "local",  var_declarations -> CmdLocalDeclarations( declarations, type )
   syntaxError
 
-- parse_statement_with_eol
-  parse_statement
+- statement_with_eol
+  statement
   mustConsume( EOL )
 
-- parse_type
+- type
   on IDENTIFIER -> CmdType( name=t.content:String )
   mustConsume IDENTIFIER
 
-- parse_var_declarations
+- optional_type
+  if (consume(':')) type
+  else              createNull
+
+
+- var_declarations
   beginList
   consume_eols
-  parse_var_declaration
+  var_declaration
   while (consume(','))
     consume_eols
-    parse_var_declaration
+    var_declaration
   endWhile
   createList
-  if (consume(':'))
-    parse_type
-  else
-    createNull
-  endIf
+  optional_type
 
-- parse_var_declaration
-  on IDENTIFIER
-    if (consume('=')) consume_eols; parse_expression
-    else              createNull
-    produce CmdVarDeclaration( name=t.content:String, initial_value )
-  endOn
+- var_declaration
+  on IDENTIFIER, optional_initial_value -> CmdVarDeclaration( name=t.content:String, initial_value )
   mustConsume IDENTIFIER
 
-- parse_expression
+- optional_initial_value
+  if (consume('=')) consume_eols; expression
+  else              createNull
 
-+ parse_assign : RightAssociativeBinaryParseRule
+- expression
+
++ assign : RightAssociativeBinaryParseRule
   on "="  -> CmdAssign
   on "+=" -> CmdAddAndAssign
   on "-=" -> CmdSubtractAndAssign
@@ -516,13 +538,13 @@ endWhile
   on "&=" -> CmdAndAndAssign
   on "|=" -> CmdOrAndAssign
 
-+ parse_logical_xor  : BinaryParseRule
++ logical_xor  : BinaryParseRule
 
-+ parse_logical_or   : BinaryParseRule
++ logical_or   : BinaryParseRule
 
-+ parse_logical_and  : BinaryParseRule
++ logical_and  : BinaryParseRule
 
-+ parse_comparison : BinaryParseRule
++ comparison : BinaryParseRule
   on "==" -> CmdCompareEQ
   on "!=" -> CmdCompareNE
   on "<"  -> CmdCompareLT
@@ -530,28 +552,28 @@ endWhile
   on "<=" -> CmdCompareLE
   on ">=" -> CmdCompareGE
 
-+ parse_bitwise_xor : BinaryParseRule
++ bitwise_xor : BinaryParseRule
 
-+ parse_bitwise_or  : BinaryParseRule
++ bitwise_or  : BinaryParseRule
 
-+ parse_bitwise_and : BinaryParseRule
++ bitwise_and : BinaryParseRule
 
-+ parse_bitwise_shift : BinaryParseRule
++ bitwise_shift : BinaryParseRule
 
-+ parse_add_subtract : BinaryParseRule
++ add_subtract : BinaryParseRule
   on "+" -> CmdAdd
   on "-" -> CmdSubtract
 
-+ parse_multiply_divide : BinaryParseRule
++ multiply_divide : BinaryParseRule
   on "*" -> CmdMultiply
   on "/" -> CmdDivide
 
-+ parse_pre_unary : PreUnaryParseRule
++ pre_unary : PreUnaryParseRule
   on "-"  -> CmdNegate
   on "++" -> CmdPreIncrement
   on "--" -> CmdPreDecrement
 
-+ parse_post_unary : PostUnaryParseRule
++ post_unary : PostUnaryParseRule
   on "++" -> CmdPostIncrement
   on "--" -> CmdPostDecrement
 
