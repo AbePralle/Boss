@@ -40,6 +40,10 @@ endRoutine
 
 routine rogo_java
   rogo_build_java
+  rogo_run
+endRoutine
+
+routine rogo_run
   execute "java -cp Build/Java boss.vm.Boss Test.boss"
 endRoutine
 

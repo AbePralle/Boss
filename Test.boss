@@ -1,2 +1,2 @@
-forEach (x at i in stuff)
-#endForEach
+forEach (x at i in y=stuff) a = 2
+b = 3

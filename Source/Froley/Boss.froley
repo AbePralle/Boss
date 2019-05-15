@@ -457,15 +457,11 @@ endWhile
     name
     forEach_optional_at
     if (consume("in"))
-      forEach_collection
-      if (has_parens) mustConsume ')'
-      multi_line_statements
-      produce ForEachIn(name,optional_at,collection,statements)
+      forEach_collection_and_body
+      produce ForEachIn(name,optional_at:At,collection:ForEachCollection,statements)
     elseIf (consume("of"))
-      forEach_collection
-      if (has_parens) mustConsume ')'
-      multi_line_statements
-      produce ForEachOf(name,optional_at,collection,statements)
+      forEach_collection_and_body
+      produce ForEachOf(name,optional_at:At,collection:ForEachCollection,statements)
     else
       syntaxError "Expected 'in' or 'of'."
     endIf
@@ -476,8 +472,20 @@ endWhile
   name
   produce At(name)
 
-- forEach_collection
+- forEach_collection_and_body
   expression
+  if (consume('=')) expression         # end of queue: var,  expression
+  else              createNull; swap   # end of queue: null, expression
+  create ForEachCollection(v,expression)
+
+  if (has_parens) mustConsume ')'
+
+  if (consume(EOL))
+    multi_line_statements
+    mustConsume "endForEach"
+  else
+    single_line_statements
+  endIf
 
 - global_method
   on "method", name, method_parameters, method_return_type, method_body ->
@@ -630,12 +638,21 @@ endWhile
   onPeek "forEach", forEach_loop: return
   onPeek "if",      if_statement: return
   onPeek "while",   while_loop:   return
+  on "global", var_declarations -> GlobalDeclarations( declarations, type )
+  on "local",  var_declarations -> LocalDeclarations( declarations, type )
   statement
 
 - statement
-  on "global", var_declarations -> GlobalDeclarations( declarations, type )
-  on "local",  var_declarations -> LocalDeclarations( declarations, type )
+
   expression
+  on "=" , expression -> Assign(target,expression)
+  on "+=", expression -> AddAndAssign(target,expression)
+  on "-=", expression -> SubtractAndAssign(target,expression)
+  on "*=", expression -> MultiplyAndAssign(target,expression)
+  on "/=", expression -> DivideAndAssign(target,expression)
+  on "%=", expression -> ModAndAssign(target,expression)
+  on "&=", expression -> AndAndAssign(target,expression)
+  on "|=", expression -> OrAndAssign(target,expression)
 
 - type
   on IDENTIFIER -> Type( name=t.content:String )
@@ -683,16 +700,6 @@ endWhile
   endOn
 
 - expression
-
-+ assign : RightAssociativeBinaryParseRule
-  on "="  -> Assign
-  on "+=" -> AddAndAssign
-  on "-=" -> SubtractAndAssign
-  on "*=" -> MultiplyAndAssign
-  on "/=" -> DivideAndAssign
-  on "%=" -> ModAndAssign
-  on "&=" -> AndAndAssign
-  on "|=" -> OrAndAssign
 
 + logical_xor  : BinaryParseRule
 
