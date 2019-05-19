@@ -60,6 +60,7 @@ KEYWORD_PRINTLN      println
 KEYWORD_PROPERTIES   PROPERTIES  [structural]
 KEYWORD_RETURN       return
 KEYWORD_ROUTINE      routine
+KEYWORD_STEP         step
 KEYWORD_THIS_CALL    thisCall
 KEYWORD_TRUE         true
 KEYWORD_UNDEFINED    undefined
@@ -476,7 +477,14 @@ endWhile
   expression
   if (consume('=')) expression         # end of queue: var,  expression
   else              createNull; swap   # end of queue: null, expression
-  create ForEachCollection(v,expression)
+
+  if (consume(@"from")) expression
+  else                  createNull
+
+  if (consume("step")) expression
+  else                 createNull
+
+  create ForEachCollection(v,expression,from,step_size)
 
   if (has_parens) mustConsume ')'
 
@@ -609,16 +617,6 @@ endWhile
 - name
   on IDENTIFIER -> Name( value=t.content:String )
   mustConsume IDENTIFIER  # previous line didn't match; throw an error
-
-#    method parse_single_line_parser_statements( statements:CmdStatements )
-#      while (reader.has_another and not reader.peek.type.is_structural)
-#        parse_parser_statement( statements, &!allow_control_structures )
-#        if (not consume(TokenType.SYMBOL_SEMICOLON)) return
-#        while (consume(TokenType.SYMBOL_SEMICOLON)) noAction
-#
-#        # Don't let a trailing ';' act as a next-line continuation.
-#        if (next_is(TokenType.EOL)) escapeWhile
-#      endWhile
 
 - module_name : BinaryParseRule
   on "::" -> Scope

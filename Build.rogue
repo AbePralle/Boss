@@ -11,20 +11,29 @@
 # "rogo_default" will run in the absence of any other command line argument.
 
 routine rogo_default
-  rogo_update_parser
+  if (parser_needs_update) rogo_update_parser
+
+  rogo_rogue
+  #{
   if (java_needs_build)
-    rogo_build_java
     rogo_java
   else
     rogo_help
   endIf
+  }#
 endRoutine
 
-description( "parser", "Runs Froley to generate an updated tokenizer and parser from 'Source/Froley/Boss.froley'." )
+routine parser_needs_update->Logical
+  if (File.is_newer_than("Source/Froley/Boss.froley","Source/Java/boss/vm/Code.java")) return true
+  if (File.is_newer_than("Source/Froley/Boss.froley","Source/Rogue/Code.rogue")) return true
+  return false
+endRoutine
 
+description( "update parser", "Runs Froley to generate an updated tokenizer and parser from 'Source/Froley/Boss.froley'." )
 routine rogo_update_parser
   File.create_folder( "Source/Java" )
-  execute "froley Source/Froley/Boss.froley --target=java --output=Source/Java --package=boss.vm --main"
+  File.create_folder( "Source/Rogue" )
+  execute "froley Source/Froley/Boss.froley --target=java --output=Source/Java --package=boss.vm --main --target=rogue --output=Source/Rogue --main"
 endRoutine
 
 routine rogo_build_java
@@ -35,16 +44,38 @@ routine rogo_build_java
 endRoutine
 
 routine rogo_rm
-  execute "rm -r Source/Java"   # FIXME - dangerous
+  execute "rm -rf Source/Java Source/Rogue"   # FIXME - dangerous
 endRoutine
 
 routine rogo_java
   rogo_build_java
-  rogo_run
+  rogo_run_java
 endRoutine
 
-routine rogo_run
+routine rogo_run_java
   execute "java -cp Build/Java boss.vm.Boss Test.boss"
+endRoutine
+
+routine rogue_needs_build->Logical
+  local exe = "Build/Rogue/Boss-" + System.os
+  return Files("Source/Rogue","*.rogue").add("**/*.rogue").any_newer_than( exe )
+endRoutine
+
+routine rogo_build_rogue
+  if (rogue_needs_build)
+    local exe = "Build/Rogue/Boss-" + System.os
+    execute "roguec Source/Rogue/Boss.rogue --compile --output=" + exe
+  endIf
+endRoutine
+
+routine rogo_rogue
+  rogo_build_rogue
+  rogo_run_rogue
+endRoutine
+
+routine rogo_run_rogue
+  local exe = "Build/Rogue/Boss-$ Test.boss" (System.os)
+  execute exe
 endRoutine
 
 routine java_needs_build->Logical
