@@ -155,7 +155,7 @@ scanner
       syntaxError "Unterminated multi-line comment."
     else
       # Single line comment
-      if scan("#" [^\n]*)
+      if scan [^\n]*
         consume '\n'
         produce EOL
       endIf

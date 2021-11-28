@@ -10,6 +10,10 @@ class Token( type:TokenType, filepath:String, source:String, line:Int32, column:
       return CompileError( message, filepath, source, line, column )
 
     method to->String
+      if (type == TokenType.EOL)
+        if (String.exists(content)) return "EOL($)"(content)
+        else                        return "EOL"
+      endIf
       if (content) return content
       return type.symbol.to_escaped_ascii
 endClass
