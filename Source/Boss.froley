@@ -1,0 +1,748 @@
+================================================================================
+# Boss.froley
+================================================================================
+
+--------------------------------------------------------------------------------
+tokens
+--------------------------------------------------------------------------------
+EOL(end of line)            [content]
+CHARACTER      character    [content]
+BINARY_INTEGER integer      [content]
+OCTAL_INTEGER  integer      [content]
+HEX_INTEGER    integer      [content]
+INTEGER        integer      [content]
+REAL_NUMBER    real         [content]
+STRING         string       [content]
+IDENTIFIER     identifier   [content]
+COMMENT        comment      [content]
+
+----------------------------------------------------------------------
+tokens Keywords
+----------------------------------------------------------------------
+KEYWORD_AUGMENT      augment
+KEYWORD_CLASS        class       [structural]
+KEYWORD_MODULE       module
+KEYWORD_ELSE         else        [structural]
+KEYWORD_ELSE_IF      elseIf
+KEYWORD_END_CLASS    endClass    [structural]
+KEYWORD_END_FOR_EACH endForEach  [structural]
+KEYWORD_END_IF       endIf       [structural]
+KEYWORD_END_ROUTINE  endRoutine  [structural]
+KEYWORD_END_WHILE    endWhile    [structural]
+KEYWORD_FALSE        false
+KEYWORD_FOR_EACH     forEach
+KEYWORD_GLOBAL       global
+KEYWORD_GLOBAL_PROPERTIES(GLOBAL PROPERTIES) [structural]
+KEYWORD_GLOBAL_METHODS(GLOBAL METHODS)       [structural]
+KEYWORD_IF           if
+KEYWORD_IN           in
+KEYWORD_IMPORT       import
+KEYWORD_LOCAL        local
+KEYWORD_METHOD       method
+KEYWORD_METHODS      METHODS     [structural]
+KEYWORD_NO_ACTION    noAction
+KEYWORD_NULL         null
+KEYWORD_OF           of
+KEYWORD_PRINTLN      println
+KEYWORD_PROPERTIES   PROPERTIES  [structural]
+KEYWORD_RETURN       return
+KEYWORD_ROUTINE      routine
+KEYWORD_STEP         step
+KEYWORD_THIS_CALL    thisCall
+KEYWORD_TRUE         true
+KEYWORD_UNDEFINED    undefined
+KEYWORD_USES         uses
+KEYWORD_WHILE        while
+
+----------------------------------------------------------------------
+tokens Symbols
+----------------------------------------------------------------------
+SYMBOL_AMPERSAND            &
+SYMBOL_ARROW                ->
+SYMBOL_ASTERISK             *
+SYMBOL_AT                   @
+SYMBOL_BANG                 !
+SYMBOL_CARET                ^
+SYMBOL_CLOSE_BRACE          }   [structural]
+SYMBOL_CLOSE_BRACKET        ]   [structural]
+SYMBOL_CLOSE_PAREN          )   [structural]
+SYMBOL_COLON                :   [structural]
+SYMBOL_COLON_COLON          ::
+SYMBOL_COMMA                ,   [structural]
+SYMBOL_DOLLAR               $
+SYMBOL_DOUBLE_VERTICAL_BAR  ||  [structural]
+SYMBOL_EQ                   ==
+SYMBOL_EQUALS               =
+SYMBOL_GE                   >=
+SYMBOL_GT                   >
+SYMBOL_GT_GT                >>
+SYMBOL_LE                   <=
+SYMBOL_LEFT_SHIFT           :<<:
+SYMBOL_LITERAL_OPEN_BRACKET @[
+SYMBOL_LT                   <
+SYMBOL_LT_LT                <<
+SYMBOL_MINUS                -
+SYMBOL_MINUS_MINUS          --
+SYMBOL_NE                   !=
+SYMBOL_OPEN_BRACE           {
+SYMBOL_OPEN_BRACKET         [
+SYMBOL_OPEN_PAREN           (
+SYMBOL_PERCENT              %
+SYMBOL_PERIOD               .
+SYMBOL_PLUS                 +
+SYMBOL_PLUS_PLUS            ++
+SYMBOL_QUESTION             ?
+SYMBOL_QUESTION_COLON       ?:
+SYMBOL_RIGHT_SHIFT          :>>:
+SYMBOL_RIGHT_SHIFT_X        :>>>:
+SYMBOL_SEMICOLON            ;
+SYMBOL_SLASH                /
+SYMBOL_TILDE                ~
+SYMBOL_VERTICAL_BAR         |
+
+SYMBOL_PLUS_EQUALS          +=
+SYMBOL_MINUS_EQUALS         -=
+SYMBOL_TIMES_EQUALS         *=
+SYMBOL_DIVIDE_EQUALS        /=
+SYMBOL_MOD_EQUALS           %=
+SYMBOL_AND_EQUALS           &=
+SYMBOL_OR_EQUALS            |=
+
+----------------------------------------------------------------------
+scanner
+----------------------------------------------------------------------
+- main
+  consume [ \r\t]*                 # whitespace
+  markPosition
+  scan_comment
+
+  if (not hasAnother)
+    create EOL
+    halt
+  endIf
+
+  match input
+    produceAny Symbols
+    case '\n': produce EOL
+    case '"':  tokenize_string
+    case "'":  tokenize_character_or_string
+    case "''": tokenize_two_quote_string
+    case "@|": tokenize_verbatim_string
+  endMatch
+
+  scan_id_or_keyword
+  scan_number
+
+  syntaxError
+
+- scan_comment
+  if (consume('#'))
+    if (consume('{'))
+      count = 1
+      while (hasAnother)
+        ch = read
+        if (ch == '\n')
+          create EOL
+        elseIf (ch == '#')
+          if (consume('{')) ++count
+        elseIf (ch == '}')
+          if (consume('#'))
+            --count
+            if (count == 0) produce COMMENT
+          endIf
+        endIf
+      endWhile
+      syntaxError "Unterminated multi-line comment."
+    else
+      # Single line comment
+      if scan("#" [^\n]*)
+        consume '\n'
+        produce EOL
+      endIf
+    endIf
+
+  elseIf (consume({"----"[-]*}) or consume({"===="[=]*}))
+    # HR comments
+    scan [^\n]*
+    consume '\n'
+    produce EOL
+
+  else
+    return
+
+  endIf
+
+- scan_id_or_keyword
+  if (not scan([_a-zA-Z][_a-zA-Z0-9]*)) return
+
+  match buffer
+    produceAny Keywords
+    case "GLOBAL"
+      # "GLOBAL PROPERTIES" / "GLOBAL METHODS"
+      if (consume [ ]+)
+        if (scan([_a-zA-Z][_a-zA-Z0-9]*))
+          match buffer
+            case "PROPERTIES" -> KEYWORD_GLOBAL_PROPERTIES
+            case "METHODS"    -> KEYWORD_GLOBAL_METHODS
+            others
+              syntaxError "Expected 'GLOBAL PROPERTIES' or 'GLOBAL METHODS'."
+          endMatch
+        endIf
+      endIf
+    others
+      produce IDENTIFIER
+  endMatch
+
+- scan_number
+  if (not nextIs([0-9]) or nextIs([.][0-9])) return
+
+  match input
+    case "0b"
+      base = 2
+      scan_binary_integer
+      produce BINARY_INTEGER
+    case "0c"
+      base = 8
+      scan_octal_integer
+      produce OCTAL_INTEGER
+    case "0x"
+      base = 16
+      scan_hex_integer
+      produce HEX_INTEGER
+    others
+      scan_integer
+      if (not scan('.')) produce INTEGER
+      scan_integer
+      if (scan([eE]))
+        scan [+-]
+        if (not scan([0-9]+)) syntaxError "Integer exponent expected."
+      endIf
+      produce REAL_NUMBER
+  endMatch
+
+- scan_integer
+  while (scan([0-9]+))
+    if (not consume([_]+)) return
+  endWhile
+  return
+
+- scan_binary_integer
+  while (scan([01]+))
+    if (not consume([_]+)) return
+  endWhile
+  return
+
+- scan_octal_integer
+  while (scan([0-7]+))
+    if (not consume([_]+)) return
+  endWhile
+  return
+
+- scan_hex_integer
+  while (scan([0-9A-Fa-f]+))
+    if (not consume([_]+)) return
+  endWhile
+  return
+
+- tokenize_string
+  while (hasAnother and not nextIs('"'))
+    scan_character
+  endWhile
+  mustConsume '"'
+  produce STRING
+
+- tokenize_character_or_string
+  if (consume('\'')) produce STRING
+  scan_character
+  if (consume('\'')) produce CHARACTER
+  while (hasAnother and not nextIs('\''))
+    scan_character
+  endWhile
+  mustConsume('\'')
+  produce STRING
+
+- tokenize_two_quote_string
+  while (hasAnother and not nextIs("''"))
+    scan_character
+  endWhile
+  mustConsume "''"
+  produce STRING
+
+- scan_character
+  if (not hasAnother) syntaxError "Unterminated string - unexpected end of file."
+  ch = read
+  if (ch == '\n')
+    syntaxError "Unterminated string - unexpected end of line."
+  endIf
+  if (ch != '\\')
+    collect ch
+    return
+  endIf
+
+  if (consume('b')) collect Character(8); return
+  if (consume('e')) collect Character(27); return
+  if (consume('f')) collect Character(12); return
+  if (consume('n')) collect '\n'; return
+  if (consume('r')) collect '\r'; return
+  if (consume('t')) collect '\t'; return
+  if (consume('v')) collect Character(11); return
+  if (consume('0')) collect Character(0); return
+  if (consume('/')) collect '/'; return
+  if (consume('?')) collect '?'; return
+  if (consume('\''))collect '\''; return
+  if (consume('\\'))collect '\\'; return
+  if (consume('"')) collect '"'; return
+  if (consume('x'))
+    hex2 = 0
+    read_hex2
+    collect Character(hex2)
+    return
+  endIf
+  if (consume('u'))
+    read_hex4
+    collect Character(hex4)
+    return
+  endIf
+  if (consume('['))
+    hex_digit = 0
+    read_hex_digit
+    value = hex_digit
+    digits = 1
+    while (digits < 6 and nextIs([0-9a-fA-F]))
+      read_hex_digit
+      value = value * 16 + hex_digit
+      ++digits
+    endWhile
+    mustConsume ']'
+    collect Character(value)
+    return
+  endIf
+  buffer = ""
+  collect "Invalid escape sequence '\\" ch
+  collect "'. Supported: \\b \\e \\f \\n \\r \\t \\v \\0 \\? \\/ \\' \\\\ \\\" \\xHH \\uHHHH \\[H*]."
+  syntaxError buffer
+
+- read_hex4
+  read_hex2
+  hex4 = hex2 * 256
+  read_hex2
+  hex4 = hex4 + hex2
+  return
+
+- read_hex2
+  read_hex_digit
+  hex2 = hex_digit * 16
+  read_hex_digit
+  hex2 = hex2 + hex_digit
+  return
+
+- read_hex_digit
+  if (not nextIs([0-9a-fA-F])) syntaxError "Hex digit expected (0-9, a-f, or A-F)."
+  ch = read
+  if (ch >= 'a' and ch <= 'f')
+    hex_digit = (ch - Integer('a')) + 10
+  elseIf (ch >= 'A' and ch <= 'F')
+    hex_digit = (ch - Integer('A')) + 10
+  else
+    hex_digit = ch - Integer('0')
+  endIf
+  return
+
+- tokenize_verbatim_string
+  while (hasAnother)
+    scan [^\n]*
+    consume '\n'
+    consume [ ]*
+    if (not consume('|')) produce STRING
+  endWhile
+  produce STRING
+
+
+#{
+#---------------------------------------------------------------------
+[parser]
+#---------------------------------------------------------------------
+- element
+  while (consume(EOL)) noAction
+  if (not hasAnother) return
+
+  on "class", class -> ClassDefinition( name, base_types, attributes, elements )
+  on "module", module_name, EOL -> ModuleDeclaration(name )
+
+  if (not nextHasAttribute(structural)) multi_line_statements; return
+  syntaxError
+
+- consume_eols
+  while (consume(EOL)) noAction
+
+- consume_end_commands
+  while (consume(EOL) or consume(';')) noAction
+
+- consume_semicolons
+  while (consume(';')) noAction
+
+- class
+  type
+  base_types
+  class_attributes
+  class_sections
+  mustConsume "endClass"
+
+- base_types
+  beginList
+  if (not consume(':')) produceList
+  type
+  while (consume(','))
+    consume_eols
+    type
+  endWhile
+  produceList
+
+- class_attributes
+  beginList
+  if (not consume('[')) produceList
+  type
+  consume_eols
+  while (not nextIs(']'))
+    type
+    consume_eols
+  endWhile
+  mustConsume ']'
+  produceList
+
+- class_sections
+  beginList
+  if (not consume(';'))
+    while (not nextIs("endClass")) class_section
+  endIf
+  produceList
+
+- class_section
+  consume_eols
+  on "GLOBAL PROPERTIES"
+    consume_eols
+    while (not nextHasAttribute(structural))
+      global_properties
+    endWhile
+    return
+  elseOn "GLOBAL METHODS"
+    consume_eols
+    while (nextIs("method"))
+      global_method
+      consume_eols
+    endWhile
+    return
+  elseOn "PROPERTIES"
+    consume_eols
+    while (not nextHasAttribute(structural))
+      properties
+    endWhile
+    return
+  elseOn "METHODS"
+    consume_eols
+    while (nextIs("method"))
+      method
+      consume_eols
+    endWhile
+    return
+  endOn
+  if (not nextIs("endClass")) syntaxError
+
+- forEach_loop
+  on "forEach"
+    var has_parens = consume( '(' )
+    name
+    forEach_optional_at
+    if (consume("in"))
+      forEach_collection_and_body
+      produce ForEachIn(name,optional_at:At,collection:ForEachCollection,statements)
+    elseIf (consume("of"))
+      forEach_collection_and_body
+      produce ForEachOf(name,optional_at:At,collection:ForEachCollection,statements)
+    else
+      syntaxError "Expected 'in' or 'of'."
+    endIf
+  endOn
+
+- forEach_optional_at
+  if (not consume(@"at")) produceNull
+  name
+  produce At(name)
+
+- forEach_collection_and_body
+  expression
+  if (consume('=')) expression         # end of queue: var,  expression
+  else              createNull; swap   # end of queue: null, expression
+
+  if (consume(@"from")) expression
+  else                  createNull
+
+  if (consume("step")) expression
+  else                 createNull
+
+  create ForEachCollection(v,expression,from,step_size)
+
+  if (has_parens) mustConsume ')'
+
+  if (consume(EOL))
+    multi_line_statements
+    mustConsume "endForEach"
+  else
+    single_line_statements
+  endIf
+
+- global_method
+  on "method", name, method_parameters, method_return_type, method_body ->
+    GlobalMethod(name,parameters,return_type,statements:NodeList)
+
+- if_statement
+  on "if"
+    expression
+    if (consume(EOL))
+      # Multi-line 'if'
+      multi_line_statements
+      if_statement_multi_line_elseIf_else
+      mustConsume 'endIf'
+    else
+      # Single-line 'if'
+      single_line_statements
+      if_statement_single_line_elseIf_else
+    endIf
+    produce If(condition,statements:NodeList,else_node:If)
+  endOn
+
+- if_statement_multi_line_elseIf_else
+  savePosition
+  on 'elseIf'
+    expression
+    if (consume(EOL))
+      # This elseIf is multi-line; good to keep going
+      discardPosition
+      multi_line_statements
+      if_statement_multi_line_elseIf_else
+      produce If(condition,statements:NodeList,else_node:If)
+    else
+      # This single-line elseIf is outside the scope of the 'if' we're currently parsing.
+      restorePosition
+      produceNull
+    endIf
+  elseOn 'else'
+    if (consume(EOL))
+      # This else is multi-line; good to keep going
+      discardPosition
+      createNull
+      multi_line_statements
+      createNull
+      produce If(condition,statements:NodeList,else_node:If)
+    else
+      # This single-line else is outside the scope of the 'if' we're currently parsing.
+      restorePosition
+      produceNull
+    endIf
+  else
+    produceNull
+  endOn
+
+- if_statement_single_line_elseIf_else
+  savePosition
+  on 'elseIf'
+    expression
+    if (consume(EOL))
+      # This elseIf is multi-line and outside our scope
+      restorePosition
+      produceNull
+    else
+      # This elseIf is single line; keep going
+      discardPosition
+      single_line_statements
+      if_statement_single_line_elseIf_else
+      produce If(condition,statements:NodeList,else_node:If)
+    endIf
+  elseOn 'else'
+    if (consume(EOL))
+      # This else is multi-line and outside our scope
+      restorePosition
+      produceNull
+    else
+      # This else is single line; keep going
+      discardPosition
+      createNull
+      single_line_statements
+      createNull
+      produce If(condition,statements:NodeList,else_node:If)
+    endIf
+  else
+    produceNull
+  endOn
+
+
+- method
+  on "method", name, method_parameters, method_return_type, method_body ->
+    Method(name,parameters,return_type,statements:NodeList)
+
+- method_parameters
+  beginList
+  if (not consume('(')) produceList
+  method_parameter
+  while (consume(',')) method_parameter
+  mustConsume ')'
+  produceList
+
+- method_parameter
+  consume_eols
+  onPeek IDENTIFIER, name, optional_initial_value, optional_type -> Parameter(name,initial_value,type)
+  on '&',            name, optional_initial_value, optional_type -> FlagParameter(name,initial_value,type)
+  mustConsume IDENTIFIER  # thow an error
+
+- method_return_type
+  if (not consume('->')) produceNull
+  type
+
+- method_body
+  multi_line_statements
+
+- multi_line_statements
+  beginList
+  consume_end_commands
+  while (hasAnother and not nextHasAttribute(structural))
+    statement_allowing_control_structures
+    consume_end_commands
+  endWhile
+  produceStatements
+
+- name
+  on IDENTIFIER -> Name( value=t.content:String )
+  mustConsume IDENTIFIER  # previous line didn't match; throw an error
+
+- module_name : BinaryParseRule
+  on "::" -> Scope
+
++ module_segment
+  identifier
+
+- global_properties
+  consume_eols
+  onPeek IDENTIFIER, var_declarations, mustConsume(EOL) -> GlobalProperties( declarations, type )
+
+- properties
+  consume_eols
+  onPeek IDENTIFIER, var_declarations, mustConsume(EOL) -> Properties( declarations, type )
+
+- statement_allowing_control_structures
+  onPeek "forEach", forEach_loop: return
+  onPeek "if",      if_statement: return
+  onPeek "while",   while_loop:   return
+  on "global", var_declarations -> GlobalDeclarations( declarations, type )
+  on "local",  var_declarations -> LocalDeclarations( declarations, type )
+  statement
+
+- statement
+
+  expression
+  on "=" , expression -> Assign(target,expression)
+  on "+=", expression -> AddAndAssign(target,expression)
+  on "-=", expression -> SubtractAndAssign(target,expression)
+  on "*=", expression -> MultiplyAndAssign(target,expression)
+  on "/=", expression -> DivideAndAssign(target,expression)
+  on "%=", expression -> ModAndAssign(target,expression)
+  on "&=", expression -> AndAndAssign(target,expression)
+  on "|=", expression -> OrAndAssign(target,expression)
+
+- type
+  on IDENTIFIER -> Type( name=t.content:String )
+  mustConsume IDENTIFIER
+
+- optional_initial_value
+  if (consume('=')) consume_eols; expression
+  else              createNull
+
+- optional_type
+  if (consume(':')) type
+  else              createNull
+
+- single_line_statements
+  beginList
+  consume_semicolons
+  while (hasAnother and not consume(EOL))
+    statement
+    consume_semicolons
+  endWhile
+  produceStatements
+
+
+- var_declarations
+  beginList
+  consume_eols
+  var_declaration
+  while (consume(','))
+    consume_eols
+    var_declaration
+  endWhile
+  createList
+  optional_type
+
+- var_declaration
+  on IDENTIFIER, optional_initial_value -> VarDeclaration( name=t.content:String, initial_value )
+  mustConsume IDENTIFIER
+
+- while_loop
+  on "while"
+    expression
+    if (consume(EOL)) multi_line_statements; mustConsume "endWhile"
+    else              single_line_statements
+    produce While(condition,statements)
+  endOn
+
+- expression
+
++ logical_xor  : BinaryParseRule
+
++ logical_or   : BinaryParseRule
+
++ logical_and  : BinaryParseRule
+
++ comparison : BinaryParseRule
+  on "==" -> CompareEQ
+  on "!=" -> CompareNE
+  on "<"  -> CompareLT
+  on ">"  -> CompareGT
+  on "<=" -> CompareLE
+  on ">=" -> CompareGE
+
++ bitwise_xor : BinaryParseRule
+
++ bitwise_or  : BinaryParseRule
+
++ bitwise_and : BinaryParseRule
+
++ bitwise_shift : BinaryParseRule
+
++ add_subtract : BinaryParseRule
+  on "+" -> Add
+  on "-" -> Subtract
+
++ multiply_divide : BinaryParseRule
+  on "*" -> Multiply
+  on "/" -> Divide
+
++ pre_unary : PreUnaryParseRule
+  on "-"  -> Negate
+  on "++" -> PreIncrement
+  on "--" -> PreDecrement
+
++ post_unary : PostUnaryParseRule
+  on "++" -> PostIncrement
+  on "--" -> PostDecrement
+
++ access : BinaryParseRule
+
++ term
+  on IDENTIFIER -> Access( value=t.content:String )
+  on INTEGER    -> LiteralInt32( value=t.content:Int32 )
+  on "true"     -> True
+  on "false"    -> False
+  on '(', expression, ')': return
+  on "noAction" -> NoAction
+  syntaxError
+}#
+
