@@ -43,6 +43,7 @@ KEYWORD_METHODS      METHODS     [structural]
 KEYWORD_NO_ACTION    noAction
 KEYWORD_NULL         null
 KEYWORD_OF           of
+KEYWORD_PRINT        print
 KEYWORD_PRINTLN      println
 KEYWORD_PROPERTIES   PROPERTIES  [structural]
 KEYWORD_RETURN       return
@@ -358,13 +359,34 @@ scanner
   produce STRING
 
 
-#{
-#---------------------------------------------------------------------
-[parser]
-#---------------------------------------------------------------------
-- element
+----------------------------------------------------------------------
+parser
+----------------------------------------------------------------------
+- ast
+  elements
+
+- elements
+  beginList
+    while (hasAnother) element
+  produceList
+
+- consume_eols
   while (consume(EOL)) noAction
+
+- must_consume_eols
+  if (not consume(EOL)) syntaxError "End of line expected."
+  while (consume(EOL)) noAction
+
+- consume_eols_and_semicolons
+  while (consume(EOL) or consume(';')) noAction
+
+- element
+  consume_eols
   if (not hasAnother) return
+
+  multi_line_statements
+
+#{
 
   on "class", class -> ClassDefinition( name, base_types, attributes, elements )
   on "module", module_name, EOL -> ModuleDeclaration(name )
@@ -601,15 +623,6 @@ scanner
 - method_body
   multi_line_statements
 
-- multi_line_statements
-  beginList
-  consume_end_commands
-  while (hasAnother and not nextHasAttribute(structural))
-    statement_allowing_control_structures
-    consume_end_commands
-  endWhile
-  produceStatements
-
 - name
   on IDENTIFIER -> Name( value=t.content:String )
   mustConsume IDENTIFIER  # previous line didn't match; throw an error
@@ -617,7 +630,7 @@ scanner
 - module_name : BinaryParseRule
   on "::" -> Scope
 
-+ module_segment
+- module_segment
   identifier
 
 - global_properties
@@ -627,18 +640,74 @@ scanner
 - properties
   consume_eols
   onPeek IDENTIFIER, var_declarations, mustConsume(EOL) -> Properties( declarations, type )
+}#
 
-- statement_allowing_control_structures
+- multi_line_statements
+  consume_eols_and_semicolons
+  if (not hasAnother) syntaxError
+  beginList
+  while (hasAnother and not nextHasAttribute(structural))
+    control_structure
+    consume_eols_and_semicolons
+  endWhile
+  produceList Statements
+
+- single_line_statements
+  beginList
+
+  if (consume(EOL)) produceList Statements
+  statement
+  while (consume(';'))
+    statement
+  endWhile
+  must_consume_eols
+
+  produceList Statements
+
+- control_structure
+#{
   onPeek "forEach", forEach_loop: return
   onPeek "if",      if_statement: return
   onPeek "while",   while_loop:   return
   on "global", var_declarations -> GlobalDeclarations( declarations, type )
   on "local",  var_declarations -> LocalDeclarations( declarations, type )
+}#
   statement
+
+- args
+  beginList
+
+  if consume '('
+    consume_eols
+    if (consume(')')) produceList
+    consume_eols
+    while (hasAnother and not nextHasAttribute(structural))
+      arg
+      consume_eols
+      consume ','
+      consume_eols
+    endWhile
+    mustConsume ')'
+  else
+    while (hasAnother and not nextHasAttribute(structural) and not nextIs(EOL))
+      arg
+      if (consume ',') consume_eols
+    endWhile
+  endIf
+
+  produceList Args
+
+- arg
+  expression
 
 - statement
 
+  on "print"   args -> Print(args)
+  on "println" args -> Println(args):Print
+
   expression
+
+#{
   on "=" , expression -> Assign(target,expression)
   on "+=", expression -> AddAndAssign(target,expression)
   on "-=", expression -> SubtractAndAssign(target,expression)
@@ -659,16 +728,6 @@ scanner
 - optional_type
   if (consume(':')) type
   else              createNull
-
-- single_line_statements
-  beginList
-  consume_semicolons
-  while (hasAnother and not consume(EOL))
-    statement
-    consume_semicolons
-  endWhile
-  produceStatements
-
 
 - var_declarations
   beginList
@@ -692,16 +751,19 @@ scanner
     else              single_line_statements
     produce While(condition,statements)
   endOn
+}#
 
 - expression
+  term
 
-+ logical_xor  : BinaryParseRule
+#{
+- logical_xor  : BinaryParseRule
 
-+ logical_or   : BinaryParseRule
+- logical_or   : BinaryParseRule
 
-+ logical_and  : BinaryParseRule
+- logical_and  : BinaryParseRule
 
-+ comparison : BinaryParseRule
+- comparison : BinaryParseRule
   on "==" -> CompareEQ
   on "!=" -> CompareNE
   on "<"  -> CompareLT
@@ -709,40 +771,46 @@ scanner
   on "<=" -> CompareLE
   on ">=" -> CompareGE
 
-+ bitwise_xor : BinaryParseRule
+- bitwise_xor : BinaryParseRule
 
-+ bitwise_or  : BinaryParseRule
+- bitwise_or  : BinaryParseRule
 
-+ bitwise_and : BinaryParseRule
+- bitwise_and : BinaryParseRule
 
-+ bitwise_shift : BinaryParseRule
+- bitwise_shift : BinaryParseRule
 
-+ add_subtract : BinaryParseRule
+- add_subtract : BinaryParseRule
   on "+" -> Add
   on "-" -> Subtract
 
-+ multiply_divide : BinaryParseRule
+- multiply_divide : BinaryParseRule
   on "*" -> Multiply
   on "/" -> Divide
 
-+ pre_unary : PreUnaryParseRule
+- pre_unary : PreUnaryParseRule
   on "-"  -> Negate
   on "++" -> PreIncrement
   on "--" -> PreDecrement
 
-+ post_unary : PostUnaryParseRule
+- post_unary : PostUnaryParseRule
   on "++" -> PostIncrement
   on "--" -> PostDecrement
 
-+ access : BinaryParseRule
+- access : BinaryParseRule
+}#
 
-+ term
+- term
+  on STRING -> LiteralString(value=content):Literal
+#{
   on IDENTIFIER -> Access( value=t.content:String )
   on INTEGER    -> LiteralInt32( value=t.content:Int32 )
   on "true"     -> True
   on "false"    -> False
   on '(', expression, ')': return
   on "noAction" -> NoAction
-  syntaxError
 }#
+  syntaxError
+
+- additional_node_types
+  create Literal
 
