@@ -363,8 +363,7 @@ class ParserCore [abstract]
               _on_t
               _execute(ip_args)
               _pop_frame
-              _push( Print(_cur_t,_node_arg(-1)), 1 )
-              _push( Println(_cur_t), 0 )
+              _push( Println(_cur_t,_node_arg(-1)), 1 )
               return
             endIf
             _execute(ip_expression)
@@ -378,6 +377,11 @@ class ParserCore [abstract]
             if (_next_t.type == TokenType.STRING)
               _on_t
               _push( LiteralString(_cur_t,_cur_t.content), 0 )
+              return
+            endIf
+            if (_next_t.type == TokenType.INTEGER)
+              _on_t
+              _push( LiteralInt32(_cur_t,_string_to_Integer(_cur_t.content)), 0 )
               return
             endIf
             _throw_syntax_error

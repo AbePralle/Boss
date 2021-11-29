@@ -214,7 +214,28 @@ class AST : Cmd
 endClass
 
 class Println : Cmd
+  PROPERTIES
+    args : Cmd
+
   METHODS
+    method init( t, args )
+
     method description->String
-      return "Println"
+      return "Println($)" (%args)
+
+endClass
+
+class LiteralInt32 : Cmd
+  PROPERTIES
+    value : Int32
+
+  METHODS
+    method init( t, value )
+
+    method description->String
+      return "LiteralInt32($)" (%value)
+
+    method to->Int32:     return value
+    method to->String:    return value
+
 endClass

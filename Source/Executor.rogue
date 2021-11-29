@@ -8,6 +8,7 @@ class Executor : Visitor
       print ((forEach in cmd.args)->String)
 
     method on_visit( cmd:Println )
+      print ((forEach in cmd.args)->String)
       println
 endClass
 

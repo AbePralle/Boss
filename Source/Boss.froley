@@ -704,11 +704,7 @@ parser
 - statement
 
   on "print"   args -> Print(args)
-  on "println"
-    args
-    create  Print(args)
-    produce Println
-  endOn
+  on "println" args -> Println(args)
 
   expression
 
@@ -805,10 +801,10 @@ parser
 }#
 
 - term
-  on STRING -> LiteralString(value=content):Literal
+  on STRING  -> LiteralString(value=content):Literal
+  on INTEGER -> LiteralInt32(value=content:Integer)
 #{
   on IDENTIFIER -> Access( value=t.content:String )
-  on INTEGER    -> LiteralInt32( value=t.content:Int32 )
   on "true"     -> True
   on "false"    -> False
   on '(', expression, ')': return
