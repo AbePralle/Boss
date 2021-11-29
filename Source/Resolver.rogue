@@ -4,9 +4,17 @@ class Resolver : Visitor
   PROPERTIES
 
   METHODS
+    method on_visit( cmd:Statements )
+      forEach (arg in rewriter=cmd.list.rewriter)
+        arg = visit( arg )
+        local type = arg.type
+        if (type) arg = type.cmd_stack_pop( arg )
+        rewriter.write( arg )
+      endForEach
+
     method on_visit( cmd:Print )
       forEach (arg in rewriter=cmd.args.list.rewriter)
-        arg = visit( arg.to_description ).require_value
+        arg = visit( visit(arg).to_description ).require_value
         if (arg) rewriter.write( arg )
       endForEach
 
@@ -14,7 +22,7 @@ class Resolver : Visitor
 
     method on_leave( cmd:Println )
       forEach (arg in rewriter=cmd.args.list.rewriter)
-        arg = visit( arg.to_description ).require_value
+        arg = visit( visit(arg).to_description ).require_value
         if (arg) rewriter.write( arg )
       endForEach
 endClass

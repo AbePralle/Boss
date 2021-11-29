@@ -30,34 +30,54 @@ endAugment
 
 augment LiteralLogical
   METHODS
+    method execute->Int32
+      Program.int32_stack.add( which{value:1||0} )
+      return EXE_CONTINUE
 endAugment
 
 augment LiteralByte
   METHODS
+    method execute->Int32
+      Program.int32_stack.add( value )
+      return EXE_CONTINUE
 endAugment
 
 augment LiteralCharacter
   METHODS
+    method execute->Int32
+      Program.int32_stack.add( value )
+      return EXE_CONTINUE
 endAugment
 
 augment LiteralInt32
   METHODS
+    method execute->Int32
+      Program.int32_stack.add( value )
+      return EXE_CONTINUE
 endAugment
 
 augment LiteralInt64
-  METHODS
 endAugment
 
 augment LiteralReal32
   METHODS
+    method execute->Int32
+      Program.real64_stack.add( value )
+      return EXE_CONTINUE
 endAugment
 
 augment LiteralReal64
   METHODS
+    method execute->Int32
+      Program.real64_stack.add( value )
+      return EXE_CONTINUE
 endAugment
 
 augment LiteralPi
   METHODS
+    method execute->Int32
+      Program.real64_stack.add( pi )
+      return EXE_CONTINUE
 endAugment
 
 augment Print
@@ -83,3 +103,40 @@ augment Println
       return EXE_CONTINUE
 endAugment
 
+augment StackPopInt32
+  METHODS
+    method execute->Int32
+      local status = operand.execute
+      if (status) return status
+      Program.int32_stack.remove_last
+      return EXE_CONTINUE
+endAugment
+
+augment StackPopObject
+  METHODS
+    #{
+    method execute->Int32
+      local status = operand.execute
+      if (status) return status
+      Program.object_stack.remove_last
+      return EXE_CONTINUE
+      }#
+endAugment
+
+augment StackPopReal64
+  METHODS
+    method execute->Int32
+      local status = operand.execute
+      if (status) return status
+      Program.real64_stack.remove_last
+      return EXE_CONTINUE
+endAugment
+
+augment StackPopString
+  METHODS
+    method execute->Int32
+      local status = operand.execute
+      if (status) return status
+      Program.string_stack.remove_last
+      return EXE_CONTINUE
+endAugment

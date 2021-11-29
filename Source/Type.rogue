@@ -6,8 +6,7 @@ class Type
       local entry = Program.types.find( name )
       if (entry) return entry.value
 
-      local type = Type( t, name, &initialize )
-      Program.types[ name ] = type
+      local type = Type( t, name, &!is_primitive )
       return type
 
   PROPERTIES
@@ -16,6 +15,87 @@ class Type
     is_primitive : Logical
 
   METHODS
-    method init( t, name, initialize:Logical )
-      noAction
+    method init( t, name, is_primitive )
+      Program.types[ name ] = this
+
+    method cmd_stack_pop( cmd:Cmd )->Cmd
+      return StackPopObject( cmd.t, cmd )
+
+    method description->String
+      return name
+
 endClass
+
+class TypeLogical : Type
+  METHODS
+    method init( t:Token )
+      prior.init( t, "Logical", &is_primitive )
+
+    method cmd_stack_pop( cmd:Cmd )->Cmd
+      return StackPopInt32( cmd.t, cmd )
+endClass
+
+class TypeByte : Type
+  METHODS
+    method init( t:Token )
+      prior.init( t, "Byte", &is_primitive )
+
+    method cmd_stack_pop( cmd:Cmd )->Cmd
+      return StackPopInt32( cmd.t, cmd )
+endClass
+
+class TypeCharacter : Type
+  METHODS
+    method init( t:Token )
+      prior.init( t, "Character", &is_primitive )
+
+    method cmd_stack_pop( cmd:Cmd )->Cmd
+      return StackPopInt32( cmd.t, cmd )
+endClass
+
+class TypeInt32 : Type
+  METHODS
+    method init( t:Token )
+      prior.init( t, "Int32", &is_primitive )
+
+    method cmd_stack_pop( cmd:Cmd )->Cmd
+      return StackPopInt32( cmd.t, cmd )
+endClass
+
+class TypeInt64 : Type
+  METHODS
+    method init( t:Token )
+      prior.init( t, "Int64", &is_primitive )
+
+    method cmd_stack_pop( cmd:Cmd )->Cmd
+      trace "TODO"
+      return cmd
+endClass
+
+class TypeReal32 : Type
+  METHODS
+    method init( t:Token )
+      prior.init( t, "Real32", &is_primitive )
+
+    method cmd_stack_pop( cmd:Cmd )->Cmd
+      return StackPopReal64( cmd.t, cmd )
+endClass
+
+class TypeReal64 : Type
+  METHODS
+    method init( t:Token )
+      prior.init( t, "Real64", &is_primitive )
+
+    method cmd_stack_pop( cmd:Cmd )->Cmd
+      return StackPopReal64( cmd.t, cmd )
+endClass
+
+class TypeString : Type
+  METHODS
+    method init( t:Token )
+      prior.init( t, "String", &is_primitive )
+
+    method cmd_stack_pop( cmd:Cmd )->Cmd
+      return StackPopString( cmd.t, cmd )
+endClass
+

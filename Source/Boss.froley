@@ -818,3 +818,8 @@ parser
 
 - additional_node_types
   create Literal
+  create StackPopInt32(operand):Unary
+  create StackPopReal64(operand):Unary
+  create StackPopString(operand):Unary
+  create StackPopObject(operand):Unary
+

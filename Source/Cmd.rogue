@@ -299,3 +299,31 @@ class LiteralCharacter : Cmd
     method to->String:    return value
 
 endClass
+
+class StackPopInt32 : Unary
+  METHODS
+    method description->String
+      return "StackPopInt32($)" (%operand)
+
+endClass
+
+class StackPopObject : Unary
+  METHODS
+    method description->String
+      return "StackPopObject($)" (%operand)
+
+endClass
+
+class StackPopReal64 : Unary
+  METHODS
+    method description->String
+      return "StackPopReal64($)" (%operand)
+
+endClass
+
+class StackPopString : Unary
+  METHODS
+    method description->String
+      return "StackPopString($)" (%operand)
+
+endClass

@@ -424,6 +424,10 @@ class ParserCore [abstract]
             return
           case ip_additional_node_types
             _push( Literal(_cur_t), 0 )
+            _push( StackPopInt32(_cur_t,_node_arg(-1)), 1 )
+            _push( StackPopReal64(_cur_t,_node_arg(-1)), 1 )
+            _push( StackPopString(_cur_t,_node_arg(-1)), 1 )
+            _push( StackPopObject(_cur_t,_node_arg(-1)), 1 )
             return
           others
             return

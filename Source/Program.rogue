@@ -27,14 +27,14 @@ class Program [singleton]
       if (is_configured) return # already configured
       t = reference_t
 
-      type_Logical   = Type( t, "Logical" ).[ is_primitive=true ]
-      type_Byte      = Type( t, "Byte" ).[ is_primitive=true ]
-      type_Character = Type( t, "Character" ).[ is_primitive=true ]
-      type_Int32     = Type( t, "Int32" ).[ is_primitive=true ]
-      type_Int64     = Type( t, "Int64" ).[ is_primitive=true ]
-      type_Real32    = Type( t, "Real32" ).[ is_primitive=true ]
-      type_Real64    = Type( t, "Real64" ).[ is_primitive=true ]
-      type_String    = Type( t, "String" ).[ is_primitive=true ]
+      type_Logical   = TypeLogical(t)
+      type_Byte      = TypeByte(t)
+      type_Character = TypeCharacter(t)
+      type_Int32     = TypeInt32(t)
+      type_Int64     = TypeInt64(t)
+      type_Real32    = TypeReal32(t)
+      type_Real64    = TypeReal64(t)
+      type_String    = TypeString(t)
 
       global_statements = Statements(t)
 
@@ -43,6 +43,7 @@ class Program [singleton]
       local statements = global_statements
       global_statements = Statements(t)
       statements.execute
+      _ensure_stack_empty
 
     method organize( ast:Cmd )
       Organizer().visit( ast )
@@ -50,5 +51,10 @@ class Program [singleton]
     method resolve
       local resolver = Resolver()
       resolver.visit( global_statements )
+
+    method _ensure_stack_empty
+      require int32_stack.is_empty
+      require real64_stack.is_empty
+      require string_stack.is_empty
 endClass
 
