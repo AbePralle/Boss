@@ -3,6 +3,7 @@ module Boss
 $include "CmdExecution.rogue"
 $include "CmdTypes.rogue"
 $include "Scanner.rogue"
+$include "OpType.rogue"
 $include "Organizer.rogue"
 $include "Parser.rogue"
 $include "Program.rogue"

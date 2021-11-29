@@ -4,16 +4,34 @@ class Resolver : Visitor
   PROPERTIES
 
   METHODS
+    method on( cmd:Add )->Cmd
+      visit_children( cmd )
+      local left = cmd.left
+      local right = cmd.right
+      local left_type = left.require_type
+      local right_type = right.require_type
+      local result_type = Cmd.common_type( left_type, right_type )
+      if (left_type is not result_type) left = visit( result_type.cmd_cast(left) )
+      if (right_type is not result_type) right = visit( result_type.cmd_cast(right) )
+      local t = cmd.t
+      which (result_type.op_type)
+        case OpType.INT32:  return AddInt32(t,left,right)
+        case OpType.REAL64: return AddReal64(t,left,right)
+        case OpType.STRING: return AddString(t,left,right)
+        case OpType.OBJECT: return AddObject(t,left,right)
+        others:             throw t.error( "TODO: Add LOGICAL" )
+      endWhich
+
     method on( cmd:Description )->Cmd
       local operand = visit( cmd.operand ).require_value
       local type = operand.type
-      which (type.stack_type)
-        case StackType.INT32
-          if (type is Program.type_Logical) return DescriptionLogical(cmd.t,cmd)
-          else                              return DescriptionInt32(cmd.t,cmd)
-        case StackType.STRING: return operand
-        case StackType.OBJECT: return DescriptionObject(cmd.t,cmd)
-        others:                return DescriptionReal64(cmd.t,cmd)
+      local t = cmd.t
+      which (type.op_type)
+        case OpType.INT32:  return DescriptionInt32(t,operand)
+        case OpType.REAL64: return DescriptionReal64(t,operand)
+        case OpType.STRING: return operand
+        case OpType.OBJECT: return DescriptionObject(t,operand)
+        others:             return DescriptionLogical(t,operand)
       endWhich
 
     method on_visit( cmd:Statements )

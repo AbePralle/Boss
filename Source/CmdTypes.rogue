@@ -1,7 +1,7 @@
 module Boss
 
 augment Cmd
-  METHODS
+  GLOBAL METHODS
     method common_type( a:Type, b:Type )->Type
       if (a is b) return a
       if (not a or not b) return null
@@ -17,6 +17,7 @@ augment Cmd
         return Program.type_String # Placeholder
       endIf
 
+  METHODS
     method require_type->Type
       local result = type
       if (result) return result
@@ -40,6 +41,30 @@ augment Binary
   METHODS
     method type->Type
       return common_type( left.type, right.type )
+endAugment
+
+augment DescriptionInt32
+  METHODS
+    method type->Type
+      return Program.type_String
+endAugment
+
+augment DescriptionLogical
+  METHODS
+    method type->Type
+      return Program.type_String
+endAugment
+
+augment DescriptionObject
+  METHODS
+    method type->Type
+      return Program.type_String
+endAugment
+
+augment DescriptionReal64
+  METHODS
+    method type->Type
+      return Program.type_String
 endAugment
 
 augment LiteralString

@@ -819,6 +819,18 @@ parser
   syntaxError
 
 - additional_node_types
+  create AddInt32(left,right):Binary
+  create AddReal64(left,right):Binary
+  create AddString(left,right):Binary
+  create AddObject(left,right):Binary
+  create CastToLogical(operand):Unary
+  create CastToByte(operand):Unary
+  create CastToCharacter(operand):Unary
+  create CastToInt32(operand):Unary
+  create CastToReal32(operand):Unary
+  create CastToReal64(operand):Unary
+  create CastToString(operand):Unary
+  create CastToObject(operand):Unary
   create Literal
   create StackPopInt32(operand):Unary
   create StackPopReal64(operand):Unary

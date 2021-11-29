@@ -14,10 +14,14 @@ class Type
     name         : String
     is_primitive : Logical
     stack_type   : StackType
+    op_type      : OpType
 
   METHODS
     method init( t, name, is_primitive )
       Program.types[ name ] = this
+
+    method cmd_cast( cmd:Cmd )->Cmd
+      return CastToObject( cmd.t, cmd, this )
 
     method cmd_stack_pop( cmd:Cmd )->Cmd
       which (stack_type)
@@ -42,6 +46,10 @@ class TypeLogical : TypePrimitive
     method init( t:Token )
       prior.init( t, "Logical", &is_primitive )
       stack_type = StackType.INT32
+      op_type = OpType.LOGICAL
+
+    method cmd_cast( cmd:Cmd )->Cmd
+      return CastToLogical(cmd.t,cmd)
 endClass
 
 class TypeByte : TypePrimitive
@@ -49,6 +57,10 @@ class TypeByte : TypePrimitive
     method init( t:Token )
       prior.init( t, "Byte", &is_primitive )
       stack_type = StackType.INT32
+      op_type = OpType.INT32
+
+    method cmd_cast( cmd:Cmd )->Cmd
+      return CastToByte(cmd.t,cmd)
 endClass
 
 class TypeCharacter : TypePrimitive
@@ -56,6 +68,10 @@ class TypeCharacter : TypePrimitive
     method init( t:Token )
       prior.init( t, "Character", &is_primitive )
       stack_type = StackType.INT32
+      op_type = OpType.INT32
+
+    method cmd_cast( cmd:Cmd )->Cmd
+      return CastToCharacter(cmd.t,cmd)
 endClass
 
 class TypeInt32 : TypePrimitive
@@ -63,6 +79,10 @@ class TypeInt32 : TypePrimitive
     method init( t:Token )
       prior.init( t, "Int32", &is_primitive )
       stack_type = StackType.INT32
+      op_type = OpType.INT32
+
+    method cmd_cast( cmd:Cmd )->Cmd
+      return CastToInt32(cmd.t,cmd)
 endClass
 
 class TypeReal32 : TypePrimitive
@@ -70,6 +90,10 @@ class TypeReal32 : TypePrimitive
     method init( t:Token )
       prior.init( t, "Real32", &is_primitive )
       stack_type = StackType.REAL64
+      op_type = OpType.REAL64
+
+    method cmd_cast( cmd:Cmd )->Cmd
+      return CastToReal32(cmd.t,cmd)
 endClass
 
 class TypeReal64 : TypePrimitive
@@ -77,6 +101,10 @@ class TypeReal64 : TypePrimitive
     method init( t:Token )
       prior.init( t, "Real64", &is_primitive )
       stack_type = StackType.REAL64
+      op_type = OpType.REAL64
+
+    method cmd_cast( cmd:Cmd )->Cmd
+      return CastToReal64(cmd.t,cmd)
 endClass
 
 class TypeString : TypePrimitive
@@ -84,5 +112,9 @@ class TypeString : TypePrimitive
     method init( t:Token )
       prior.init( t, "String", &is_primitive )
       stack_type = StackType.STRING
+      op_type = OpType.STRING
+
+    method cmd_cast( cmd:Cmd )->Cmd
+      return CastToString(cmd.t,cmd)
 endClass
 

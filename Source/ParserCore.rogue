@@ -453,6 +453,18 @@ class ParserCore [abstract]
             _throw_syntax_error
             return
           case ip_additional_node_types
+            _push( AddInt32(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
+            _push( AddReal64(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
+            _push( AddString(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
+            _push( AddObject(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
+            _push( CastToLogical(_cur_t,_node_arg(-1)), 1 )
+            _push( CastToByte(_cur_t,_node_arg(-1)), 1 )
+            _push( CastToCharacter(_cur_t,_node_arg(-1)), 1 )
+            _push( CastToInt32(_cur_t,_node_arg(-1)), 1 )
+            _push( CastToReal32(_cur_t,_node_arg(-1)), 1 )
+            _push( CastToReal64(_cur_t,_node_arg(-1)), 1 )
+            _push( CastToString(_cur_t,_node_arg(-1)), 1 )
+            _push( CastToObject(_cur_t,_node_arg(-1)), 1 )
             _push( Literal(_cur_t), 0 )
             _push( StackPopInt32(_cur_t,_node_arg(-1)), 1 )
             _push( StackPopReal64(_cur_t,_node_arg(-1)), 1 )

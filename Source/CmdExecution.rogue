@@ -21,6 +21,28 @@ augment CmdList
       return EXE_CONTINUE
 endAugment
 
+augment AddInt32
+  METHODS
+    method execute->Int32
+      local status = left.execute
+      if (status) return status
+      local a = Program.int32_stack.remove_last
+
+      status = right.execute
+      if (status) return status
+      Program.int32_stack.last = (a + Program.int32_stack.last)
+      return EXE_CONTINUE
+endAugment
+
+augment DescriptionInt32
+  METHODS
+    method execute->Int32
+      local status = operand.execute
+      if (status) return status
+      Program.string_stack.add( Program.int32_stack.remove_last->String )
+      return EXE_CONTINUE
+endAugment
+
 augment LiteralString
   METHODS
     method execute->Int32
