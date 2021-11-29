@@ -169,13 +169,6 @@ class Print : Cmd
 
 endClass
 
-class Println : Print
-  METHODS
-    method description->String
-      return "Println($)" (%args)
-
-endClass
-
 class Statements : CmdList
   METHODS
     method description->String
@@ -206,4 +199,22 @@ class LiteralString : Literal
     method to->Logical: return value?
     method to->String: return value
 
+endClass
+
+class AST : Cmd
+  PROPERTIES
+    elements : Cmd
+
+  METHODS
+    method init( t, elements )
+
+    method description->String
+      return "AST($)" (%elements)
+
+endClass
+
+class Println : Cmd
+  METHODS
+    method description->String
+      return "Println"
 endClass

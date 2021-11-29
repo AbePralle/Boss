@@ -1,0 +1,16 @@
+module Boss
+
+class Organizer : Visitor
+  PROPERTIES
+
+  METHODS
+    method on_leave( cmd:AST )
+      forEach (element in rewriter=cmd.elements.list.rewriter)
+        if (element instanceOf Statements)
+          Program.global_statements.add( forEach in (element as Statements) )
+        else
+          rewriter.write( element )
+        endIf
+      endForEach
+endClass
+

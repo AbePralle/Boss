@@ -364,6 +364,7 @@ parser
 ----------------------------------------------------------------------
 - ast
   elements
+  produce AST(elements)
 
 - elements
   beginList
@@ -703,7 +704,11 @@ parser
 - statement
 
   on "print"   args -> Print(args)
-  on "println" args -> Println(args):Print
+  on "println"
+    args
+    create  Print(args)
+    produce Println
+  endOn
 
   expression
 

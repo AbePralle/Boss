@@ -1,5 +1,65 @@
 module Boss
 
 augment Cmd
+  METHODS
+    method require_type->Type
+      local result = type
+      if (result) return result
+      throw t.error( "Value expected." )
+
+    method require_value->Cmd
+      require_type
+      return this
+
+    method type->Type
+      return null
+endAugment
+
+augment LiteralString
+  METHODS
+    method type->Type
+      return Program.type_String
+endAugment
+
+augment LiteralLogical
+  METHODS
+    method type->Type
+      return Program.type_Logical
+endAugment
+
+augment LiteralByte
+  METHODS
+    method type->Type
+      return Program.type_Byte
+endAugment
+
+augment LiteralCharacter
+  METHODS
+    method type->Type
+      return Program.type_Character
+endAugment
+
+augment LiteralInt32
+  METHODS
+    method type->Type
+      return Program.type_Int32
+endAugment
+
+augment LiteralInt64
+  METHODS
+    method type->Type
+      return Program.type_Int64
+endAugment
+
+augment LiteralReal32
+  METHODS
+    method type->Type
+      return Program.type_Real32
+endAugment
+
+augment LiteralReal64
+  METHODS
+    method type->Type
+      return Program.type_Real64
 endAugment
 

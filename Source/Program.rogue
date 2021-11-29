@@ -1,0 +1,50 @@
+module Boss
+
+class Program [singleton]
+  PROPERTIES
+    t     : Token
+    types = StringTable<<Type>>()
+
+    is_configured  = false
+
+    type_Logical   : Type
+    type_Byte      : Type
+    type_Character : Type
+    type_Int32     : Type
+    type_Int64     : Type
+    type_Real32    : Type
+    type_Real64    : Type
+    type_String    : Type
+
+    global_statements : Statements
+
+  METHODS
+    method configure( reference_t:Token )
+      if (is_configured) return # already configured
+      t = reference_t
+
+      type_Logical   = Type( t, "Logical" ).[ is_primitive=true ]
+      type_Byte      = Type( t, "Byte" ).[ is_primitive=true ]
+      type_Character = Type( t, "Character" ).[ is_primitive=true ]
+      type_Int32     = Type( t, "Int32" ).[ is_primitive=true ]
+      type_Int64     = Type( t, "Int64" ).[ is_primitive=true ]
+      type_Real32    = Type( t, "Real32" ).[ is_primitive=true ]
+      type_Real64    = Type( t, "Real64" ).[ is_primitive=true ]
+      type_String    = Type( t, "String" )
+
+      global_statements = Statements(t)
+
+    method launch
+      resolve
+      local statements = global_statements
+      global_statements = Statements(t)
+      Executor().visit( statements )
+
+    method organize( ast:Cmd )
+      Organizer().visit( ast )
+
+    method resolve
+      local resolver = Resolver()
+      resolver.visit( global_statements )
+endClass
+

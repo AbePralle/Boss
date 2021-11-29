@@ -1,0 +1,21 @@
+module Boss
+
+class Type
+  GLOBAL METHODS
+    method create( t:Token, name:String )->Type
+      local entry = Program.types.find( name )
+      if (entry) return entry.value
+
+      local type = Type( t, name, &initialize )
+      Program.types[ name ] = type
+      return type
+
+  PROPERTIES
+    t            : Token
+    name         : String
+    is_primitive : Logical
+
+  METHODS
+    method init( t, name, initialize:Logical )
+      noAction
+endClass

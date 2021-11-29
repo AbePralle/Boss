@@ -1,0 +1,11 @@
+module Boss
+
+class Resolver : Visitor
+  PROPERTIES
+
+  METHODS
+    method on_leave( cmd:Print )
+      if (cmd.args.count == 0) throw cmd.t.error( "One or more arguments expected." )
+      (forEach in cmd.args).require_value
+endClass
+

@@ -245,6 +245,7 @@ class ParserCore [abstract]
           case ip_ast
             _execute(ip_elements)
             _pop_frame
+            _push( AST(_cur_t,_node_arg(-1)), 1 )
             return
           case ip_elements
             _begin_list
@@ -362,7 +363,8 @@ class ParserCore [abstract]
               _on_t
               _execute(ip_args)
               _pop_frame
-              _push( Println(_cur_t,_node_arg(-1)), 1 )
+              _push( Print(_cur_t,_node_arg(-1)), 1 )
+              _push( Println(_cur_t), 0 )
               return
             endIf
             _execute(ip_expression)
