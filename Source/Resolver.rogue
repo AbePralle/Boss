@@ -4,11 +4,18 @@ class Resolver : Visitor
   PROPERTIES
 
   METHODS
-    method on_leave( cmd:Print )
+    method on_visit( cmd:Print )
+      forEach (arg in rewriter=cmd.args.list.rewriter)
+        arg = visit( arg.to_description ).require_value
+        if (arg) rewriter.write( arg )
+      endForEach
+
       if (cmd.args.count == 0) throw cmd.t.error( "One or more arguments expected." )
-      (forEach in cmd.args).require_value
 
     method on_leave( cmd:Println )
-      (forEach in cmd.args).require_value
+      forEach (arg in rewriter=cmd.args.list.rewriter)
+        arg = visit( arg.to_description ).require_value
+        if (arg) rewriter.write( arg )
+      endForEach
 endClass
 

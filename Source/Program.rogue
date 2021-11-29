@@ -18,6 +18,10 @@ class Program [singleton]
 
     global_statements : Statements
 
+    int32_stack    = Int32[]
+    real64_stack   = Real64[]
+    string_stack   = String[]
+
   METHODS
     method configure( reference_t:Token )
       if (is_configured) return # already configured
@@ -30,7 +34,7 @@ class Program [singleton]
       type_Int64     = Type( t, "Int64" ).[ is_primitive=true ]
       type_Real32    = Type( t, "Real32" ).[ is_primitive=true ]
       type_Real64    = Type( t, "Real64" ).[ is_primitive=true ]
-      type_String    = Type( t, "String" )
+      type_String    = Type( t, "String" ).[ is_primitive=true ]
 
       global_statements = Statements(t)
 
@@ -38,7 +42,7 @@ class Program [singleton]
       resolve
       local statements = global_statements
       global_statements = Statements(t)
-      Executor().visit( statements )
+      statements.execute
 
     method organize( ast:Cmd )
       Organizer().visit( ast )

@@ -1,0 +1,85 @@
+module Boss
+
+augment Cmd
+  DEFINITIONS
+    EXE_CONTINUE  = 0
+    EXE_EXCEPTION = 1
+    EXE_RETURN    = 2
+
+  METHODS
+    method execute->Int32
+      throw t.error( "[INTERNAL] $.execute() is undefined."(type_name) )
+endAugment
+
+augment CmdList
+  METHODS
+    method execute->Int32
+      forEach (cmd in list)
+        local status = cmd.execute
+        if (status) return status
+      endForEach
+      return EXE_CONTINUE
+endAugment
+
+augment LiteralString
+  METHODS
+    method execute->Int32
+      Program.string_stack.add( value )
+      return EXE_CONTINUE
+endAugment
+
+augment LiteralLogical
+  METHODS
+endAugment
+
+augment LiteralByte
+  METHODS
+endAugment
+
+augment LiteralCharacter
+  METHODS
+endAugment
+
+augment LiteralInt32
+  METHODS
+endAugment
+
+augment LiteralInt64
+  METHODS
+endAugment
+
+augment LiteralReal32
+  METHODS
+endAugment
+
+augment LiteralReal64
+  METHODS
+endAugment
+
+augment LiteralPi
+  METHODS
+endAugment
+
+augment Print
+  METHODS
+    method execute->Int32
+      forEach (cmd in args.list)
+        local status = cmd.execute
+        if (status) return status
+        print Program.string_stack.remove_last
+      endForEach
+      return EXE_CONTINUE
+endAugment
+
+augment Println
+  METHODS
+    method execute->Int32
+      forEach (cmd in args.list)
+        local status = cmd.execute
+        if (status) return status
+        print Program.string_stack.remove_last
+      endForEach
+      println
+      return EXE_CONTINUE
+endAugment
+
