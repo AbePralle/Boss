@@ -69,7 +69,7 @@ class ScannerCore [abstract]
     _scan_pattern_15 = ScanPattern( "[0-9a-fA-F]" )
     _scan_pattern_16 = ScanPattern( "[ ]*" )
     _scan_table_0 = ScanTable("gW7/HQo8Ij4nQEBGJlAtVipkIWpecH1yXXQpdjp4LIEeJIEgfIEiPYEsPoEyPIE8e4FGW4FIKIFKJYFMLoFSK4FUP4FeO4FkL4FmfoFsAAABAAIBJ0QDAAgCfExbTgQAGgAFAT1UNAAdAz5eLWA9YgYAHgAwAAcBPWgxAAkBPW4fAAoACwAMAA0ADgM6gQA8gQI+gQwPAP8BPIEG/wE6gQoZAP8BPoEQ/wI6gRY+gRgpAP8BOoEcKgAQABEALgJ8gSg9gSoSADUAFAE9gTATABYCPYE4PoE6FQAXABsCPYFCPIFEGAAcACAAIQAiACMBPYFQMwAkACUCK4FaPYFcJgAvACcBOoFiKAArACwBPYFqMgAtAA==")
-    _scan_table_1 = ScanTable("hgIAE0coYYEGY4EgbYEyZYFcZoJiZ4MMaYMibINATYNSboNsb4QWcIQcUIQ2coRcc4UKdIUYdYVCd4Vw/wFMLP8BTzD/AUI0/wFBOP8BTDwBASBA/wJQRk1s/wFSSv8BT07/AVBS/wFFVv8BUlr/AVRe/wFJYv8BRWb/AVNqDwD/AUVw/wFUdP8BSHj/AU98/wFEgQD/AVOBBBAA/wF1gQr/AWeBDv8BbYES/wFlgRb/AW6BGv8BdIEeAgD/AWyBJP8BYYEo/wFzgSz/AXOBMAMA/wJvgThlgUr/AWSBPP8BdYFA/wFsgUT/AWWBSAQA/wF0gU7/AWiBUv8Bb4FW/wFkgVoVAP8CbIFiboF0/wFzgWb/AWWBagUBSYFu/wFmgXIGAP8BZIF4/wVDggRGghZJgjBSgjZXglD/AWyCCP8BYYIM/wFzghD/AXOCFAcA/wFvghr/AXKCHv8BRYIi/wFhgib/AWOCKv8BaIIuCAD/AWaCNAkA/wFvgjr/AXWCPv8BdIJC/wFpgkb/AW6CSv8BZYJOCgD/AWiCVP8BaYJY/wFsglz/AWWCYAsA/wJhgmhvgnb/AWyCbP8Bc4Jw/wFlgnQMAP8BcoJ6/wFFgn7/AWGDAv8BY4MG/wFogwoNAP8BbIMQ/wFvgxT/AWKDGP8BYYMc/wFsgyAOAP8DZoMqboMsbYMuEQASAP8BcIMy/wFvgzb/AXKDOv8BdIM+EwD/AW+DRP8BY4NI/wFhg0z/AWyDUBQA/wFFg1b/AVSDWv8BSINe/wFPg2L/AUSDZv8BU4NqFgD/Am+DcnWEDP8BQYN2/wFjg3r/AXSDfv8BaYQC/wFvhAb/AW6EChcA/wFshBD/AWyEFBgA/wFmhBoZAP8BcoQg/wFphCT/AW6EKP8BdIQsGgFshDD/AW6ENBsA/wFShDr/AU+EPv8BUIRC/wFFhEb/AVKESv8BVIRO/wFJhFL/AUWEVv8BU4RaHAD/AmWEYm+EdP8BdIRm/wF1hGr/AXKEbv8BboRyHQD/AXWEeP8BdIR8/wFphQD/AW6FBP8BZYUIHgD/AXSFDv8BZYUS/wFwhRYfAP8CaIUecoU4/wFphSL/AXOFJv8BQ4Uq/wFhhS7/AWyFMv8BbIU2IAD/AXWFPP8BZYVAIQD/Am6FSHOFZv8BZIVM/wFlhVD/AWaFVP8BaYVY/wFuhVz/AWWFYP8BZIVkIgD/AWWFav8Bc4VuIwD/AWiFdP8BaYV4/wFshXz/AWWGACQA")
+    _scan_table_1 = ScanTable("hgYAE0coYYEGY4EgbYEyZYFcZoJiZ4MMaYMibINATYNSboNsb4QWcIQcUIQ6coRgc4UOdIUcdYVGd4V0/wFMLP8BTzD/AUI0/wFBOP8BTDwBASBA/wJQRk1s/wFSSv8BT07/AVBS/wFFVv8BUlr/AVRe/wFJYv8BRWb/AVNqDwD/AUVw/wFUdP8BSHj/AU98/wFEgQD/AVOBBBAA/wF1gQr/AWeBDv8BbYES/wFlgRb/AW6BGv8BdIEeAgD/AWyBJP8BYYEo/wFzgSz/AXOBMAMA/wJvgThlgUr/AWSBPP8BdYFA/wFsgUT/AWWBSAQA/wF0gU7/AWiBUv8Bb4FW/wFkgVoVAP8CbIFiboF0/wFzgWb/AWWBagUBSYFu/wFmgXIGAP8BZIF4/wVDggRGghZJgjBSgjZXglD/AWyCCP8BYYIM/wFzghD/AXOCFAcA/wFvghr/AXKCHv8BRYIi/wFhgib/AWOCKv8BaIIuCAD/AWaCNAkA/wFvgjr/AXWCPv8BdIJC/wFpgkb/AW6CSv8BZYJOCgD/AWiCVP8BaYJY/wFsglz/AWWCYAsA/wJhgmhvgnb/AWyCbP8Bc4Jw/wFlgnQMAP8BcoJ6/wFFgn7/AWGDAv8BY4MG/wFogwoNAP8BbIMQ/wFvgxT/AWKDGP8BYYMc/wFsgyAOAP8DZoMqboMsbYMuEQASAP8BcIMy/wFvgzb/AXKDOv8BdIM+EwD/AW+DRP8BY4NI/wFhg0z/AWyDUBQA/wFFg1b/AVSDWv8BSINe/wFPg2L/AUSDZv8BU4NqFgD/Am+DcnWEDP8BQYN2/wFjg3r/AXSDfv8BaYQC/wFvhAb/AW6EChcA/wFshBD/AWyEFBgA/wFmhBoZAP8CaYQicoQkGgD/AWmEKP8BboQs/wF0hDAbAWyENP8BboQ4HAD/AVKEPv8BT4RC/wFQhEb/AUWESv8BUoRO/wFUhFL/AUmEVv8BRYRa/wFThF4dAP8CZYRmb4R4/wF0hGr/AXWEbv8BcoRy/wFuhHYeAP8BdYR8/wF0hQD/AWmFBP8BboUI/wFlhQwfAP8BdIUS/wFlhRb/AXCFGiAA/wJohSJyhTz/AWmFJv8Bc4Uq/wFDhS7/AWGFMv8BbIU2/wFshTohAP8BdYVA/wFlhUQiAP8CboVMc4Vq/wFkhVD/AWWFVP8BZoVY/wFphVz/AW6FYP8BZYVk/wFkhWgjAP8BZYVu/wFzhXIkAP8BaIV4/wFphXz/AWyGAP8BZYYEJQA=")
     _scan_table_2 = ScanTable("RgACUAZNLP8BUgr/AU8O/wFQEv8BRRb/AVIa/wFUHv8BSSL/AUUm/wFTKgEA/wFFMP8BVDT/AUg4/wFPPP8BRED/AVNEAgA=")
     _scan_table_3 = ScanTable("EgABMAT/A2IMYw54EAEAAgADAA==")
 
@@ -515,36 +515,39 @@ class ScannerCore [abstract]
                   _add( TokenType.KEYWORD_OF )
                   return false
                 case 26
-                  _add( TokenType.KEYWORD_PRINT )
+                  _add( TokenType.KEYWORD_PI )
                   return false
                 case 27
-                  _add( TokenType.KEYWORD_PRINTLN )
+                  _add( TokenType.KEYWORD_PRINT )
                   return false
                 case 28
-                  _add( TokenType.KEYWORD_PROPERTIES )
+                  _add( TokenType.KEYWORD_PRINTLN )
                   return false
                 case 29
-                  _add( TokenType.KEYWORD_RETURN )
+                  _add( TokenType.KEYWORD_PROPERTIES )
                   return false
                 case 30
-                  _add( TokenType.KEYWORD_ROUTINE )
+                  _add( TokenType.KEYWORD_RETURN )
                   return false
                 case 31
-                  _add( TokenType.KEYWORD_STEP )
+                  _add( TokenType.KEYWORD_ROUTINE )
                   return false
                 case 32
-                  _add( TokenType.KEYWORD_THIS_CALL )
+                  _add( TokenType.KEYWORD_STEP )
                   return false
                 case 33
-                  _add( TokenType.KEYWORD_TRUE )
+                  _add( TokenType.KEYWORD_THIS_CALL )
                   return false
                 case 34
-                  _add( TokenType.KEYWORD_UNDEFINED )
+                  _add( TokenType.KEYWORD_TRUE )
                   return false
                 case 35
-                  _add( TokenType.KEYWORD_USES )
+                  _add( TokenType.KEYWORD_UNDEFINED )
                   return false
                 case 36
+                  _add( TokenType.KEYWORD_USES )
+                  return false
+                case 37
                   _add( TokenType.KEYWORD_WHILE )
                   return false
                 others

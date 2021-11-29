@@ -63,3 +63,9 @@ augment LiteralReal64
       return Program.type_Real64
 endAugment
 
+augment LiteralPi
+  METHODS
+    method type->Type
+      return Program.type_Real64
+endAugment
+

@@ -7,5 +7,8 @@ class Resolver : Visitor
     method on_leave( cmd:Print )
       if (cmd.args.count == 0) throw cmd.t.error( "One or more arguments expected." )
       (forEach in cmd.args).require_value
+
+    method on_leave( cmd:Println )
+      (forEach in cmd.args).require_value
 endClass
 

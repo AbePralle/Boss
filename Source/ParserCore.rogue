@@ -352,6 +352,10 @@ class ParserCore [abstract]
             _pop_frame
             return
           case ip_statement
+            if (_next_t.type == TokenType.KEYWORD_NO_ACTION)
+              _on_t
+              return
+            endIf
             if (_next_t.type == TokenType.KEYWORD_PRINT)
               _on_t
               _execute(ip_args)
@@ -382,6 +386,38 @@ class ParserCore [abstract]
             if (_next_t.type == TokenType.INTEGER)
               _on_t
               _push( LiteralInt32(_cur_t,_string_to_Integer(_cur_t.content)), 0 )
+              return
+            endIf
+            if (_next_t.type == TokenType.REAL_NUMBER)
+              _on_t
+              _push( LiteralReal64(_cur_t,_string_to_Real(_cur_t.content)), 0 )
+              return
+            endIf
+            if (_next_t.type == TokenType.CHARACTER)
+              _on_t
+              _push( LiteralCharacter(_cur_t,_string_to_Character(_cur_t.content)), 0 )
+              return
+            endIf
+            if (_next_t.type == TokenType.KEYWORD_TRUE)
+              _on_t
+              _push( LiteralLogical(_cur_t,_string_to_Logical("true")), 0 )
+              return
+            endIf
+            if (_next_t.type == TokenType.KEYWORD_FALSE)
+              _on_t
+              _push( LiteralLogical(_cur_t,_string_to_Logical("false")), 0 )
+              return
+            endIf
+            if (_next_t.type == TokenType.SYMBOL_OPEN_PAREN)
+              _on_t
+              _execute(ip_expression)
+              _pop_frame
+              if (not _consume(TokenType.SYMBOL_CLOSE_PAREN)) _throw_syntax_error( &expected=TokenType.SYMBOL_CLOSE_PAREN )
+              return
+            endIf
+            if (_next_t.type == TokenType.KEYWORD_PI)
+              _on_t
+              _push( LiteralPi(_cur_t), 0 )
               return
             endIf
             _throw_syntax_error

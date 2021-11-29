@@ -43,6 +43,7 @@ KEYWORD_METHODS      METHODS     [structural]
 KEYWORD_NO_ACTION    noAction
 KEYWORD_NULL         null
 KEYWORD_OF           of
+KEYWORD_PI           pi
 KEYWORD_PRINT        print
 KEYWORD_PRINTLN      println
 KEYWORD_PROPERTIES   PROPERTIES  [structural]
@@ -703,6 +704,7 @@ parser
 
 - statement
 
+  on "noAction": return
   on "print"   args -> Print(args)
   on "println" args -> Println(args)
 
@@ -801,15 +803,17 @@ parser
 }#
 
 - term
-  on STRING  -> LiteralString(value=content):Literal
-  on INTEGER -> LiteralInt32(value=content:Integer)
+  on STRING      -> LiteralString(value=content):Literal
+  on INTEGER     -> LiteralInt32(value=content:Integer)
+  on REAL_NUMBER -> LiteralReal64(value=content:Real)
+  on CHARACTER   -> LiteralCharacter(value=content:Character)
 #{
   on IDENTIFIER -> Access( value=t.content:String )
-  on "true"     -> True
-  on "false"    -> False
-  on '(', expression, ')': return
-  on "noAction" -> NoAction
 }#
+  on "true"     -> LiteralLogical(value="true":Logical)
+  on "false"    -> LiteralLogical(value="false":Logical)
+  on '(', expression, ')': return
+  on "pi"       -> LiteralPi
   syntaxError
 
 - additional_node_types

@@ -239,3 +239,63 @@ class LiteralInt32 : Cmd
     method to->String:    return value
 
 endClass
+
+class LiteralLogical : Cmd
+  PROPERTIES
+    value : Logical
+
+  METHODS
+    method init( t, value )
+
+    method description->String
+      return "LiteralLogical($)" (%value)
+
+    method to->Int32:   return which{value:1 || 0}
+    method to->Logical: return value
+    method to->String:  return which{value:"true" || "false"}
+
+endClass
+
+
+class LiteralReal64 : Cmd
+  PROPERTIES
+    value : Real64
+
+  METHODS
+    method init( t, value )
+
+    method description->String
+      return "LiteralReal64($)" (%value)
+
+    method to->Int32:  return value
+    method to->Real64: return value
+    method to->String: return value
+
+endClass
+
+class LiteralPi : Cmd
+  METHODS
+    method description->String
+      return "LiteralPi"
+
+    method to->Int32:  return 3
+    method to->Real64: return pi
+    method to->String: return pi->String
+endClass
+
+
+class LiteralCharacter : Cmd
+  PROPERTIES
+    value : Character
+
+  METHODS
+    method init( t, value )
+
+    method description->String
+      return "LiteralCharacter($)" (%value)
+
+    method to->Character: return value
+    method to->Int32:     return value
+    method to->String:    return value
+
+endClass
