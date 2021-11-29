@@ -327,3 +327,59 @@ class StackPopString : Unary
       return "StackPopString($)" (%operand)
 
 endClass
+
+class Add : Binary
+  METHODS
+    method description->String
+      return "Add($,$)" (%left,%right)
+
+endClass
+
+class Subtract : Binary
+  METHODS
+    method description->String
+      return "Subtract($,$)" (%left,%right)
+
+endClass
+
+class Description : Unary
+  METHODS
+    method description->String
+      return "Description($)" (%operand)
+
+endClass
+
+class DescriptionInt32 : Unary
+  METHODS
+    method description->String
+      return "DescriptionInt32($)" (%operand)
+
+endClass
+
+class DescriptionObject : Unary
+  METHODS
+    method description->String
+      return "DescriptionObject($)" (%operand)
+
+endClass
+
+class DescriptionReal64 : Unary
+  METHODS
+    method description->String
+      return "DescriptionReal64($)" (%operand)
+
+endClass
+
+class DescriptionString : Unary
+  METHODS
+    method description->String
+      return "DescriptionString($)" (%operand)
+
+endClass
+
+class DescriptionLogical : Unary
+  METHODS
+    method description->String
+      return "DescriptionLogical($)" (%operand)
+
+endClass

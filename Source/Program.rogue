@@ -11,7 +11,6 @@ class Program [singleton]
     type_Byte      : Type
     type_Character : Type
     type_Int32     : Type
-    type_Int64     : Type
     type_Real32    : Type
     type_Real64    : Type
     type_String    : Type
@@ -31,7 +30,6 @@ class Program [singleton]
       type_Byte      = TypeByte(t)
       type_Character = TypeCharacter(t)
       type_Int32     = TypeInt32(t)
-      type_Int64     = TypeInt64(t)
       type_Real32    = TypeReal32(t)
       type_Real64    = TypeReal64(t)
       type_String    = TypeString(t)

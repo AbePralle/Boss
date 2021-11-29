@@ -629,7 +629,7 @@ parser
   on IDENTIFIER -> Name( value=t.content:String )
   mustConsume IDENTIFIER  # previous line didn't match; throw an error
 
-- module_name : BinaryParseRule
+- module_name [binary]
   on "::" -> Scope
 
 - module_segment
@@ -757,16 +757,16 @@ parser
 }#
 
 - expression
-  term
+  add_subtract
 
 #{
-- logical_xor  : BinaryParseRule
+- logical_xor  [binary]
 
-- logical_or   : BinaryParseRule
+- logical_or   [binary]
 
-- logical_and  : BinaryParseRule
+- logical_and  [binary]
 
-- comparison : BinaryParseRule
+- comparison [binary]
   on "==" -> CompareEQ
   on "!=" -> CompareNE
   on "<"  -> CompareLT
@@ -774,32 +774,34 @@ parser
   on "<=" -> CompareLE
   on ">=" -> CompareGE
 
-- bitwise_xor : BinaryParseRule
+- bitwise_xor [binary]
 
-- bitwise_or  : BinaryParseRule
+- bitwise_or  [binary]
 
-- bitwise_and : BinaryParseRule
+- bitwise_and [binary]
 
-- bitwise_shift : BinaryParseRule
+- bitwise_shift [binary]
+}#
 
-- add_subtract : BinaryParseRule
+- add_subtract [binary]
   on "+" -> Add
   on "-" -> Subtract
 
-- multiply_divide : BinaryParseRule
+#{
+- multiply_divide [binary]
   on "*" -> Multiply
   on "/" -> Divide
 
-- pre_unary : PreUnaryParseRule
+- pre_unary [preUnary]
   on "-"  -> Negate
   on "++" -> PreIncrement
   on "--" -> PreDecrement
 
-- post_unary : PostUnaryParseRule
+- post_unary [postUnary]
   on "++" -> PostIncrement
   on "--" -> PostDecrement
 
-- access : BinaryParseRule
+- access [binary]
 }#
 
 - term
@@ -822,4 +824,9 @@ parser
   create StackPopReal64(operand):Unary
   create StackPopString(operand):Unary
   create StackPopObject(operand):Unary
+  create Description(operand):Unary
+  create DescriptionInt32(operand):Unary
+  create DescriptionLogical(operand):Unary
+  create DescriptionReal64(operand):Unary
+  create DescriptionObject(operand):Unary
 

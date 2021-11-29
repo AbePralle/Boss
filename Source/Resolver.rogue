@@ -4,6 +4,18 @@ class Resolver : Visitor
   PROPERTIES
 
   METHODS
+    method on( cmd:Description )->Cmd
+      local operand = visit( cmd.operand ).require_value
+      local type = operand.type
+      which (type.stack_type)
+        case StackType.INT32
+          if (type is Program.type_Logical) return DescriptionLogical(cmd.t,cmd)
+          else                              return DescriptionInt32(cmd.t,cmd)
+        case StackType.STRING: return operand
+        case StackType.OBJECT: return DescriptionObject(cmd.t,cmd)
+        others:                return DescriptionReal64(cmd.t,cmd)
+      endWhich
+
     method on_visit( cmd:Statements )
       forEach (arg in rewriter=cmd.list.rewriter)
         arg = visit( arg )
@@ -14,7 +26,7 @@ class Resolver : Visitor
 
     method on_visit( cmd:Print )
       forEach (arg in rewriter=cmd.args.list.rewriter)
-        arg = visit( visit(arg).to_description ).require_value
+        arg = visit( Description(arg.t,arg) ).require_value
         if (arg) rewriter.write( arg )
       endForEach
 
@@ -22,7 +34,7 @@ class Resolver : Visitor
 
     method on_leave( cmd:Println )
       forEach (arg in rewriter=cmd.args.list.rewriter)
-        arg = visit( visit(arg).to_description ).require_value
+        arg = visit( Description(arg.t,arg) ).require_value
         if (arg) rewriter.write( arg )
       endForEach
 endClass

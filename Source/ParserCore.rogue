@@ -23,8 +23,10 @@ class ParserCore [abstract]
     ip_arg = 10
     ip_statement = 11
     ip_expression = 12
-    ip_term = 13
-    ip_additional_node_types = 14
+    ip_add_subtract = 13
+    ip_add_subtract__inner = 14
+    ip_term = 15
+    ip_additional_node_types = 16
 
   PROPERTIES
     _tokens          : Token[]
@@ -374,8 +376,36 @@ class ParserCore [abstract]
             _pop_frame
             return
           case ip_expression
+            _execute(ip_add_subtract)
+            _pop_frame
+            return
+          case ip_add_subtract
             _execute(ip_term)
             _pop_frame
+            _execute(ip_add_subtract__inner)
+            _pop_frame
+            return
+          case ip_add_subtract__inner
+            if (_next_t.type == TokenType.SYMBOL_PLUS)
+              _on_t
+              _consume_eols
+              _execute(ip_term)
+              _pop_frame
+              _push( Add(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
+              _execute(ip_add_subtract__inner)
+              _pop_frame
+              return
+            endIf
+            if (_next_t.type == TokenType.SYMBOL_MINUS)
+              _on_t
+              _consume_eols
+              _execute(ip_term)
+              _pop_frame
+              _push( Subtract(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
+              _execute(ip_add_subtract__inner)
+              _pop_frame
+              return
+            endIf
             return
           case ip_term
             if (_next_t.type == TokenType.STRING)
@@ -428,6 +458,11 @@ class ParserCore [abstract]
             _push( StackPopReal64(_cur_t,_node_arg(-1)), 1 )
             _push( StackPopString(_cur_t,_node_arg(-1)), 1 )
             _push( StackPopObject(_cur_t,_node_arg(-1)), 1 )
+            _push( Description(_cur_t,_node_arg(-1)), 1 )
+            _push( DescriptionInt32(_cur_t,_node_arg(-1)), 1 )
+            _push( DescriptionLogical(_cur_t,_node_arg(-1)), 1 )
+            _push( DescriptionReal64(_cur_t,_node_arg(-1)), 1 )
+            _push( DescriptionObject(_cur_t,_node_arg(-1)), 1 )
             return
           others
             return

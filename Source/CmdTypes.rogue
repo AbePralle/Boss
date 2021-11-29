@@ -2,6 +2,21 @@ module Boss
 
 augment Cmd
   METHODS
+    method common_type( a:Type, b:Type )->Type
+      if (a is b) return a
+      if (not a or not b) return null
+      if (a.is_primitive and b.is_primitive)
+        local type = Program.type_String
+        if (a is type or b is type) return type
+        type = Program.type_Real64
+        if (a is type or b is type) return type
+        type = Program.type_Real32
+        if (a is type or b is type) return type
+        return Program.type_Int32  # any mismatched pair Byte/Character/Int32 -> Int32
+      else
+        return Program.type_String # Placeholder
+      endIf
+
     method require_type->Type
       local result = type
       if (result) return result
@@ -11,90 +26,66 @@ augment Cmd
       require_type
       return this
 
-    method to_description->Cmd
-      throw t.error( "[INTERNAL] $.to_description() is undefined."(type_name) )
-
     method type->Type
       return null
 endAugment
 
+augment Unary
+  METHODS
+    method type->Type
+      return operand.type
+endAugment
+
+augment Binary
+  METHODS
+    method type->Type
+      return common_type( left.type, right.type )
+endAugment
+
 augment LiteralString
   METHODS
-    method to_description->Cmd
-      return this
-
     method type->Type
       return Program.type_String
 endAugment
 
 augment LiteralLogical
   METHODS
-    method to_description->Cmd
-      return LiteralString( t, value->String )
-
     method type->Type
       return Program.type_Logical
 endAugment
 
 augment LiteralByte
   METHODS
-    method to_description->Cmd
-      return LiteralString( t, value->String )
-
     method type->Type
       return Program.type_Byte
 endAugment
 
 augment LiteralCharacter
   METHODS
-    method to_description->Cmd
-      return LiteralString( t, value->String )
-
     method type->Type
       return Program.type_Character
 endAugment
 
 augment LiteralInt32
   METHODS
-    method to_description->Cmd
-      return LiteralString( t, value->String )
-
     method type->Type
       return Program.type_Int32
 endAugment
 
-augment LiteralInt64
-  METHODS
-    method to_description->Cmd
-      return LiteralString( t, value->String )
-
-    method type->Type
-      return Program.type_Int64
-endAugment
-
 augment LiteralReal32
   METHODS
-    method to_description->Cmd
-      return LiteralString( t, value->String )
-
     method type->Type
       return Program.type_Real32
 endAugment
 
 augment LiteralReal64
   METHODS
-    method to_description->Cmd
-      return LiteralString( t, value->String )
-
     method type->Type
       return Program.type_Real64
 endAugment
 
 augment LiteralPi
   METHODS
-    method to_description->Cmd
-      return LiteralString( t, pi->String )
-
     method type->Type
       return Program.type_Real64
 endAugment
