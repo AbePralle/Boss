@@ -823,22 +823,30 @@ parser
   create AddReal64(left,right):Binary
   create AddString(left,right):Binary
   create AddObject(left,right):Binary
-  create CastToLogical(operand):Unary
-  create CastToByte(operand):Unary
-  create CastToCharacter(operand):Unary
   create CastToInt32(operand):Unary
-  create CastToReal32(operand):Unary
+  create CastReal64ToInt32(operand):Unary
+  create CastStringToInt32(operand):Unary
+  create CastObjectToInt32(operand):Unary
   create CastToReal64(operand):Unary
+  create CastInt32ToReal64(operand):Unary
+  create CastStringToReal64(operand):Unary
+  create CastObjectToReal64(operand):Unary
   create CastToString(operand):Unary
+  create CastInt32ToString(operand):Unary
+  create CastReal64ToString(operand):Unary
+  create CastObjectToString(operand):Unary
   create CastToObject(operand):Unary
+  create CastInt32ToObject(operand):Unary
+  create CastReal64ToObject(operand):Unary
+  create CastStringToObject(operand):Unary
   create Literal
-  #create StackPopInt32(operand):Unary
-  #create StackPopReal64(operand):Unary
-  #create StackPopString(operand):Unary
-  #create StackPopObject(operand):Unary
   create Description(operand):Unary
   create DescriptionInt32(operand):Unary
   create DescriptionLogical(operand):Unary
   create DescriptionReal64(operand):Unary
   create DescriptionObject(operand):Unary
+  create SubtractInt32(left,right):Binary
+  create SubtractReal64(left,right):Binary
+  create SubtractString(left,right):Binary
+  create SubtractObject(left,right):Binary
 

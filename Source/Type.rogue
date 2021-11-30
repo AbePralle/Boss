@@ -51,7 +51,7 @@ class TypeLogical : TypePrimitive
       op_type = OpType.LOGICAL
 
     method cmd_cast( cmd:Cmd )->Cmd
-      return CastToLogical(cmd.t,cmd)
+      return CastToInt32(cmd.t,cmd)
 endClass
 
 class TypeByte : TypePrimitive
@@ -62,7 +62,7 @@ class TypeByte : TypePrimitive
       op_type = OpType.INT32
 
     method cmd_cast( cmd:Cmd )->Cmd
-      return CastToByte(cmd.t,cmd)
+      return CastToInt32(cmd.t,cmd)
 endClass
 
 class TypeCharacter : TypePrimitive
@@ -73,7 +73,7 @@ class TypeCharacter : TypePrimitive
       op_type = OpType.INT32
 
     method cmd_cast( cmd:Cmd )->Cmd
-      return CastToCharacter(cmd.t,cmd)
+      return CastToInt32(cmd.t,cmd)
 endClass
 
 class TypeInt32 : TypePrimitive
@@ -95,7 +95,7 @@ class TypeReal32 : TypePrimitive
       op_type = OpType.REAL64
 
     method cmd_cast( cmd:Cmd )->Cmd
-      return CastToReal32(cmd.t,cmd)
+      return CastToReal64(cmd.t,cmd)
 endClass
 
 class TypeReal64 : TypePrimitive

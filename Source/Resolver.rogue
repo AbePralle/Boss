@@ -5,21 +5,35 @@ class Resolver : Visitor
 
   METHODS
     method on( cmd:Add )->Cmd
+      on_visit( cmd as Binary )  # resolves children & converts to common type
+      local t = cmd.t
+      which (cmd.left.type.op_type)
+        case OpType.INT32:  return AddInt32(t,cmd.left,cmd.right)
+        case OpType.REAL64: return AddReal64(t,cmd.left,cmd.right)
+        case OpType.STRING: return AddString(t,cmd.left,cmd.right)
+        case OpType.OBJECT: return AddObject(t,cmd.left,cmd.right)
+        others:             throw t.error( "TODO: Add LOGICAL" )
+      endWhich
+
+    method on_visit( cmd:Binary )
       visit_children( cmd )
       local left = cmd.left
       local right = cmd.right
       local left_type = left.require_type
       local right_type = right.require_type
       local result_type = Cmd.common_type( left_type, right_type )
-      if (left_type is not result_type) left = visit( result_type.cmd_cast(left) )
-      if (right_type is not result_type) right = visit( result_type.cmd_cast(right) )
+      if (left_type is not result_type) cmd.left = visit( result_type.cmd_cast(left) )
+      if (right_type is not result_type) cmd.right = visit( result_type.cmd_cast(right) )
+
+    method on( cmd:CastToReal64 )->Cmd
+      local operand = visit( cmd.operand ).require_value
+      local type = operand.type
       local t = cmd.t
-      which (result_type.op_type)
-        case OpType.INT32:  return AddInt32(t,left,right)
-        case OpType.REAL64: return AddReal64(t,left,right)
-        case OpType.STRING: return AddString(t,left,right)
-        case OpType.OBJECT: return AddObject(t,left,right)
-        others:             throw t.error( "TODO: Add LOGICAL" )
+      which (type.stack_type)
+        case OpType.INT32:  return CastInt32ToReal64(t,operand)
+        case OpType.REAL64: return operand
+        case OpType.STRING: return CastStringToReal64(t,operand)
+        others:             return CastObjectToReal64(t,operand)
       endWhich
 
     method on( cmd:Description )->Cmd
@@ -55,5 +69,16 @@ class Resolver : Visitor
         arg = visit( Description(arg.t,arg) ).require_value
         if (arg) rewriter.write( arg )
       endForEach
+
+    method on( cmd:Subtract )->Cmd
+      on_visit( cmd as Binary )  # resolves children & converts to common type
+      local t = cmd.t
+      which (cmd.left.type.op_type)
+        case OpType.INT32:  return SubtractInt32(t,cmd.left,cmd.right)
+        case OpType.REAL64: return SubtractReal64(t,cmd.left,cmd.right)
+        case OpType.STRING: return SubtractString(t,cmd.left,cmd.right)
+        case OpType.OBJECT: return SubtractObject(t,cmd.left,cmd.right)
+        others:             throw t.error( "TODO: Subtract LOGICAL" )
+      endWhich
 endClass
 

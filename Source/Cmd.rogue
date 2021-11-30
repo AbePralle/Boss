@@ -407,24 +407,10 @@ class AddString : Binary
 
 endClass
 
-class CastToCharacter : Unary
-  METHODS
-    method description->String
-      return "CastToCharacter($)" (%operand)
-
-endClass
-
 class CastToInt32 : Unary
   METHODS
     method description->String
       return "CastToInt32($)" (%operand)
-
-endClass
-
-class CastToLogical : Unary
-  METHODS
-    method description->String
-      return "CastToLogical($)" (%operand)
 
 endClass
 
@@ -436,13 +422,6 @@ class CastToObject( t, operand, to_type:Type ) : Unary
 
     method description->String
       return "CastToObject($,$)" (%operand,%to_type)
-
-endClass
-
-class CastToReal32 : Unary
-  METHODS
-    method description->String
-      return "CastToReal32($)" (%operand)
 
 endClass
 
@@ -460,9 +439,114 @@ class CastToString : Unary
 
 endClass
 
-class CastToByte : Unary
+class SubtractInt32 : Binary
   METHODS
     method description->String
-      return "CastToByte($)" (%operand)
+      return "SubtractInt32($,$)" (%left,%right)
+
+endClass
+
+class SubtractObject : Binary
+  METHODS
+    method description->String
+      return "SubtractObject($,$)" (%left,%right)
+
+endClass
+
+class SubtractReal64 : Binary
+  METHODS
+    method description->String
+      return "SubtractReal64($,$)" (%left,%right)
+
+endClass
+
+class SubtractString : Binary
+  METHODS
+    method description->String
+      return "SubtractString($,$)" (%left,%right)
+
+endClass
+
+class CastInt32ToObject : Unary
+  METHODS
+    method description->String
+      return "CastInt32ToObject($)" (%operand)
+
+endClass
+
+class CastInt32ToReal64 : Unary
+  METHODS
+    method description->String
+      return "CastInt32ToReal64($)" (%operand)
+
+endClass
+
+class CastInt32ToString : Unary
+  METHODS
+    method description->String
+      return "CastInt32ToString($)" (%operand)
+
+endClass
+
+class CastObjectToInt32 : Unary
+  METHODS
+    method description->String
+      return "CastObjectToInt32($)" (%operand)
+
+endClass
+
+class CastObjectToReal64 : Unary
+  METHODS
+    method description->String
+      return "CastObjectToReal64($)" (%operand)
+
+endClass
+
+class CastObjectToString : Unary
+  METHODS
+    method description->String
+      return "CastObjectToString($)" (%operand)
+
+endClass
+
+class CastReal64ToInt32 : Unary
+  METHODS
+    method description->String
+      return "CastReal64ToInt32($)" (%operand)
+
+endClass
+
+class CastReal64ToObject : Unary
+  METHODS
+    method description->String
+      return "CastReal64ToObject($)" (%operand)
+
+endClass
+
+class CastReal64ToString : Unary
+  METHODS
+    method description->String
+      return "CastReal64ToString($)" (%operand)
+
+endClass
+
+class CastStringToInt32 : Unary
+  METHODS
+    method description->String
+      return "CastStringToInt32($)" (%operand)
+
+endClass
+
+class CastStringToObject : Unary
+  METHODS
+    method description->String
+      return "CastStringToObject($)" (%operand)
+
+endClass
+
+class CastStringToReal64 : Unary
+  METHODS
+    method description->String
+      return "CastStringToReal64($)" (%operand)
 
 endClass

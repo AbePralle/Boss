@@ -26,11 +26,46 @@ augment AddInt32
       return true
 endAugment
 
+augment AddReal64
+  METHODS
+    method execute->Logical
+      if (not left.execute) return false
+      local a = Program.result_Real64
+
+      if (not right.execute) return false
+      Program.result_Real64 += a
+      return true
+endAugment
+
+augment CastInt32ToReal64
+  METHODS
+    method execute->Logical
+      if (not operand.execute) return false
+      Program.result_Real64 = Program.result_Int32->Real64
+      return true
+endAugment
+
+augment CastStringToReal64
+  METHODS
+    method execute->Logical
+      if (not operand.execute) return false
+      Program.result_Real64 = Program.result_String->Real64
+      return true
+endAugment
+
 augment DescriptionInt32
   METHODS
     method execute->Logical
       if (not operand.execute) return false
       Program.result_String = Program.result_Int32->String
+      return true
+endAugment
+
+augment DescriptionReal64
+  METHODS
+    method execute->Logical
+      if (not operand.execute) return false
+      Program.result_String = Program.result_Real64->String
       return true
 endAugment
 
@@ -111,42 +146,25 @@ augment Println
       return true
 endAugment
 
-#{
-augment StackPopInt32
+augment SubtractInt32
   METHODS
     method execute->Logical
-      local status = operand.execute
-      if (status) return status
-      Program.int32_stack.remove_last
-      return EXE_CONTINUE
+      if (not left.execute) return false
+      local a = Program.result_Int32
+
+      if (not right.execute) return false
+      Program.result_Int32 = a - Program.result_Int32
+      return true
 endAugment
 
-augment StackPopObject
+augment SubtractReal64
   METHODS
-    #{
     method execute->Logical
-      local status = operand.execute
-      if (status) return status
-      Program.object_stack.remove_last
-      return EXE_CONTINUE
-      }#
+      if (not left.execute) return false
+      local a = Program.result_Real64
+
+      if (not right.execute) return false
+      Program.result_Real64 = a - Program.result_Real64
+      return true
 endAugment
 
-augment StackPopReal64
-  METHODS
-    method execute->Logical
-      local status = operand.execute
-      if (status) return status
-      Program.real64_stack.remove_last
-      return EXE_CONTINUE
-endAugment
-
-augment StackPopString
-  METHODS
-    method execute->Logical
-      local status = operand.execute
-      if (status) return status
-      Program.string_stack.remove_last
-      return EXE_CONTINUE
-endAugment
-}#
