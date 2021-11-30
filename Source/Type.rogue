@@ -23,6 +23,7 @@ class Type
     method cmd_cast( cmd:Cmd )->Cmd
       return CastToObject( cmd.t, cmd, this )
 
+      #{
     method cmd_stack_pop( cmd:Cmd )->Cmd
       which (stack_type)
         case StackType.INT32:  return StackPopInt32(cmd.t,cmd)
@@ -30,6 +31,7 @@ class Type
         case StackType.OBJECT: return StackPopObject(cmd.t,cmd)
         others:                return StackPopReal64(cmd.t,cmd)
       endWhich
+      }#
 
     method description->String
       return name

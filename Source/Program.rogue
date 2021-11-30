@@ -1,6 +1,17 @@
 module Boss
 
 class Program [singleton]
+  DEFINITIONS
+    EXE_CONTINUE  = 0
+    EXE_EXCEPTION = 1
+    EXE_RETURN    = 2
+
+  GLOBAL PROPERTIES
+    execution_status : Int32
+    result_Int32     : Int32
+    result_Real64    : Real64
+    result_String    : String
+
   PROPERTIES
     t     : Token
     types = StringTable<<Type>>()

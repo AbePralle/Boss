@@ -1,133 +1,120 @@
 module Boss
 
 augment Cmd
-  DEFINITIONS
-    EXE_CONTINUE  = 0
-    EXE_EXCEPTION = 1
-    EXE_RETURN    = 2
-
   METHODS
-    method execute->Int32
+    method execute->Logical
       throw t.error( "[INTERNAL] $.execute() is undefined."(type_name) )
 endAugment
 
 augment CmdList
   METHODS
-    method execute->Int32
+    method execute->Logical
       forEach (cmd in list)
-        local status = cmd.execute
-        if (status) return status
+        if (not cmd.execute) return false
       endForEach
-      return EXE_CONTINUE
+      return true
 endAugment
 
 augment AddInt32
   METHODS
-    method execute->Int32
-      local status = left.execute
-      if (status) return status
-      local a = Program.int32_stack.remove_last
+    method execute->Logical
+      if (not left.execute) return false
+      local a = Program.result_Int32
 
-      status = right.execute
-      if (status) return status
-      Program.int32_stack.last = (a + Program.int32_stack.last)
-      return EXE_CONTINUE
+      if (not right.execute) return false
+      Program.result_Int32 += a
+      return true
 endAugment
 
 augment DescriptionInt32
   METHODS
-    method execute->Int32
-      local status = operand.execute
-      if (status) return status
-      Program.string_stack.add( Program.int32_stack.remove_last->String )
-      return EXE_CONTINUE
+    method execute->Logical
+      if (not operand.execute) return false
+      Program.result_String = Program.result_Int32->String
+      return true
 endAugment
 
 augment LiteralString
   METHODS
-    method execute->Int32
-      Program.string_stack.add( value )
-      return EXE_CONTINUE
+    method execute->Logical
+      Program.result_String = value
+      return true
 endAugment
 
 augment LiteralLogical
   METHODS
-    method execute->Int32
-      Program.int32_stack.add( which{value:1||0} )
-      return EXE_CONTINUE
+    method execute->Logical
+      Program.result_Int32 = which{ value:1 || 0 }
+      return true
 endAugment
 
 augment LiteralByte
   METHODS
-    method execute->Int32
-      Program.int32_stack.add( value )
-      return EXE_CONTINUE
+    method execute->Logical
+      Program.result_Int32 = value
+      return true
 endAugment
 
 augment LiteralCharacter
   METHODS
-    method execute->Int32
-      Program.int32_stack.add( value )
-      return EXE_CONTINUE
+    method execute->Logical
+      Program.result_Int32 = value
+      return true
 endAugment
 
 augment LiteralInt32
   METHODS
-    method execute->Int32
-      Program.int32_stack.add( value )
-      return EXE_CONTINUE
-endAugment
-
-augment LiteralInt64
+    method execute->Logical
+      Program.result_Int32 = value
+      return true
 endAugment
 
 augment LiteralReal32
   METHODS
-    method execute->Int32
-      Program.real64_stack.add( value )
-      return EXE_CONTINUE
+    method execute->Logical
+      Program.result_Real64 = value
+      return true
 endAugment
 
 augment LiteralReal64
   METHODS
-    method execute->Int32
-      Program.real64_stack.add( value )
-      return EXE_CONTINUE
+    method execute->Logical
+      Program.result_Real64 = value
+      return true
 endAugment
 
 augment LiteralPi
   METHODS
-    method execute->Int32
-      Program.real64_stack.add( pi )
-      return EXE_CONTINUE
+    method execute->Logical
+      Program.result_Real64 = pi
+      return true
 endAugment
 
 augment Print
   METHODS
-    method execute->Int32
+    method execute->Logical
       forEach (cmd in args.list)
-        local status = cmd.execute
-        if (status) return status
-        print Program.string_stack.remove_last
+        if (not cmd.execute) return false
+        print Program.result_String
       endForEach
-      return EXE_CONTINUE
+      return true
 endAugment
 
 augment Println
   METHODS
-    method execute->Int32
+    method execute->Logical
       forEach (cmd in args.list)
-        local status = cmd.execute
-        if (status) return status
-        print Program.string_stack.remove_last
+        if (not cmd.execute) return false
+        print Program.result_String
       endForEach
       println
-      return EXE_CONTINUE
+      return true
 endAugment
 
+#{
 augment StackPopInt32
   METHODS
-    method execute->Int32
+    method execute->Logical
       local status = operand.execute
       if (status) return status
       Program.int32_stack.remove_last
@@ -137,7 +124,7 @@ endAugment
 augment StackPopObject
   METHODS
     #{
-    method execute->Int32
+    method execute->Logical
       local status = operand.execute
       if (status) return status
       Program.object_stack.remove_last
@@ -147,7 +134,7 @@ endAugment
 
 augment StackPopReal64
   METHODS
-    method execute->Int32
+    method execute->Logical
       local status = operand.execute
       if (status) return status
       Program.real64_stack.remove_last
@@ -156,9 +143,10 @@ endAugment
 
 augment StackPopString
   METHODS
-    method execute->Int32
+    method execute->Logical
       local status = operand.execute
       if (status) return status
       Program.string_stack.remove_last
       return EXE_CONTINUE
 endAugment
+}#

@@ -37,9 +37,9 @@ class Resolver : Visitor
     method on_visit( cmd:Statements )
       forEach (arg in rewriter=cmd.list.rewriter)
         arg = visit( arg )
-        local type = arg.type
-        if (type) arg = type.cmd_stack_pop( arg )
-        rewriter.write( arg )
+        if (arg) rewriter.write( arg )
+        #local type = arg.type
+        #if (type) arg = type.cmd_stack_pop( arg )
       endForEach
 
     method on_visit( cmd:Print )

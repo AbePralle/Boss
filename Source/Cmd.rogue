@@ -300,6 +300,7 @@ class LiteralCharacter : Cmd
 
 endClass
 
+#{
 class StackPopInt32 : Unary
   METHODS
     method description->String
@@ -327,6 +328,7 @@ class StackPopString : Unary
       return "StackPopString($)" (%operand)
 
 endClass
+}#
 
 class Add : Binary
   METHODS

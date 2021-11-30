@@ -832,10 +832,10 @@ parser
   create CastToString(operand):Unary
   create CastToObject(operand):Unary
   create Literal
-  create StackPopInt32(operand):Unary
-  create StackPopReal64(operand):Unary
-  create StackPopString(operand):Unary
-  create StackPopObject(operand):Unary
+  #create StackPopInt32(operand):Unary
+  #create StackPopReal64(operand):Unary
+  #create StackPopString(operand):Unary
+  #create StackPopObject(operand):Unary
   create Description(operand):Unary
   create DescriptionInt32(operand):Unary
   create DescriptionLogical(operand):Unary
