@@ -391,7 +391,6 @@ class ScannerCore [abstract]
                     if (_scanner.consume('#'))
                       --count
                       if ((count==0))
-                        _add( TokenType.COMMENT )
                         return false
                       endIf
                     endIf

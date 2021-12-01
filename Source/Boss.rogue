@@ -32,9 +32,6 @@ class Boss
     method init( args:String[] )
       command = parse_args( args )
 
-      # trace command
-      # has //options and possibly //args
-
       if (command//options//help or command//args.count == 0)
         print_usage
         System.exit 0
@@ -46,10 +43,15 @@ class Boss
       forEach (arg in command//args)
         local filepath = arg->String
         local tokens = Scanner( File(filepath) ).tokenize
+        preprocess( tokens )
         Program.configure( tokens.first )
-        Program.organize( Parser(tokens).parse )
+        local ast = Parser(tokens).parse
+        if (ast) Program.add_to_program( ast )
       endForEach
       Program.launch
+
+    method preprocess( tokens:Token[] )
+      noAction
 
     method parse_args( args:String[] )->Value
       # This method is unrelated to the Froley Parser

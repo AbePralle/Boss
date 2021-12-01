@@ -4,13 +4,19 @@ class Organizer : Visitor
   PROPERTIES
 
   METHODS
-    method on_leave( cmd:AST )
-      forEach (element in rewriter=cmd.elements.list.rewriter)
-        if (element instanceOf Statements)
-          Program.global_statements.add( forEach in (element as Statements) )
-        else
-          rewriter.write( element )
-        endIf
-      endForEach
+    method on_enter( cmd:RoutineDef )
+      use builder = StringBuilder.pool
+        builder.print cmd.name
+        builder.print '('
+        builder.print ')'
+        cmd.signature = builder->String
+      endUse
+
+      #{
+      if (Program.routines_by_signature.contains(cmd.signature))
+        throw cmd.t.error( "A definition for routine $ already exists."(cmd.signature) )
+      endIf
+      Program.routines_by_signature[cmd.signature] = cmd
+      }#
 endClass
 

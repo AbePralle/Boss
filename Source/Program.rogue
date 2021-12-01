@@ -26,7 +26,8 @@ class Program [singleton]
     type_Real64    : Type
     type_String    : Type
 
-    global_statements : Statements
+    global_statements     : Statements
+    routines              = RoutineDef[]  # temporary queue
 
     int32_stack    = Int32[]
     real64_stack   = Real64[]
@@ -54,12 +55,16 @@ class Program [singleton]
       statements.execute
       _ensure_stack_empty
 
-    method organize( ast:Cmd )
-      Organizer().visit( ast )
+    method add_to_program( ast:Cmd )
+      (forEach in ((ast as AST).elements)).add_to_program
+
+    method analyze( visitor:Visitor )
+      #visitor.visit( forEach in (forEach in routines_by_name) )
+      visitor.visit( global_statements )
 
     method resolve
-      local resolver = Resolver()
-      resolver.visit( global_statements )
+      analyze( Organizer() )
+      analyze( Resolver() )
 
     method _ensure_stack_empty
       require int32_stack.is_empty

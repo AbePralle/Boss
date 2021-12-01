@@ -14,7 +14,6 @@ INTEGER        integer      [content]
 REAL_NUMBER    real         [content]
 STRING         string       [content]
 IDENTIFIER     identifier   [content]
-COMMENT        comment      [content]
 
 ----------------------------------------------------------------------
 tokens Keywords
@@ -48,7 +47,7 @@ KEYWORD_PRINT        print
 KEYWORD_PRINTLN      println
 KEYWORD_PROPERTIES   PROPERTIES  [structural]
 KEYWORD_RETURN       return
-KEYWORD_ROUTINE      routine
+KEYWORD_ROUTINE      routine     [structural]
 KEYWORD_STEP         step
 KEYWORD_THIS_CALL    thisCall
 KEYWORD_TRUE         true
@@ -150,7 +149,7 @@ scanner
         elseIf (ch == '}')
           if (consume('#'))
             --count
-            if (count == 0) produce COMMENT
+            if (count == 0) restart
           endIf
         endIf
       endWhile
@@ -386,7 +385,25 @@ parser
   consume_eols
   if (not hasAnother) return
 
+  on "routine"
+    identifier
+    createNull  # parameters
+    createNull  # return type
+    createNull  # attributes
+    if (consume(':'))
+      single_line_statements
+    else
+      multi_line_statements
+      mustConsume "endRoutine"
+    endIf
+    produce RoutineDef(name:String,parameters,return_type,attributes,statements):ProcedureDef
+  endOn
+
   multi_line_statements
+
+- identifier
+  on IDENTIFIER -> Identifier(name=content)
+  syntaxError "Identifier expected."
 
 #{
 
@@ -756,6 +773,10 @@ parser
   endOn
 }#
 
+- access_args
+  if (not nextIs('(')) produceNull
+  args
+
 - expression
   add_subtract
 
@@ -809,44 +830,43 @@ parser
   on INTEGER     -> LiteralInt32(value=content:Integer)
   on REAL_NUMBER -> LiteralReal64(value=content:Real)
   on CHARACTER   -> LiteralCharacter(value=content:Character)
-#{
-  on IDENTIFIER -> Access( value=t.content:String )
-}#
-  on "true"     -> LiteralLogical(value="true":Logical)
-  on "false"    -> LiteralLogical(value="false":Logical)
+  on IDENTIFIER, access_args -> Access( name=content, args )
+  on "true"      -> LiteralLogical(value="true":Logical)
+  on "false"     -> LiteralLogical(value="false":Logical)
   on '(', expression, ')': return
-  on "pi"       -> LiteralPi
+  on "pi"        -> LiteralPi
   syntaxError
 
 - additional_node_types
   create AddInt32(left,right):Binary
+  create AddObject(left,right):Binary
   create AddReal64(left,right):Binary
   create AddString(left,right):Binary
-  create AddObject(left,right):Binary
-  create CastToInt32(operand):Unary
-  create CastReal64ToInt32(operand):Unary
-  create CastStringToInt32(operand):Unary
-  create CastObjectToInt32(operand):Unary
-  create CastToReal64(operand):Unary
-  create CastInt32ToReal64(operand):Unary
-  create CastStringToReal64(operand):Unary
-  create CastObjectToReal64(operand):Unary
-  create CastToString(operand):Unary
-  create CastInt32ToString(operand):Unary
-  create CastReal64ToString(operand):Unary
-  create CastObjectToString(operand):Unary
-  create CastToObject(operand):Unary
   create CastInt32ToObject(operand):Unary
+  create CastInt32ToReal64(operand):Unary
+  create CastInt32ToString(operand):Unary
+  create CastObjectToInt32(operand):Unary
+  create CastObjectToReal64(operand):Unary
+  create CastObjectToString(operand):Unary
+  create CastReal64ToInt32(operand):Unary
   create CastReal64ToObject(operand):Unary
+  create CastReal64ToString(operand):Unary
+  create CastStringToInt32(operand):Unary
   create CastStringToObject(operand):Unary
-  create Literal
+  create CastStringToReal64(operand):Unary
+  create CastToInt32(operand):Unary
+  create CastToObject(operand):Unary
+  create CastToReal64(operand):Unary
+  create CastToString(operand):Unary
   create Description(operand):Unary
   create DescriptionInt32(operand):Unary
   create DescriptionLogical(operand):Unary
-  create DescriptionReal64(operand):Unary
   create DescriptionObject(operand):Unary
+  create DescriptionReal64(operand):Unary
+  create Literal
+  create ProcedureDef(name:String,parameters,return_type,attributes,statements)
   create SubtractInt32(left,right):Binary
+  create SubtractObject(left,right):Binary
   create SubtractReal64(left,right):Binary
   create SubtractString(left,right):Binary
-  create SubtractObject(left,right):Binary
 

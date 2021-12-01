@@ -3,6 +3,12 @@ module Boss
 
 class Cmd( t:Token )
   METHODS
+    method init( existing:Cmd )
+      t = existing.t
+
+    method cloned->ThisType [propagated]
+      return ThisType(this)
+
     method add( cmd:Cmd )
       throw UnsupportedOperationError()
 
@@ -91,6 +97,10 @@ class CmdList : Cmd
       list.add( element1 )
       list.add( element2 )
 
+    method init( existing:CmdList )
+      prior.init( existing )
+      list = existing.list.cloned
+
     method add( cmd:Cmd )
       @list.add( cmd )
 
@@ -141,64 +151,23 @@ endClass
 
 class Unary( t, operand:Cmd ) : Cmd
   METHODS
+    method init( existing:Unary )
+      prior.init( existing )
+      operand = existing.operand.cloned
+
     method description->String
       return "Unary($)"(%operand)
 endClass
 
 class Binary( t, left:Cmd, right:Cmd ) : Cmd
   METHODS
+    method init( existing:Binary )
+      prior.init( existing )
+      left = existing.left.cloned
+      right = existing.right.cloned
+
     method description->String
       return "Binary($,$)"(%left,%right)
-endClass
-
-class Args : CmdList
-  METHODS
-    method description->String
-      return "Args" + list_description
-endClass
-
-class Print : Cmd
-  PROPERTIES
-    args : Cmd
-
-  METHODS
-    method init( t, args )
-
-    method description->String
-      return "Print($)" (%args)
-
-endClass
-
-class Statements : CmdList
-  METHODS
-    method description->String
-      return "Statements" + list_description
-endClass
-
-class Literal : Cmd
-  METHODS
-    method description->String
-      return "Literal"
-endClass
-
-class LiteralString : Literal
-  PROPERTIES
-    value : String
-
-  METHODS
-    method init( t, value )
-
-    method description->String
-      return "LiteralString($)" (%value)
-
-    method to->Character
-      if (value is null or value.count == 0) return Character(0)
-      return value[0]
-
-    method to->Int32:  return value
-    method to->Logical: return value?
-    method to->String: return value
-
 endClass
 
 class AST : Cmd
@@ -208,174 +177,37 @@ class AST : Cmd
   METHODS
     method init( t, elements )
 
+    method init( existing:AST )
+      prior.init( existing )
+      if (existing.elements) elements = existing.elements.cloned
+
     method description->String
       return "AST($)" (%elements)
 
 endClass
 
-class Println : Cmd
+class Access : Cmd
   PROPERTIES
+    name : String
     args : Cmd
 
   METHODS
-    method init( t, args )
+    method init( t, name, args )
+
+    method init( existing:Access )
+      prior.init( existing )
+      name = existing.name
+      if (existing.args) args = existing.args.cloned
 
     method description->String
-      return "Println($)" (%args)
+      return "Access($,$)" (%name,%args)
 
 endClass
-
-class LiteralInt32 : Cmd
-  PROPERTIES
-    value : Int32
-
-  METHODS
-    method init( t, value )
-
-    method description->String
-      return "LiteralInt32($)" (%value)
-
-    method to->Int32:     return value
-    method to->String:    return value
-
-endClass
-
-class LiteralLogical : Cmd
-  PROPERTIES
-    value : Logical
-
-  METHODS
-    method init( t, value )
-
-    method description->String
-      return "LiteralLogical($)" (%value)
-
-    method to->Int32:   return which{value:1 || 0}
-    method to->Logical: return value
-    method to->String:  return which{value:"true" || "false"}
-
-endClass
-
-
-class LiteralReal64 : Cmd
-  PROPERTIES
-    value : Real64
-
-  METHODS
-    method init( t, value )
-
-    method description->String
-      return "LiteralReal64($)" (%value)
-
-    method to->Int32:  return value
-    method to->Real64: return value
-    method to->String: return value
-
-endClass
-
-class LiteralPi : Cmd
-  METHODS
-    method description->String
-      return "LiteralPi"
-
-    method to->Int32:  return 3
-    method to->Real64: return pi
-    method to->String: return pi->String
-endClass
-
-
-class LiteralCharacter : Cmd
-  PROPERTIES
-    value : Character
-
-  METHODS
-    method init( t, value )
-
-    method description->String
-      return "LiteralCharacter($)" (%value)
-
-    method to->Character: return value
-    method to->Int32:     return value
-    method to->String:    return value
-
-endClass
-
-#{
-class StackPopInt32 : Unary
-  METHODS
-    method description->String
-      return "StackPopInt32($)" (%operand)
-
-endClass
-
-class StackPopObject : Unary
-  METHODS
-    method description->String
-      return "StackPopObject($)" (%operand)
-
-endClass
-
-class StackPopReal64 : Unary
-  METHODS
-    method description->String
-      return "StackPopReal64($)" (%operand)
-
-endClass
-
-class StackPopString : Unary
-  METHODS
-    method description->String
-      return "StackPopString($)" (%operand)
-
-endClass
-}#
 
 class Add : Binary
   METHODS
     method description->String
       return "Add($,$)" (%left,%right)
-
-endClass
-
-class Subtract : Binary
-  METHODS
-    method description->String
-      return "Subtract($,$)" (%left,%right)
-
-endClass
-
-class Description : Unary
-  METHODS
-    method description->String
-      return "Description($)" (%operand)
-
-endClass
-
-class DescriptionInt32 : Unary
-  METHODS
-    method description->String
-      return "DescriptionInt32($)" (%operand)
-
-endClass
-
-class DescriptionObject : Unary
-  METHODS
-    method description->String
-      return "DescriptionObject($)" (%operand)
-
-endClass
-
-class DescriptionReal64 : Unary
-  METHODS
-    method description->String
-      return "DescriptionReal64($)" (%operand)
-
-endClass
-
-class DescriptionLogical : Unary
-  METHODS
-    method description->String
-      return "DescriptionLogical($)" (%operand)
 
 endClass
 
@@ -407,64 +239,10 @@ class AddString : Binary
 
 endClass
 
-class CastToInt32 : Unary
+class Args : CmdList
   METHODS
     method description->String
-      return "CastToInt32($)" (%operand)
-
-endClass
-
-class CastToObject( t, operand, to_type:Type ) : Unary
-  METHODS
-    method init( t, operand )
-      # This constructor is just to satisfy the Froley compiler
-      throw UnsupportedOperationError()
-
-    method description->String
-      return "CastToObject($,$)" (%operand,%to_type)
-
-endClass
-
-class CastToReal64 : Unary
-  METHODS
-    method description->String
-      return "CastToReal64($)" (%operand)
-
-endClass
-
-class CastToString : Unary
-  METHODS
-    method description->String
-      return "CastToString($)" (%operand)
-
-endClass
-
-class SubtractInt32 : Binary
-  METHODS
-    method description->String
-      return "SubtractInt32($,$)" (%left,%right)
-
-endClass
-
-class SubtractObject : Binary
-  METHODS
-    method description->String
-      return "SubtractObject($,$)" (%left,%right)
-
-endClass
-
-class SubtractReal64 : Binary
-  METHODS
-    method description->String
-      return "SubtractReal64($,$)" (%left,%right)
-
-endClass
-
-class SubtractString : Binary
-  METHODS
-    method description->String
-      return "SubtractString($,$)" (%left,%right)
-
+      return "Args" + list_description
 endClass
 
 class CastInt32ToObject : Unary
@@ -548,5 +326,324 @@ class CastStringToReal64 : Unary
   METHODS
     method description->String
       return "CastStringToReal64($)" (%operand)
+
+endClass
+
+class CastToInt32 : Unary
+  METHODS
+    method description->String
+      return "CastToInt32($)" (%operand)
+
+endClass
+
+class CastToObject : Unary
+  PROPERTIES
+    of_type : Type
+
+  METHODS
+    method init( t, operand )
+
+    method init( t, operand, of_type )
+
+    method init( existing:CastToObject )
+      prior.init( existing )
+      of_type = existing.of_type
+
+    method description->String
+      return "CastToObject($)" (%operand)
+
+endClass
+
+class CastToReal64 : Unary
+  METHODS
+    method description->String
+      return "CastToReal64($)" (%operand)
+
+endClass
+
+class CastToString : Unary
+  METHODS
+    method description->String
+      return "CastToString($)" (%operand)
+
+endClass
+
+class Description : Unary
+  METHODS
+    method description->String
+      return "Description($)" (%operand)
+
+endClass
+
+class DescriptionInt32 : Unary
+  METHODS
+    method description->String
+      return "DescriptionInt32($)" (%operand)
+
+endClass
+
+class DescriptionLogical : Unary
+  METHODS
+    method description->String
+      return "DescriptionLogical($)" (%operand)
+
+endClass
+
+class DescriptionObject : Unary
+  METHODS
+    method description->String
+      return "DescriptionObject($)" (%operand)
+
+endClass
+
+class DescriptionReal64 : Unary
+  METHODS
+    method description->String
+      return "DescriptionReal64($)" (%operand)
+
+endClass
+
+class Identifier : Cmd
+  PROPERTIES
+    name : String
+
+  METHODS
+    method init( t, name )
+
+    method init( existing:Identifier )
+      prior.init( existing )
+      name = existing.name
+
+    method description->String
+      return "Identifier($)" (%name)
+
+    method to->Character
+      if (name is null or name.count == 0) return Character(0)
+      return name[0]
+
+    method to->Int32:  return name
+    method to->Logical: return name?
+    method to->String: return name
+
+endClass
+
+class Literal : Cmd
+  METHODS
+    method description->String
+      return "Literal"
+endClass
+
+class LiteralCharacter : Cmd
+  PROPERTIES
+    value : Character
+
+  METHODS
+    method init( t, value )
+
+    method init( existing:LiteralCharacter )
+      prior.init( existing )
+      value = existing.value
+
+    method description->String
+      return "LiteralCharacter($)" (%value)
+
+    method to->Character: return value
+    method to->Int32:     return value
+    method to->String:    return value
+
+endClass
+
+class LiteralInt32 : Cmd
+  PROPERTIES
+    value : Int32
+
+  METHODS
+    method init( t, value )
+
+    method init( existing:LiteralInt32 )
+      prior.init( existing )
+      value = existing.value
+
+    method description->String
+      return "LiteralInt32($)" (%value)
+
+    method to->Int32:     return value
+    method to->String:    return value
+
+endClass
+
+class LiteralLogical : Cmd
+  PROPERTIES
+    value : Logical
+
+  METHODS
+    method init( t, value )
+
+    method init( existing:LiteralLogical )
+      prior.init( existing )
+      value = existing.value
+
+    method description->String
+      return "LiteralLogical($)" (%value)
+
+    method to->Int32:   return which{value:1 || 0}
+    method to->Logical: return value
+    method to->String:  return which{value:"true" || "false"}
+
+endClass
+
+class LiteralPi : Cmd
+  METHODS
+    method description->String
+      return "LiteralPi"
+endClass
+
+class LiteralReal64 : Cmd
+  PROPERTIES
+    value : Real64
+
+  METHODS
+    method init( t, value )
+
+    method init( existing:LiteralReal64 )
+      prior.init( existing )
+      value = existing.value
+
+    method description->String
+      return "LiteralReal64($)" (%value)
+
+    method to->Int32:  return value
+    method to->Real64: return value
+    method to->String: return value
+
+endClass
+
+class LiteralString : Literal
+  PROPERTIES
+    value : String
+
+  METHODS
+    method init( t, value )
+
+    method init( existing:LiteralString )
+      prior.init( existing )
+      value = existing.value
+
+    method description->String
+      return "LiteralString($)" (%value)
+
+    method to->Character
+      if (value is null or value.count == 0) return Character(0)
+      return value[0]
+
+    method to->Int32:  return value
+    method to->Logical: return value?
+    method to->String: return value
+
+endClass
+
+class Print : Cmd
+  PROPERTIES
+    args : Cmd
+
+  METHODS
+    method init( t, args )
+
+    method init( existing:Print )
+      prior.init( existing )
+      if (existing.args) args = existing.args.cloned
+
+    method description->String
+      return "Print($)" (%args)
+
+endClass
+
+class Println : Cmd
+  PROPERTIES
+    args : Cmd
+
+  METHODS
+    method init( t, args )
+
+    method init( existing:Println )
+      prior.init( existing )
+      if (existing.args) args = existing.args.cloned
+
+    method description->String
+      return "Println($)" (%args)
+
+endClass
+
+class ProcedureDef : Cmd
+  PROPERTIES
+    name        : String
+    parameters  : Cmd
+    return_type : Cmd
+    attributes  : Cmd
+    statements  : Cmd
+
+    signature   : String
+
+  METHODS
+    method init( t, name, parameters, return_type, attributes, statements )
+
+    method init( existing:ProcedureDef )
+      prior.init( existing )
+      name = existing.name
+      if (existing.parameters) parameters = existing.parameters.cloned
+      if (existing.return_type) return_type = existing.return_type.cloned
+      if (existing.attributes) attributes = existing.attributes.cloned
+      if (existing.statements) statements = existing.statements.cloned
+
+    method description->String
+      return "ProcedureDef($,$,$,$,$)" (%name,%parameters,%return_type,%attributes,%statements)
+
+endClass
+
+class RoutineDef : ProcedureDef
+  METHODS
+    method description->String
+      return "RoutineDef($,$,$,$,$)" (%name,%parameters,%return_type,%attributes,%statements)
+
+endClass
+
+class Statements : CmdList
+  METHODS
+    method description->String
+      return "Statements" + list_description
+endClass
+
+class Subtract : Binary
+  METHODS
+    method description->String
+      return "Subtract($,$)" (%left,%right)
+
+endClass
+
+class SubtractInt32 : Binary
+  METHODS
+    method description->String
+      return "SubtractInt32($,$)" (%left,%right)
+
+endClass
+
+class SubtractObject : Binary
+  METHODS
+    method description->String
+      return "SubtractObject($,$)" (%left,%right)
+
+endClass
+
+class SubtractReal64 : Binary
+  METHODS
+    method description->String
+      return "SubtractReal64($,$)" (%left,%right)
+
+endClass
+
+class SubtractString : Binary
+  METHODS
+    method description->String
+      return "SubtractString($,$)" (%left,%right)
 
 endClass

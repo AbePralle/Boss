@@ -117,4 +117,24 @@ class Visitor<<$ReturnType>>
         visit( cmd.args )
       endIf
 
+    method on_visit_children( cmd:Access )
+      if ($ReturnType instanceOf Cmd)
+        cmd.args = visit(cmd.args)
+      else
+        visit( cmd.args )
+      endIf
+
+    method on_visit_children( cmd:ProcedureDef )
+      if ($ReturnType instanceOf Cmd)
+        cmd.parameters = visit(cmd.parameters)
+        cmd.return_type = visit(cmd.return_type)
+        cmd.attributes = visit(cmd.attributes)
+        cmd.statements = visit(cmd.statements)
+      else
+        visit( cmd.parameters )
+        visit( cmd.return_type )
+        visit( cmd.attributes )
+        visit( cmd.statements )
+      endIf
+
 endClass

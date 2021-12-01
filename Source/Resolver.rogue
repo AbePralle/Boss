@@ -1,9 +1,13 @@
 module Boss
+uses Utility/WorkList
 
 class Resolver : Visitor
   PROPERTIES
 
   METHODS
+    method on( cmd:Access )->Cmd
+      return resolve_access( null, cmd )
+
     method on( cmd:Add )->Cmd
       on_visit( cmd as Binary )  # resolves children & converts to common type
       local t = cmd.t
@@ -80,5 +84,23 @@ class Resolver : Visitor
         case OpType.OBJECT: return SubtractObject(t,cmd.left,cmd.right)
         others:             throw t.error( "TODO: Subtract LOGICAL" )
       endWhich
+
+    method resolve_access( context:Cmd, access:Access )->Cmd
+      local name = access.name
+
+      #use candidates=WorkList<<
+
+      local mesg : String
+      if (access.args)
+        if (context) mesg = "No such method '$' exists in type '$'." (name,context.type)
+        else         mesg = "No such variable, method, or routine '$'."(access.name)
+      else
+        if (context)
+          mesg = "No such variable or method '$' exists in type '$'." (name,context.type)
+        else
+          mesg = "No such variable, method, or routine '$'."(name)
+        endIf
+      endIf
+      throw access.t.error( mesg )
 endClass
 

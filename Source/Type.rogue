@@ -16,6 +16,8 @@ class Type
     stack_type   : StackType
     op_type      : OpType
 
+    #global_methods_by_name
+
   METHODS
     method init( t, name, is_primitive )
       Program.types[ name ] = this

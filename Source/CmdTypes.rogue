@@ -18,6 +18,9 @@ augment Cmd
       endIf
 
   METHODS
+    method add_to_program
+      throw t.error( "[INTERNAL] Cannot add_to_program() program element $." (type_name) )
+
     method require_type->Type
       local result = type
       if (result) return result
@@ -113,5 +116,17 @@ augment LiteralPi
   METHODS
     method type->Type
       return Program.type_Real64
+endAugment
+
+augment RoutineDef
+  METHODS
+    method add_to_program
+      Program.routines.add( this )
+endAugment
+
+augment Statements
+  METHODS
+    method add_to_program
+      Program.global_statements.add( forEach in this )
 endAugment
 

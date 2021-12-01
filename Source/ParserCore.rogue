@@ -16,17 +16,19 @@ class ParserCore [abstract]
     ip_must_consume_eols = 3
     ip_consume_eols_and_semicolons = 4
     ip_element = 5
-    ip_multi_line_statements = 6
-    ip_single_line_statements = 7
-    ip_control_structure = 8
-    ip_args = 9
-    ip_arg = 10
-    ip_statement = 11
-    ip_expression = 12
-    ip_add_subtract = 13
-    ip_add_subtract__inner = 14
-    ip_term = 15
-    ip_additional_node_types = 16
+    ip_identifier = 6
+    ip_multi_line_statements = 7
+    ip_single_line_statements = 8
+    ip_control_structure = 9
+    ip_args = 10
+    ip_arg = 11
+    ip_statement = 12
+    ip_access_args = 13
+    ip_expression = 14
+    ip_add_subtract = 15
+    ip_add_subtract__inner = 16
+    ip_term = 17
+    ip_additional_node_types = 18
 
   PROPERTIES
     _tokens          : Token[]
@@ -278,8 +280,34 @@ class ParserCore [abstract]
             if ((not (_position < _limit)))
               return
             endIf
+            if (_next_t.type == TokenType.KEYWORD_ROUTINE)
+              _on_t
+              _execute(ip_identifier)
+              _pop_frame
+              _push( null, 0 )
+              _push( null, 0 )
+              _push( null, 0 )
+              if (_consume(TokenType.SYMBOL_COLON))
+                _execute(ip_single_line_statements)
+                _pop_frame
+              else
+                _execute(ip_multi_line_statements)
+                _pop_frame
+                if (not _consume(TokenType.KEYWORD_END_ROUTINE)) _throw_syntax_error( &expected=TokenType.KEYWORD_END_ROUTINE )
+              endIf
+              _push( RoutineDef(_cur_t,_string_arg(-5),_node_arg(-4),_node_arg(-3),_node_arg(-2),_node_arg(-1)), 5 )
+              return
+            endIf
             _execute(ip_multi_line_statements)
             _pop_frame
+            return
+          case ip_identifier
+            if (_next_t.type == TokenType.IDENTIFIER)
+              _on_t
+              _push( Identifier(_cur_t,_cur_t.content), 0 )
+              return
+            endIf
+            _throw_syntax_error("Identifier expected.")
             return
           case ip_multi_line_statements
             _execute(ip_consume_eols_and_semicolons)
@@ -375,6 +403,14 @@ class ParserCore [abstract]
             _execute(ip_expression)
             _pop_frame
             return
+          case ip_access_args
+            if ((not (_next_t.type == TokenType.SYMBOL_OPEN_PAREN)))
+              _push( null, 0 )
+              return
+            endIf
+            _execute(ip_args)
+            _pop_frame
+            return
           case ip_expression
             _execute(ip_add_subtract)
             _pop_frame
@@ -428,6 +464,13 @@ class ParserCore [abstract]
               _push( LiteralCharacter(_cur_t,_string_to_Character(_cur_t.content)), 0 )
               return
             endIf
+            if (_next_t.type == TokenType.IDENTIFIER)
+              _on_t
+              _execute(ip_access_args)
+              _pop_frame
+              _push( Access(_cur_t,_cur_t.content,_node_arg(-1)), 1 )
+              return
+            endIf
             if (_next_t.type == TokenType.KEYWORD_TRUE)
               _on_t
               _push( LiteralLogical(_cur_t,_string_to_Logical("true")), 0 )
@@ -454,35 +497,36 @@ class ParserCore [abstract]
             return
           case ip_additional_node_types
             _push( AddInt32(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
+            _push( AddObject(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( AddReal64(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( AddString(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
-            _push( AddObject(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
-            _push( CastToInt32(_cur_t,_node_arg(-1)), 1 )
-            _push( CastReal64ToInt32(_cur_t,_node_arg(-1)), 1 )
-            _push( CastStringToInt32(_cur_t,_node_arg(-1)), 1 )
-            _push( CastObjectToInt32(_cur_t,_node_arg(-1)), 1 )
-            _push( CastToReal64(_cur_t,_node_arg(-1)), 1 )
-            _push( CastInt32ToReal64(_cur_t,_node_arg(-1)), 1 )
-            _push( CastStringToReal64(_cur_t,_node_arg(-1)), 1 )
-            _push( CastObjectToReal64(_cur_t,_node_arg(-1)), 1 )
-            _push( CastToString(_cur_t,_node_arg(-1)), 1 )
-            _push( CastInt32ToString(_cur_t,_node_arg(-1)), 1 )
-            _push( CastReal64ToString(_cur_t,_node_arg(-1)), 1 )
-            _push( CastObjectToString(_cur_t,_node_arg(-1)), 1 )
-            _push( CastToObject(_cur_t,_node_arg(-1)), 1 )
             _push( CastInt32ToObject(_cur_t,_node_arg(-1)), 1 )
+            _push( CastInt32ToReal64(_cur_t,_node_arg(-1)), 1 )
+            _push( CastInt32ToString(_cur_t,_node_arg(-1)), 1 )
+            _push( CastObjectToInt32(_cur_t,_node_arg(-1)), 1 )
+            _push( CastObjectToReal64(_cur_t,_node_arg(-1)), 1 )
+            _push( CastObjectToString(_cur_t,_node_arg(-1)), 1 )
+            _push( CastReal64ToInt32(_cur_t,_node_arg(-1)), 1 )
             _push( CastReal64ToObject(_cur_t,_node_arg(-1)), 1 )
+            _push( CastReal64ToString(_cur_t,_node_arg(-1)), 1 )
+            _push( CastStringToInt32(_cur_t,_node_arg(-1)), 1 )
             _push( CastStringToObject(_cur_t,_node_arg(-1)), 1 )
-            _push( Literal(_cur_t), 0 )
+            _push( CastStringToReal64(_cur_t,_node_arg(-1)), 1 )
+            _push( CastToInt32(_cur_t,_node_arg(-1)), 1 )
+            _push( CastToObject(_cur_t,_node_arg(-1)), 1 )
+            _push( CastToReal64(_cur_t,_node_arg(-1)), 1 )
+            _push( CastToString(_cur_t,_node_arg(-1)), 1 )
             _push( Description(_cur_t,_node_arg(-1)), 1 )
             _push( DescriptionInt32(_cur_t,_node_arg(-1)), 1 )
             _push( DescriptionLogical(_cur_t,_node_arg(-1)), 1 )
-            _push( DescriptionReal64(_cur_t,_node_arg(-1)), 1 )
             _push( DescriptionObject(_cur_t,_node_arg(-1)), 1 )
+            _push( DescriptionReal64(_cur_t,_node_arg(-1)), 1 )
+            _push( Literal(_cur_t), 0 )
+            _push( ProcedureDef(_cur_t,_string_arg(-5),_node_arg(-4),_node_arg(-3),_node_arg(-2),_node_arg(-1)), 5 )
             _push( SubtractInt32(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
+            _push( SubtractObject(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( SubtractReal64(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( SubtractString(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
-            _push( SubtractObject(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             return
           others
             return
