@@ -127,8 +127,7 @@ endAugment
 augment RoutineDef
   METHODS
     method organize
-      trace "TODO"
-      #Program.current_module.elements.add( this )
+      Program.current_module.global_methods.add( this )
 endAugment
 
 augment Statements

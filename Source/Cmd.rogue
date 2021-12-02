@@ -583,6 +583,7 @@ class ProcedureDef : Cmd
     statements  : Cmd
 
     signature   : String
+    is_resolved = false
 
   METHODS
     method init( t, name, parameters, return_type, attributes, statements )
