@@ -1,0 +1,33 @@
+module Boss
+
+class Module
+  PROPERTIES
+    t    : Token
+    name : String
+
+    types    = StringTable<<Type>>()
+    global_statements : Statements
+
+  METHODS
+    method init( t, name )
+      global_statements = Statements(t)
+      Program.all_modules.add( this )
+      Program.modules_by_name[ name ] = this
+
+    method analyze( visitor:Visitor )
+      #visitor.visit( forEach in (forEach in routines_by_name) )
+      visitor.visit( global_statements )
+
+    method launch
+      local statements = global_statements
+      global_statements = Statements(t)
+      statements.execute
+
+    method organize
+      analyze( Organizer() )
+
+    method resolve
+      analyze( Resolver() )
+
+endClass
+

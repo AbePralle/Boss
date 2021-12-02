@@ -385,6 +385,12 @@ parser
   consume_eols
   if (not hasAnother) return
 
+  on "module"
+    if (nextIs(IDENTIFIER)) identifier
+    else                    createNull
+    produce DefineModule(name:String)
+  endOn
+
   on "routine"
     identifier
     createNull  # parameters

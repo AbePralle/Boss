@@ -647,3 +647,27 @@ class SubtractString : Binary
       return "SubtractString($,$)" (%left,%right)
 
 endClass
+
+class DefineModule : Cmd
+  PROPERTIES
+    name : String
+
+  METHODS
+    method init( t, name )
+
+    method init( existing:DefineModule )
+      prior.init( existing )
+      name = existing.name
+
+    method description->String
+      return "DefineModule($)" (%name)
+
+    method to->Character
+      if (name is null or name.count == 0) return Character(0)
+      return name[0]
+
+    method to->Int32:  return name
+    method to->Logical: return name?
+    method to->String: return name
+
+endClass

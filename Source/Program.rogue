@@ -14,7 +14,6 @@ class Program [singleton]
 
   PROPERTIES
     t     : Token
-    types = StringTable<<Type>>()
 
     is_configured  = false
 
@@ -26,18 +25,24 @@ class Program [singleton]
     type_Real64    : Type
     type_String    : Type
 
-    global_statements     : Statements
-    routines              = RoutineDef[]  # temporary queue
+    included_files = Set<<String>>()
+
+    default_module    : Module
+    current_module    : Module
+    all_modules       = Module[]
+    modules_by_name   = StringTable<<Module>>()
 
     int32_stack    = Int32[]
     real64_stack   = Real64[]
     string_stack   = String[]
 
   METHODS
-    method configure( reference_t:Token )
-      if (is_configured) return # already configured
-      t = reference_t
+    method init
+      t = Token( TokenType.EOI, "Boss" )
 
+      default_module = Module( t, "Default" )
+
+      current_module  = Module( t, "Boss" )
       type_Logical   = TypeLogical(t)
       type_Byte      = TypeByte(t)
       type_Character = TypeCharacter(t)
@@ -45,26 +50,74 @@ class Program [singleton]
       type_Real32    = TypeReal32(t)
       type_Real64    = TypeReal64(t)
       type_String    = TypeString(t)
+      current_module = default_module
 
-      global_statements = Statements(t)
+    method include( filepath:String )
+      if (included_files.contains(filepath)) return
+
+      if (not File.exists(filepath))
+        throw t.error( "No such file '$'."(filepath) )
+      endIf
+
+      filepath = File.abs( filepath )
+      if (included_files.contains(filepath)) return
+      included_files.add( filepath )
+
+      current_module = default_module
+
+      local tokens = Scanner( File(filepath) ).tokenize
+      preprocess( tokens )
+
+      local ast = Parser(tokens).parse as AST
+      if (ast)
+        (forEach in ast.elements).organize
+      endIf
 
     method launch
       resolve
-      local statements = global_statements
-      global_statements = Statements(t)
-      statements.execute
+      (forEach in all_modules).launch
       _ensure_stack_empty
 
-    method add_to_program( ast:Cmd )
-      (forEach in ((ast as AST).elements)).add_to_program
 
-    method analyze( visitor:Visitor )
-      #visitor.visit( forEach in (forEach in routines_by_name) )
-      visitor.visit( global_statements )
+      #{
+    method load( file:File )->Module
+      local filepath = file.filepath
+      if (modules_by_filepath.contains(filepath))
+        # First check unmodified path in case of any special mappings
+        return modules_by_filepath[ filepath ]
+      endIf
+
+      if (not file.exists)
+        local message = "No such file '$'."(file.filepath)
+        if (is_configured) throw t.error( message )
+        else               throw CompileError( message )
+      endIf
+
+      filepath = file.abs
+      if (modules_by_filepath.contains(filepath))
+        return modules_by_filepath[ filepath ]
+      endIf
+
+      return Module( File(filepath) )
+      }#
+
+    method preprocess( tokens:Token[] )
+      noAction
 
     method resolve
-      analyze( Organizer() )
-      analyze( Resolver() )
+      (forEach in all_modules).organize
+      (forEach in all_modules).resolve
+
+    method set_current_module( @current_module )
+
+    method set_current_module( t:Token, name:String )
+      if (name is null)
+        @current_module = default_module
+      elseIf (modules_by_name.contains(name))
+        @current_module = modules_by_name[ name ]
+      else
+        @current_module = Module( t, name )
+      endIf
 
     method _ensure_stack_empty
       require int32_stack.is_empty

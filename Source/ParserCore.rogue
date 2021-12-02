@@ -280,6 +280,17 @@ class ParserCore [abstract]
             if ((not (_position < _limit)))
               return
             endIf
+            if (_next_t.type == TokenType.KEYWORD_MODULE)
+              _on_t
+              if ((_next_t.type == TokenType.IDENTIFIER))
+                _execute(ip_identifier)
+                _pop_frame
+              else
+                _push( null, 0 )
+              endIf
+              _push( DefineModule(_cur_t,_string_arg(-1)), 1 )
+              return
+            endIf
             if (_next_t.type == TokenType.KEYWORD_ROUTINE)
               _on_t
               _execute(ip_identifier)

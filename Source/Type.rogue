@@ -3,24 +3,26 @@ module Boss
 class Type
   GLOBAL METHODS
     method create( t:Token, name:String )->Type
-      local entry = Program.types.find( name )
+      local entry = Program.current_module.types.find( name )
       if (entry) return entry.value
 
       local type = Type( t, name, &!is_primitive )
       return type
 
   PROPERTIES
-    t            : Token
-    name         : String
-    is_primitive : Logical
-    stack_type   : StackType
-    op_type      : OpType
+    context_module : Module
+    t              : Token
+    name           : String
+    is_primitive   : Logical
+    stack_type     : StackType
+    op_type        : OpType
 
     #global_methods_by_name
 
   METHODS
     method init( t, name, is_primitive )
-      Program.types[ name ] = this
+      context_module = Program.current_module
+      Program.current_module.types[ name ] = this
 
     method cmd_cast( cmd:Cmd )->Cmd
       return CastToObject( cmd.t, cmd, this )

@@ -18,8 +18,8 @@ augment Cmd
       endIf
 
   METHODS
-    method add_to_program
-      throw t.error( "[INTERNAL] Cannot add_to_program() program element $." (type_name) )
+    method organize
+      throw t.error( "[INTERNAL] Cannot organize() program element $." (type_name) )
 
     method require_type->Type
       local result = type
@@ -44,6 +44,12 @@ augment Binary
   METHODS
     method type->Type
       return common_type( left.type, right.type )
+endAugment
+
+augment DefineModule
+  METHODS
+    method organize
+      Program.set_current_module( t, name )
 endAugment
 
 augment DescriptionInt32
@@ -120,13 +126,14 @@ endAugment
 
 augment RoutineDef
   METHODS
-    method add_to_program
-      Program.routines.add( this )
+    method organize
+      trace "TODO"
+      #Program.current_module.elements.add( this )
 endAugment
 
 augment Statements
   METHODS
-    method add_to_program
-      Program.global_statements.add( forEach in this )
+    method organize
+      Program.current_module.global_statements.add( this )
 endAugment
 

@@ -3,6 +3,7 @@ module Boss
 $include "CmdExecution.rogue"
 $include "CmdTypes.rogue"
 $include "Scanner.rogue"
+$include "Module.rogue"
 $include "OpType.rogue"
 $include "Organizer.rogue"
 $include "Parser.rogue"
@@ -40,18 +41,8 @@ class Boss
       parse_files
 
     method parse_files
-      forEach (arg in command//args)
-        local filepath = arg->String
-        local tokens = Scanner( File(filepath) ).tokenize
-        preprocess( tokens )
-        Program.configure( tokens.first )
-        local ast = Parser(tokens).parse
-        if (ast) Program.add_to_program( ast )
-      endForEach
+      Program.include( forEach in command//args )
       Program.launch
-
-    method preprocess( tokens:Token[] )
-      noAction
 
     method parse_args( args:String[] )->Value
       # This method is unrelated to the Froley Parser
