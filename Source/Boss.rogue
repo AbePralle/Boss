@@ -1,15 +1,16 @@
 module Boss
 
+$include "Candidates.rogue"
 $include "CmdExecution.rogue"
 $include "CmdTypes.rogue"
-$include "Scanner.rogue"
+$include "MethodOrganizer.rogue"
 $include "Module.rogue"
 $include "OpType.rogue"
-$include "MethodOrganizer.rogue"
 $include "Parser.rogue"
 $include "Procedures.rogue"
 $include "Program.rogue"
 $include "Resolver.rogue"
+$include "Scanner.rogue"
 $include "StackType.rogue"
 $include "Type.rogue"
 uses Boss

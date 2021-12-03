@@ -18,8 +18,11 @@ augment Cmd
       endIf
 
   METHODS
+    method create_call( context:Cmd, args:Cmd )->Cmd
+      throw t.error( "[INTERNAL] $.create_call() is undefined."(type_name) )
+
     method organize_element
-      throw t.error( "[INTERNAL] organize_element() undefined for type $." (type_name) )
+      throw t.error( "[INTERNAL] $.organize_element() is undefined." (type_name) )
 
     method require_type->Type
       local result = type
@@ -44,6 +47,12 @@ augment Binary
   METHODS
     method type->Type
       return common_type( left.type, right.type )
+endAugment
+
+augment CallRoutine
+  METHODS
+    method type->Type
+      return r.return_type
 endAugment
 
 augment DefineModule
@@ -124,8 +133,14 @@ augment LiteralPi
       return Program.type_Real64
 endAugment
 
-augment RoutineDef
+augment Procedure
+endAugment
+
+augment Routine
   METHODS
+    method create_call( context:Cmd, args:Cmd )->Cmd
+      return CallRoutine( t, this, args )
+
     method organize_element
       Program.current_module.routines.add( this )
 endAugment

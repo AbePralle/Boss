@@ -22,7 +22,19 @@ class Module
       visitor.visit( forEach in (forEach in routines.by_name) )
       visitor.visit( global_statements )
 
-    method collect_routines( with_name:String, list:ProcedureDef[] )
+    method collect_routines( m_name:String, list:Procedure[], &is_limited )
+      if (is_visiting) return
+
+      local matching = routines.by_name[ m_name ]
+      if (matching) list.add( matching )
+
+      is_visiting = true
+      forEach (used_m in used_modules)
+        if (not is_limited or used_m.is_exported)
+          used_m.m.collect_routines( m_name, list, &=is_limited )
+        endIf
+      endForEach
+      is_visiting = false
 
     method find_type( name:String, &is_limited )->Type
       if (is_visiting) return null

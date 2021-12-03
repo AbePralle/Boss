@@ -579,7 +579,7 @@ class Println : Cmd
 
 endClass
 
-class ProcedureDef : Cmd
+class Procedure : Cmd
   PROPERTIES
     name             : String
     parameters       : Cmd
@@ -594,7 +594,7 @@ class ProcedureDef : Cmd
   METHODS
     method init( t, name, parameters, return_type_ref, attributes, statements )
 
-    method init( existing:ProcedureDef )
+    method init( existing:Procedure )
       prior.init( existing )
       name = existing.name
       if (existing.parameters) parameters = existing.parameters.cloned
@@ -602,15 +602,13 @@ class ProcedureDef : Cmd
       if (existing.statements) statements = existing.statements.cloned
 
     method description->String
-      return "ProcedureDef($,$,$,$,$)" (%name,%parameters,return_type_ref,%attributes,%statements)
+      if (signature) return signature
+      return name
 
 endClass
 
-class RoutineDef : ProcedureDef
+class Routine : Procedure
   METHODS
-    method description->String
-      return "RoutineDef($,$,$,$,$)" (%name,%parameters,return_type_ref,%attributes,%statements)
-
 endClass
 
 class Statements : CmdList
@@ -701,7 +699,7 @@ class TypeReference : Cmd
 
 endClass
 
-class GlobalMethodDef : ProcedureDef
+class GlobalMethodDef : Procedure
   PROPERTIES
     type_content_ref : TypeReference
 
@@ -716,3 +714,22 @@ class GlobalMethodDef : ProcedureDef
       return "GlobalMethodDef($,$,$,$,$,$)" (%type_content_ref,%name,%parameters,%return_type_ref,%attributes,%statements)
 
 endClass
+
+class CallRoutine : Cmd
+  PROPERTIES
+    r    : Procedure
+    args : Cmd
+
+  METHODS
+    method init( t, args )
+
+    method init( t, r, args )
+
+    method init( existing:CallRoutine )
+      prior.init( existing )
+      if (existing.args) args = existing.args.cloned
+
+    method description->String
+      return "CallRoutine($)" (%args)
+endClass
+

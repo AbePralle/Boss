@@ -90,28 +90,30 @@ class Resolver : Visitor
       endWhich
 
     method resolve_access( context:Cmd, access:Access )->Cmd
-      local name = access.name
+      local match : Cmd
+      use candidates = Candidates
+        local name = access.name
+        this_module.collect_routines( name, candidates.list )
 
-      local result : Cmd
-      use candidates = WorkList<<ProcedureDef>>
-        this_module.collect_routines( name, candidates )
-trace candidates
-
-        local mesg : String
-        if (context)
-          if (access.args) mesg = "No such method '$' exists in type '$'." (name,context.type)
-          else             mesg = "No such property or method '$' exists in type '$'." (name,context.type)
-        elseIf (this_type)
-          if (access.args) mesg = "No such method or routine '$'."(access.name)
-          else             mesg = "No such variable, method, or routine '$'."(name)
+        if (candidates.match)
+          match = candidates.match
         else
-          if (access.args) mesg = "No such routine '$'."(access.name)
-          else             mesg = "No such variable or routine '$'."(access.name)
-        endIf
+          local mesg : String
+          if (context)
+            if (access.args) mesg = "No such method '$' exists in type '$'." (name,context.type)
+            else             mesg = "No such property or method '$' exists in type '$'." (name,context.type)
+          elseIf (this_type)
+            if (access.args) mesg = "No such method or routine '$'."(access.name)
+            else             mesg = "No such variable, method, or routine '$'."(name)
+          else
+            if (access.args) mesg = "No such routine '$'."(access.name)
+            else             mesg = "No such variable or routine '$'."(access.name)
+          endIf
 
-        throw access.t.error( mesg )
+          throw access.t.error( mesg )
+        endIf
       endUse
 
-      return result
+      return visit( match.create_call(null,access.args) )
 endClass
 

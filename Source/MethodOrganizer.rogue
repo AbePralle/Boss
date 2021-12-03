@@ -9,7 +9,7 @@ class MethodOrganizer : Visitor
 
     #method on_visit( cmd:GlobalMethodDef )
 
-    method on_visit( cmd:ProcedureDef )
+    method on_visit( cmd:Procedure )
       if (cmd.return_type_ref)
         cmd.return_type = this_module.must_find_type( cmd.t, cmd.return_type_ref->String )
       endIf
@@ -23,8 +23,8 @@ class MethodOrganizer : Visitor
         cmd.signature = builder->String
       endUse
 
-    method on_visit( cmd:RoutineDef )
-      on_visit( cmd as ProcedureDef )
+    method on_visit( cmd:Routine )
+      on_visit( cmd as Procedure )
 
       local sig = cmd.signature
       if (this_module.routines.by_signature.contains(sig))
@@ -39,6 +39,6 @@ class MethodOrganizer : Visitor
       Program.routines_by_signature[cmd.signature] = cmd
       }#
 
-    method organize_procedure( cmd:ProcedureDef )
+    method organize_procedure( cmd:Procedure )
 endClass
 

@@ -37,6 +37,13 @@ augment AddReal64
       return true
 endAugment
 
+augment CallRoutine
+  METHODS
+    method execute->Logical
+      if (not r.statements.execute) return false
+      return true
+endAugment
+
 augment CastInt32ToReal64
   METHODS
     method execute->Logical

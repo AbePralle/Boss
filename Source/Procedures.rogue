@@ -2,23 +2,11 @@ module Boss
 
 class Procedures
   PROPERTIES
-    by_name = StringTable<<ProcedureDef[]>>()
-    by_signature = StringTable<<ProcedureDef>>()
+    by_name = StringTable<<Procedure[]>>()
+    by_signature = StringTable<<Procedure>>()
 
   METHODS
-    method add( def:ProcedureDef )
-      if (not by_name.contains(def.name)) by_name[def.name] = ProcedureDef[]
+    method add( def:Procedure )
+      if (not by_name.contains(def.name)) by_name[def.name] = Procedure[]
       by_name[ def.name ].add( def )
-      #if (def.signature) add_by_signature( def )
-
-      #{
-    method add_by_signature( def:ProcedureDef )
-      local existing = by_signature[ def.signature ]
-      if (existing)
-        if (existing is not def)
-TODO
-        endIf
-      else
-      endIf
-      }#
 endClass
