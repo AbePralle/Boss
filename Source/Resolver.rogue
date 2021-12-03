@@ -3,10 +3,11 @@ uses Utility/WorkList
 
 class Resolver : Visitor
   PROPERTIES
-    cur_module : Module
+    this_module : Module
+    this_type   : Type
 
   METHODS
-    method init( cur_module )
+    method init( this_module, this_type )
 
     method on( cmd:Access )->Cmd
       return resolve_access( null, cmd )
@@ -91,19 +92,26 @@ class Resolver : Visitor
     method resolve_access( context:Cmd, access:Access )->Cmd
       local name = access.name
 
-      #use candidates=WorkList<<
+      local result : Cmd
+      use candidates = WorkList<<ProcedureDef>>
+        this_module.collect_routines( name, candidates )
+trace candidates
 
-      local mesg : String
-      if (access.args)
-        if (context) mesg = "No such method '$' exists in type '$'." (name,context.type)
-        else         mesg = "No such variable, method, or routine '$'."(access.name)
-      else
+        local mesg : String
         if (context)
-          mesg = "No such variable or method '$' exists in type '$'." (name,context.type)
+          if (access.args) mesg = "No such method '$' exists in type '$'." (name,context.type)
+          else             mesg = "No such property or method '$' exists in type '$'." (name,context.type)
+        elseIf (this_type)
+          if (access.args) mesg = "No such method or routine '$'."(access.name)
+          else             mesg = "No such variable, method, or routine '$'."(name)
         else
-          mesg = "No such variable, method, or routine '$'."(name)
+          if (access.args) mesg = "No such routine '$'."(access.name)
+          else             mesg = "No such variable or routine '$'."(access.name)
         endIf
-      endIf
-      throw access.t.error( mesg )
+
+        throw access.t.error( mesg )
+      endUse
+
+      return result
 endClass
 

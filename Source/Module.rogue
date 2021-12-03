@@ -22,7 +22,9 @@ class Module
       visitor.visit( forEach in (forEach in routines.by_name) )
       visitor.visit( global_statements )
 
-    method find_type( name:String, &is_indirect )->Type
+    method collect_routines( with_name:String, list:ProcedureDef[] )
+
+    method find_type( name:String, &is_limited )->Type
       if (is_visiting) return null
 
       local result = types[ name ]
@@ -30,8 +32,8 @@ class Module
 
       is_visiting = true
       forEach (used_m in used_modules)
-        if (not is_indirect or used_m.is_exported)
-          result = used_m.m.find_type( name, &is_indirect )
+        if (not is_limited or used_m.is_exported)
+          result = used_m.m.find_type( name, &is_limited )
           if (result) escapeForEach
         endIf
       endForEach
@@ -56,7 +58,7 @@ class Module
       analyze( MethodOrganizer(this) )
 
     method resolve
-      analyze( Resolver(this) )
+      analyze( Resolver(this,null) )
 
     method use_module( m:Module, &is_exported )
       if (m is this) return # happens when this is the default module
