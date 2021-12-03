@@ -155,7 +155,6 @@ class ParserCore [abstract]
     method _push( cmd:Cmd, node_arg_count:Int32 )
       _cmd_stack.discard_from( _cmd_stack.count - node_arg_count )
       _cmd_stack.add( cmd )
-      if (_token_stack.count) _cur_t = _token_stack.pop
 
     method _push_list( list:Cmd )
       local i1 = _list_starts.remove_last
@@ -289,6 +288,7 @@ class ParserCore [abstract]
                 _push( null, 0 )
               endIf
               _push( DefineModule(_cur_t,_string_arg(-1)), 1 )
+              _cur_t = _token_stack.pop
               return
             endIf
             if (_next_t.type == TokenType.KEYWORD_ROUTINE)
@@ -306,7 +306,8 @@ class ParserCore [abstract]
                 _pop_frame
                 if (not _consume(TokenType.KEYWORD_END_ROUTINE)) _throw_syntax_error( &expected=TokenType.KEYWORD_END_ROUTINE )
               endIf
-              _push( RoutineDef(_cur_t,_string_arg(-5),_node_arg(-4),_node_arg(-3),_node_arg(-2),_node_arg(-1)), 5 )
+              _push( RoutineDef(_cur_t,_string_arg(-5),_node_arg(-4),_node_arg(-3) as TypeReference,_node_arg(-2),_node_arg(-1)), 5 )
+              _cur_t = _token_stack.pop
               return
             endIf
             _execute(ip_multi_line_statements)
@@ -316,6 +317,7 @@ class ParserCore [abstract]
             if (_next_t.type == TokenType.IDENTIFIER)
               _on_t
               _push( Identifier(_cur_t,_cur_t.content), 0 )
+              _cur_t = _token_stack.pop
               return
             endIf
             _throw_syntax_error("Identifier expected.")
@@ -395,6 +397,7 @@ class ParserCore [abstract]
           case ip_statement
             if (_next_t.type == TokenType.KEYWORD_NO_ACTION)
               _on_t
+              _cur_t = _token_stack.pop
               return
             endIf
             if (_next_t.type == TokenType.KEYWORD_PRINT)
@@ -402,6 +405,7 @@ class ParserCore [abstract]
               _execute(ip_args)
               _pop_frame
               _push( Print(_cur_t,_node_arg(-1)), 1 )
+              _cur_t = _token_stack.pop
               return
             endIf
             if (_next_t.type == TokenType.KEYWORD_PRINTLN)
@@ -409,6 +413,7 @@ class ParserCore [abstract]
               _execute(ip_args)
               _pop_frame
               _push( Println(_cur_t,_node_arg(-1)), 1 )
+              _cur_t = _token_stack.pop
               return
             endIf
             _execute(ip_expression)
@@ -441,6 +446,7 @@ class ParserCore [abstract]
               _push( Add(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
               _execute(ip_add_subtract__inner)
               _pop_frame
+              _cur_t = _token_stack.pop
               return
             endIf
             if (_next_t.type == TokenType.SYMBOL_MINUS)
@@ -451,6 +457,7 @@ class ParserCore [abstract]
               _push( Subtract(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
               _execute(ip_add_subtract__inner)
               _pop_frame
+              _cur_t = _token_stack.pop
               return
             endIf
             return
@@ -458,21 +465,25 @@ class ParserCore [abstract]
             if (_next_t.type == TokenType.STRING)
               _on_t
               _push( LiteralString(_cur_t,_cur_t.content), 0 )
+              _cur_t = _token_stack.pop
               return
             endIf
             if (_next_t.type == TokenType.INTEGER)
               _on_t
               _push( LiteralInt32(_cur_t,_string_to_Integer(_cur_t.content)), 0 )
+              _cur_t = _token_stack.pop
               return
             endIf
             if (_next_t.type == TokenType.REAL_NUMBER)
               _on_t
               _push( LiteralReal64(_cur_t,_string_to_Real(_cur_t.content)), 0 )
+              _cur_t = _token_stack.pop
               return
             endIf
             if (_next_t.type == TokenType.CHARACTER)
               _on_t
               _push( LiteralCharacter(_cur_t,_string_to_Character(_cur_t.content)), 0 )
+              _cur_t = _token_stack.pop
               return
             endIf
             if (_next_t.type == TokenType.IDENTIFIER)
@@ -480,16 +491,19 @@ class ParserCore [abstract]
               _execute(ip_access_args)
               _pop_frame
               _push( Access(_cur_t,_cur_t.content,_node_arg(-1)), 1 )
+              _cur_t = _token_stack.pop
               return
             endIf
             if (_next_t.type == TokenType.KEYWORD_TRUE)
               _on_t
               _push( LiteralLogical(_cur_t,_string_to_Logical("true")), 0 )
+              _cur_t = _token_stack.pop
               return
             endIf
             if (_next_t.type == TokenType.KEYWORD_FALSE)
               _on_t
               _push( LiteralLogical(_cur_t,_string_to_Logical("false")), 0 )
+              _cur_t = _token_stack.pop
               return
             endIf
             if (_next_t.type == TokenType.SYMBOL_OPEN_PAREN)
@@ -497,11 +511,13 @@ class ParserCore [abstract]
               _execute(ip_expression)
               _pop_frame
               if (not _consume(TokenType.SYMBOL_CLOSE_PAREN)) _throw_syntax_error( &expected=TokenType.SYMBOL_CLOSE_PAREN )
+              _cur_t = _token_stack.pop
               return
             endIf
             if (_next_t.type == TokenType.KEYWORD_PI)
               _on_t
               _push( LiteralPi(_cur_t), 0 )
+              _cur_t = _token_stack.pop
               return
             endIf
             _throw_syntax_error
@@ -532,12 +548,14 @@ class ParserCore [abstract]
             _push( DescriptionLogical(_cur_t,_node_arg(-1)), 1 )
             _push( DescriptionObject(_cur_t,_node_arg(-1)), 1 )
             _push( DescriptionReal64(_cur_t,_node_arg(-1)), 1 )
+            _push( GlobalMethodDef(_cur_t,_node_arg(-6) as TypeReference,_string_arg(-5),_node_arg(-4),_node_arg(-3) as TypeReference,_node_arg(-2),_node_arg(-1)), 6 )
             _push( Literal(_cur_t), 0 )
-            _push( ProcedureDef(_cur_t,_string_arg(-5),_node_arg(-4),_node_arg(-3),_node_arg(-2),_node_arg(-1)), 5 )
+            _push( ProcedureDef(_cur_t,_string_arg(-5),_node_arg(-4),_node_arg(-3) as TypeReference,_node_arg(-2),_node_arg(-1)), 5 )
             _push( SubtractInt32(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( SubtractObject(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( SubtractReal64(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( SubtractString(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
+            _push( TypeReference(_cur_t,_string_arg(-1)), 1 )
             return
           others
             return

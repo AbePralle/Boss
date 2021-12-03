@@ -3,8 +3,11 @@ uses Utility/WorkList
 
 class Resolver : Visitor
   PROPERTIES
+    cur_module : Module
 
   METHODS
+    method init( cur_module )
+
     method on( cmd:Access )->Cmd
       return resolve_access( null, cmd )
 

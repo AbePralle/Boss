@@ -5,9 +5,12 @@ class Module
     t    : Token
     name : String
 
-    types    = StringTable<<Type>>()
+    used_modules      = UsedModule[]
+    types             = StringTable<<Type>>()
     global_statements : Statements
-    global_methods    = Procedures()
+    routines          = Procedures()
+
+    is_visiting : Logical
 
   METHODS
     method init( t, name )
@@ -16,19 +19,54 @@ class Module
       Program.modules_by_name[ name ] = this
 
     method analyze( visitor:Visitor )
-      #visitor.visit( forEach in (forEach in routines_by_name) )
+      visitor.visit( forEach in (forEach in routines.by_name) )
       visitor.visit( global_statements )
+
+    method find_type( name:String, &is_indirect )->Type
+      if (is_visiting) return null
+
+      local result = types[ name ]
+      if (result) return result
+
+      is_visiting = true
+      forEach (used_m in used_modules)
+        if (not is_indirect or used_m.is_exported)
+          result = used_m.m.find_type( name, &is_indirect )
+          if (result) escapeForEach
+        endIf
+      endForEach
+      is_visiting = false
+
+      return result
 
     method launch
       local statements = global_statements
       global_statements = Statements(t)
       statements.execute
 
-    method organize
-      analyze( Organizer() )
+    method must_find_type( t:Token, name:String )->Type
+      local result = find_type( name )
+      if (result) return result
+      throw t.error( "No such type '$'." (name) )
+
+    method organize_types
+      # TODO: arrange class inheritance
+
+    method organize_methods
+      analyze( MethodOrganizer(this) )
 
     method resolve
-      analyze( Resolver() )
+      analyze( Resolver(this) )
 
+    method use_module( m:Module, &is_exported )
+      if (m is this) return # happens when this is the default module
+      forEach (existing_m in used_modules)
+        if (existing_m.m is m) return
+      endForEach
+      used_modules.add( UsedModule(m,&=is_exported) )
+
+endClass
+
+class UsedModule( m:Module, is_exported:Logical ) [compound]
 endClass
 

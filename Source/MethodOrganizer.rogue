@@ -1,0 +1,44 @@
+module Boss
+
+class MethodOrganizer : Visitor
+  PROPERTIES
+    this_module : Module
+
+  METHODS
+    method init( this_module )
+
+    #method on_visit( cmd:GlobalMethodDef )
+
+    method on_visit( cmd:ProcedureDef )
+      if (cmd.return_type_ref)
+        cmd.return_type = this_module.must_find_type( cmd.t, cmd.return_type_ref->String )
+      endIf
+
+      # TODO: parameters
+
+      use builder = StringBuilder.pool
+        builder.print cmd.name
+        builder.print '('
+        builder.print ')'
+        cmd.signature = builder->String
+      endUse
+
+    method on_visit( cmd:RoutineDef )
+      on_visit( cmd as ProcedureDef )
+
+      local sig = cmd.signature
+      if (this_module.routines.by_signature.contains(sig))
+        throw cmd.t.error( "Module $ already defines routine $."(this_module.name,sig) )
+      endIf
+      this_module.routines.by_signature[ sig ] = cmd
+
+      #{
+      if (Program.routines_by_signature.contains(cmd.signature))
+        throw cmd.t.error( "A definition for routine $ already exists."(cmd.signature) )
+      endIf
+      Program.routines_by_signature[cmd.signature] = cmd
+      }#
+
+    method organize_procedure( cmd:ProcedureDef )
+endClass
+

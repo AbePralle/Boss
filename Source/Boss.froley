@@ -402,7 +402,7 @@ parser
       multi_line_statements
       mustConsume "endRoutine"
     endIf
-    produce RoutineDef(name:String,parameters,return_type,attributes,statements):ProcedureDef
+    produce RoutineDef(name:String,parameters,return_type_ref:TypeReference,attributes,statements):ProcedureDef
   endOn
 
   multi_line_statements
@@ -540,7 +540,7 @@ parser
 
 - global_method
   on "method", name, method_parameters, method_return_type, method_body ->
-    GlobalMethod(name,parameters,return_type,statements:NodeList)
+    GlobalMethod(name,parameters,return_type_name:ReturnTypeReference,statements):ProcedureDef
 
 - if_statement
   on "if"
@@ -625,7 +625,7 @@ parser
 
 - method
   on "method", name, method_parameters, method_return_type, method_body ->
-    Method(name,parameters,return_type,statements:NodeList)
+    Method(name,parameters,return_type_name:String,statements)
 
 - method_parameters
   beginList
@@ -869,10 +869,12 @@ parser
   create DescriptionLogical(operand):Unary
   create DescriptionObject(operand):Unary
   create DescriptionReal64(operand):Unary
+  create GlobalMethodDef(type_content_ref:TypeReference,name:String,parameters,return_type_ref:TypeReference,attributes,statements):ProcedureDef
   create Literal
-  create ProcedureDef(name:String,parameters,return_type,attributes,statements)
+  create ProcedureDef(name:String,parameters,return_type_ref:TypeReference,attributes,statements)
   create SubtractInt32(left,right):Binary
   create SubtractObject(left,right):Binary
   create SubtractReal64(left,right):Binary
   create SubtractString(left,right):Binary
+  create TypeReference(name:String)
 

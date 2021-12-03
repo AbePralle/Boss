@@ -18,8 +18,8 @@ augment Cmd
       endIf
 
   METHODS
-    method organize
-      throw t.error( "[INTERNAL] Cannot organize() program element $." (type_name) )
+    method organize_element
+      throw t.error( "[INTERNAL] organize_element() undefined for type $." (type_name) )
 
     method require_type->Type
       local result = type
@@ -48,7 +48,7 @@ endAugment
 
 augment DefineModule
   METHODS
-    method organize
+    method organize_element
       Program.set_current_module( t, name )
 endAugment
 
@@ -126,13 +126,13 @@ endAugment
 
 augment RoutineDef
   METHODS
-    method organize
-      Program.current_module.global_methods.add( this )
+    method organize_element
+      Program.current_module.routines.add( this )
 endAugment
 
 augment Statements
   METHODS
-    method organize
+    method organize_element
       Program.current_module.global_statements.add( this )
 endAugment
 
