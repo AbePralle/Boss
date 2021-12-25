@@ -13,7 +13,7 @@ class Program [singleton]
     result_String    : String
 
   PROPERTIES
-    t     : Token
+    t              : Token
 
     is_configured  = false
 
@@ -34,9 +34,7 @@ class Program [singleton]
     all_modules       = Module[]
     modules_by_name   = StringTable<<Module>>()
 
-    int32_stack    = Int32[]
-    real64_stack   = Real64[]
-    string_stack   = String[]
+    #stack = BossValue[]
 
   METHODS
     method init
@@ -72,7 +70,7 @@ class Program [singleton]
       local tokens = Scanner( File(filepath) ).tokenize
       preprocess( tokens )
 
-      local ast = Parser(tokens).parse as AST
+      local ast = Parser(tokens).parse->(as AST)
       parsed_files[ filepath ] = ast
       if (ast)
         (forEach in ast.elements).organize_element
@@ -81,7 +79,7 @@ class Program [singleton]
     method launch
       resolve
       (forEach in all_modules).launch
-      _ensure_stack_empty
+      #require stack.is_empty
 
 
       #{
@@ -125,9 +123,5 @@ class Program [singleton]
         @current_module = Module( t, name )
       endIf
 
-    method _ensure_stack_empty
-      require int32_stack.is_empty
-      require real64_stack.is_empty
-      require string_stack.is_empty
 endClass
 

@@ -24,7 +24,7 @@ class MethodOrganizer : Visitor
       endUse
 
     method on_visit( cmd:Routine )
-      on_visit( cmd as Procedure )
+      on_visit( cmd->(as Procedure) )
 
       local sig = cmd.signature
       if (this_module.routines.by_signature.contains(sig))

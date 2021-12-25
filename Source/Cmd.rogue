@@ -51,7 +51,7 @@ class Cmd( t:Token )
       throw UnsupportedOperationError()
 
     method get<<$AsType>>( index:Int32 )->$AsType
-      return get(index) as $AsType
+      return get(index)->(as $AsType)
 
     method insert( element:Cmd, before_index=0:Int32 )
       throw UnsupportedOperationError()

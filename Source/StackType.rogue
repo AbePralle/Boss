@@ -1,8 +1,0 @@
-module Boss
-
-enum StackType
-  OBJECT
-  STRING
-  REAL64
-  INT32
-endEnum

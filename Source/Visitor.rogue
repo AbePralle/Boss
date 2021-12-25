@@ -139,9 +139,9 @@ class Visitor<<$ReturnType>>
 
     method on_visit_children( cmd:GlobalMethodDef )
       if ($ReturnType instanceOf Cmd)
-        cmd.type_content_ref = visit(cmd.type_content_ref) as TypeReference
+        cmd.type_content_ref = visit(cmd.type_content_ref)->(as TypeReference)
         cmd.parameters = visit(cmd.parameters)
-        cmd.return_type_ref = visit(cmd.return_type_ref) as TypeReference
+        cmd.return_type_ref = visit(cmd.return_type_ref)->(as TypeReference)
         cmd.attributes = visit(cmd.attributes)
         cmd.statements = visit(cmd.statements)
       else

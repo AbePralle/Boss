@@ -13,7 +13,7 @@ class Resolver : Visitor
       return resolve_access( null, cmd )
 
     method on( cmd:Add )->Cmd
-      on_visit( cmd as Binary )  # resolves children & converts to common type
+      on_visit( cmd->(as Binary) )  # resolves children & converts to common type
       local t = cmd.t
       which (cmd.left.type.op_type)
         case OpType.INT32:  return AddInt32(t,cmd.left,cmd.right)
@@ -34,6 +34,8 @@ class Resolver : Visitor
       if (right_type is not result_type) cmd.right = visit( result_type.cmd_cast(right) )
 
     method on( cmd:CastToReal64 )->Cmd
+      trace "TODO"
+      #{
       local operand = visit( cmd.operand ).require_value
       local type = operand.type
       local t = cmd.t
@@ -43,6 +45,8 @@ class Resolver : Visitor
         case OpType.STRING: return CastStringToReal64(t,operand)
         others:             return CastObjectToReal64(t,operand)
       endWhich
+      }#
+      return cmd
 
     method on( cmd:Description )->Cmd
       local operand = visit( cmd.operand ).require_value
@@ -79,7 +83,7 @@ class Resolver : Visitor
       endForEach
 
     method on( cmd:Subtract )->Cmd
-      on_visit( cmd as Binary )  # resolves children & converts to common type
+      on_visit( cmd->(as Binary) )  # resolves children & converts to common type
       local t = cmd.t
       which (cmd.left.type.op_type)
         case OpType.INT32:  return SubtractInt32(t,cmd.left,cmd.right)
