@@ -1,9 +1,0 @@
-module Boss
-
-enum OpType
-  OBJECT
-  STRING
-  REAL64
-  INT32
-  LOGICAL
-endEnum

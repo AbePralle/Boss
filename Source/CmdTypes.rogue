@@ -14,7 +14,7 @@ augment Cmd
         if (a is type or b is type) return type
         return Program.type_Int32  # any mismatched pair Byte/Character/Int32 -> Int32
       else
-        return Program.type_String # Placeholder
+        return Program.type_String # Placeholder/TODO
       endIf
 
   METHODS

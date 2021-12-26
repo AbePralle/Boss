@@ -14,7 +14,6 @@ class Type
     t              : Token
     name           : String
     is_primitive   : Logical
-    op_type        : OpType
 
     #global_methods_by_name
 
@@ -40,7 +39,6 @@ class TypeLogical : TypePrimitive
   METHODS
     method init( t:Token )
       prior.init( t, "Logical", &is_primitive )
-      op_type = OpType.LOGICAL
 
     method cmd_cast( cmd:Cmd )->Cmd
       return CastToInt32(cmd.t,cmd)
@@ -50,7 +48,6 @@ class TypeByte : TypePrimitive
   METHODS
     method init( t:Token )
       prior.init( t, "Byte", &is_primitive )
-      op_type = OpType.INT32
 
     method cmd_cast( cmd:Cmd )->Cmd
       return CastToInt32(cmd.t,cmd)
@@ -60,7 +57,6 @@ class TypeCharacter : TypePrimitive
   METHODS
     method init( t:Token )
       prior.init( t, "Character", &is_primitive )
-      op_type = OpType.INT32
 
     method cmd_cast( cmd:Cmd )->Cmd
       return CastToInt32(cmd.t,cmd)
@@ -70,7 +66,6 @@ class TypeInt32 : TypePrimitive
   METHODS
     method init( t:Token )
       prior.init( t, "Int32", &is_primitive )
-      op_type = OpType.INT32
 
     method cmd_cast( cmd:Cmd )->Cmd
       return CastToInt32(cmd.t,cmd)
@@ -80,7 +75,6 @@ class TypeReal32 : TypePrimitive
   METHODS
     method init( t:Token )
       prior.init( t, "Real32", &is_primitive )
-      op_type = OpType.REAL64
 
     method cmd_cast( cmd:Cmd )->Cmd
       return CastToReal64(cmd.t,cmd)
@@ -90,7 +84,6 @@ class TypeReal64 : TypePrimitive
   METHODS
     method init( t:Token )
       prior.init( t, "Real64", &is_primitive )
-      op_type = OpType.REAL64
 
     method cmd_cast( cmd:Cmd )->Cmd
       return CastToReal64(cmd.t,cmd)
@@ -100,7 +93,6 @@ class TypeString : TypePrimitive
   METHODS
     method init( t:Token )
       prior.init( t, "String", &is_primitive )
-      op_type = OpType.STRING
 
     method cmd_cast( cmd:Cmd )->Cmd
       return CastToString(cmd.t,cmd)

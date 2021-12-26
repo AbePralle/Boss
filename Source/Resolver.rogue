@@ -14,14 +14,7 @@ class Resolver : Visitor
 
     method on( cmd:Add )->Cmd
       on_visit( cmd->(as Binary) )  # resolves children & converts to common type
-      local t = cmd.t
-      which (cmd.left.type.op_type)
-        case OpType.INT32:  return AddInt32(t,cmd.left,cmd.right)
-        case OpType.REAL64: return AddReal64(t,cmd.left,cmd.right)
-        case OpType.STRING: return AddString(t,cmd.left,cmd.right)
-        case OpType.OBJECT: return AddObject(t,cmd.left,cmd.right)
-        others:             throw t.error( "TODO: Add LOGICAL" )
-      endWhich
+      return visit( cmd.left.type.cmd_add(cmd.t, cmd.left, cmd.right) )
 
     method on_visit( cmd:Binary )
       visit_children( cmd )
@@ -50,15 +43,7 @@ class Resolver : Visitor
 
     method on( cmd:Description )->Cmd
       local operand = visit( cmd.operand ).require_value
-      local type = operand.type
-      local t = cmd.t
-      which (type.op_type)
-        case OpType.INT32:  return DescriptionInt32(t,operand)
-        case OpType.REAL64: return DescriptionReal64(t,operand)
-        case OpType.STRING: return operand
-        case OpType.OBJECT: return DescriptionObject(t,operand)
-        others:             return DescriptionLogical(t,operand)
-      endWhich
+      return visit( operand.type.cmd_description(cmd.t, cmd.operand) )
 
     method on_visit( cmd:Statements )
       forEach (arg in rewriter=cmd.list.rewriter)
@@ -84,14 +69,7 @@ class Resolver : Visitor
 
     method on( cmd:Subtract )->Cmd
       on_visit( cmd->(as Binary) )  # resolves children & converts to common type
-      local t = cmd.t
-      which (cmd.left.type.op_type)
-        case OpType.INT32:  return SubtractInt32(t,cmd.left,cmd.right)
-        case OpType.REAL64: return SubtractReal64(t,cmd.left,cmd.right)
-        case OpType.STRING: return SubtractString(t,cmd.left,cmd.right)
-        case OpType.OBJECT: return SubtractObject(t,cmd.left,cmd.right)
-        others:             throw t.error( "TODO: Subtract LOGICAL" )
-      endWhich
+      return visit( cmd.left.type.cmd_subtract(cmd.t, cmd.left, cmd.right) )
 
     method resolve_access( context:Cmd, access:Access )->Cmd
       local match : Cmd
@@ -120,4 +98,58 @@ class Resolver : Visitor
 
       return visit( match.create_call(null,access.args) )
 endClass
+
+# Add
+augment
+  METHODS
+    method Type.cmd_add( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      throw t.error( "Values of type $ cannot be added."(name) )
+
+    method TypeInt32.cmd_add( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return AddInt32( t, lhs, rhs )
+
+    method TypeReal64.cmd_add( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return AddReal64( t, lhs, rhs )
+
+    method TypeString.cmd_add( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return AddString( t, lhs, rhs )
+
+endAugment
+
+# Description
+augment
+  METHODS
+    method Type.cmd_description( t:Token, operand:Cmd)->Cmd
+      return DescriptionObject( t, operand )
+
+    method TypeInt32.cmd_description( t:Token, operand:Cmd)->Cmd
+      return DescriptionInt32( t, operand )
+
+    method TypeLogical.cmd_description( t:Token, operand:Cmd)->Cmd
+      return DescriptionLogical( t, operand )
+
+    method TypeReal64.cmd_description( t:Token, operand:Cmd)->Cmd
+      return DescriptionReal64( t, operand )
+
+    method TypeString.cmd_description( t:Token, operand:Cmd)->Cmd
+      return operand
+
+endAugment
+
+# Subtract
+augment
+  METHODS
+    method Type.cmd_subtract( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      throw t.error( "Values of type $ cannot be subtracted."(name) )
+
+    method TypeInt32.cmd_subtract( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return SubtractInt32( t, lhs, rhs )
+
+    method TypeReal64.cmd_subtract( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return SubtractReal64( t, lhs, rhs )
+
+    method TypeString.cmd_subtract( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return SubtractString( t, lhs, rhs )
+
+endAugment
 
