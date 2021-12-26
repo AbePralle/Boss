@@ -37,117 +37,63 @@ augment Cmd
       return null
 endAugment
 
-augment Unary
+augment
   METHODS
-    method type->Type
+    method Unary.type->Type
       return operand.type
-endAugment
 
-augment Binary
-  METHODS
-    method type->Type
+    method Binary.type->Type
       return common_type( left.type, right.type )
-endAugment
 
-augment CallRoutine
-  METHODS
-    method type->Type
+    method CallRoutine.type->Type
       return r.return_type
-endAugment
 
-augment DefineModule
-  METHODS
-    method organize_element
+    method DefineModule.organize_element
       Program.set_current_module( t, name )
-endAugment
 
-augment DescriptionInt32
-  METHODS
-    method type->Type
+    method DescriptionInt32.type->Type
       return Program.type_String
-endAugment
 
-augment DescriptionLogical
-  METHODS
-    method type->Type
+    method DescriptionLogical.type->Type
       return Program.type_String
-endAugment
 
-augment DescriptionObject
-  METHODS
-    method type->Type
+    method DescriptionObject.type->Type
       return Program.type_String
-endAugment
 
-augment DescriptionReal64
-  METHODS
-    method type->Type
+    method DescriptionReal64.type->Type
       return Program.type_String
-endAugment
 
-augment LiteralString
-  METHODS
-    method type->Type
+    method LiteralString.type->Type
       return Program.type_String
-endAugment
 
-augment LiteralLogical
-  METHODS
-    method type->Type
+    method LiteralLogical.type->Type
       return Program.type_Logical
-endAugment
 
-augment LiteralByte
-  METHODS
-    method type->Type
+    method LiteralByte.type->Type
       return Program.type_Byte
-endAugment
 
-augment LiteralCharacter
-  METHODS
-    method type->Type
+    method LiteralCharacter.type->Type
       return Program.type_Character
-endAugment
 
-augment LiteralInt32
-  METHODS
-    method type->Type
+    method LiteralInt32.type->Type
       return Program.type_Int32
-endAugment
 
-augment LiteralReal32
-  METHODS
-    method type->Type
+    method LiteralReal32.type->Type
       return Program.type_Real32
-endAugment
 
-augment LiteralReal64
-  METHODS
-    method type->Type
+    method LiteralReal64.type->Type
       return Program.type_Real64
-endAugment
 
-augment LiteralPi
-  METHODS
-    method type->Type
+    method LiteralPi.type->Type
       return Program.type_Real64
-endAugment
 
-augment Procedure
-endAugment
-
-augment Routine
-  METHODS
-    method create_call( context:Cmd, args:Cmd )->Cmd
+    method Routine.create_call( context:Cmd, args:Cmd )->Cmd
       return CallRoutine( t, this, args )
 
-    method organize_element
+    method Routine.organize_element
       Program.current_module.routines.add( this )
-endAugment
 
-augment Statements
-  METHODS
-    method organize_element
+    method Statements.organize_element
       Program.current_module.global_statements.add( this )
-endAugment
 
+endAugment

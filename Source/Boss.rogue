@@ -16,20 +16,7 @@ uses Boss
 uses Utility/CommandLineParser
 
 try
-  #Boss( System.command_line_arguments )
-  @trace BossValue()
-  @trace BossValue( true )
-  @trace BossValue( false )
-  @trace BossValue( Byte(255) )
-  @trace BossValue( 'A' )
-  @trace BossValue( 65536 )
-  @trace BossValue( Real32(pi) )
-  @trace BossValue( Real64(pi) )
-  @trace BossValue( "Success" )
-  @trace BossValue( XY(3,4) )
-  @trace BossValue( Box(5,6,7,8) )
-  @trace BossValue( BossValue[][BossValue("One"),BossValue(1)] )
-  @trace BossValue.table
+  Boss( System.command_line_arguments )
 
 catch (error:CompileError)
   Console.error.println error

@@ -19,7 +19,7 @@ class Candidates [singleton]
       return %list
 
     method found_match->Logical
-      return list.count == 1
+      return matches.count == 1
 
     method get( index:Int32 )->Procedure
       return list[index]
@@ -28,7 +28,7 @@ class Candidates [singleton]
       matches.add( match )
 
     method match->Procedure
-      if (list.count == 1) return list.first
+      if (matches.count == 1) return matches.first
       return null
 
     method on_use->this
@@ -40,9 +40,10 @@ class Candidates [singleton]
       work_list_alpha.on_end_use
       work_list_beta.on_end_use
 
-    method update
-      if (not matches.is_empty)
-        list.[ clear ].add( matches )
-        matches.clear
-      endIf
+    method refine->Logical
+      if (matches.is_empty) return false
+      list.[ clear ].add( matches )
+      matches.clear
+      return true
 endClass
+

@@ -40,6 +40,9 @@ endAugment
 augment CallRoutine
   METHODS
     method execute->Logical
+      if (args)
+        trace args
+      endIf
       if (not r.statements.execute) return false
       return true
 endAugment

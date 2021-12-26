@@ -581,6 +581,7 @@ endClass
 
 class Procedure : Cmd
   PROPERTIES
+    type_context     : Type
     name             : String
     parameters       : Cmd
     return_type_ref  : Cmd
@@ -596,14 +597,24 @@ class Procedure : Cmd
 
     method init( existing:Procedure )
       prior.init( existing )
+      type_context = existing.type_context
       name = existing.name
       if (existing.parameters) parameters = existing.parameters.cloned
       if (existing.attributes) attributes = existing.attributes.cloned
       if (existing.statements) statements = existing.statements.cloned
 
+    method accepts_arg_count( n:Int32 )->Logical
+      local min = which{ parameters:parameters.count || 0 }
+      local max = min
+      return (n >= min and n <= max)
+
     method description->String
       if (signature) return signature
       return name
+
+    method context_signature->String
+      if (not type_context) return signature
+      return "$.$" (type_context,signature)
 
 endClass
 

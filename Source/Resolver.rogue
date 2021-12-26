@@ -73,23 +73,70 @@ class Resolver : Visitor
 
     method resolve_access( context:Cmd, access:Access )->Cmd
       local match : Cmd
-      use candidates = Candidates
-        local name = access.name
-        this_module.collect_routines( name, candidates.list )
 
-        if (candidates.match)
-          match = candidates.match
-        else
+      use Candidates
+        local name = access.name
+        this_module.collect_routines( name, Candidates.list )
+
+        match = refine_candidates( context, access )
+
+        if (not match)
+          local sig = name
+          if (access.args)
+            sig += '('
+            forEach (arg at i in access.args)
+              if (i > 0) sig += ','
+              sig += arg.require_type
+            endForEach
+            sig += ')'
+          endIf
+
           local mesg : String
-          if (context)
-            if (access.args) mesg = "No such method '$' exists in type '$'." (name,context.type)
-            else             mesg = "No such property or method '$' exists in type '$'." (name,context.type)
-          elseIf (this_type)
-            if (access.args) mesg = "No such method or routine '$'."(access.name)
-            else             mesg = "No such variable, method, or routine '$'."(name)
+          if (access.args)
+            which (Candidates.count)
+              case 0
+                mesg = "No such "
+                if (context)       mesg += "method "
+                elseIf (this_type) mesg += "method or routine "
+                else               mesg += "routine "
+
+                if (context)       mesg += context.type + "."
+                elseIf (this_type) mesg += this_type + "."
+
+                mesg += sig + '.'
+
+              case 1
+                mesg = "Call to "
+                if (context)       mesg += context.type + "."
+                elseIf (this_type) mesg += this_type + "."
+
+                mesg += sig
+                mesg += " has arguments that are incompatible with the best candidate:\n\n"
+                mesg += "  " + Candidates[0].context_signature
+
+              others
+                mesg = "Ambiguous call to "
+                if (context)       mesg += context.type + "."
+                elseIf (this_type) mesg += this_type + "."
+
+                mesg += sig
+                mesg += ". Candidates:\n\n"
+                forEach (m in Candidates)
+                  mesg += "  " + m.context_signature
+                endForEach
+
+            endWhich
           else
-            if (access.args) mesg = "No such routine '$'."(access.name)
-            else             mesg = "No such variable or routine '$'."(access.name)
+            if (context)
+              if (access.args) mesg = "No such method '$' exists in type '$'." (sig,context.type)
+              else             mesg = "No such property or method '$' exists in type '$'." (sig,context.type)
+            elseIf (this_type)
+              if (access.args) mesg = "No such method or routine '$'."(sig)
+              else             mesg = "No such variable, method, or routine '$'."(sig)
+            else
+              if (access.args) mesg = "No such routine '$'."(sig)
+              else             mesg = "No such variable or routine '$'."(sig)
+            endIf
           endIf
 
           throw access.t.error( mesg )
@@ -97,6 +144,16 @@ class Resolver : Visitor
       endUse
 
       return visit( match.create_call(null,access.args) )
+
+    method refine_candidates( context:Cmd, access:Access )->Procedure
+      local arg_count = which{ access.args:access.args.count || 0 }
+      forEach (m in Candidates)
+        if (m.accepts_arg_count(arg_count)) Candidates.keep m
+      endForEach
+      if (Candidates.found_match) return Candidates.match
+      if (not Candidates.refine) return null
+
+      return null
 endClass
 
 # Add
