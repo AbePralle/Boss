@@ -1,0 +1,15 @@
+module Boss
+
+class Local
+  PROPERTIES
+    t             : Token
+    name          : String
+    type          : Type
+    initial_value : Cmd
+
+  METHODS
+    method init( t, name, type, initial_value=null )
+
+    method init( t, name, type_ref:TypeReference, initial_value=null )
+      if (type_ref) type = type_ref->Type
+endClass

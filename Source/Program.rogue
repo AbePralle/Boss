@@ -18,13 +18,12 @@ class Program [singleton]
     is_configured  = false
 
     type_Logical   : Type
-    type_Byte      : Type
     type_Character : Type
     type_Int32     : Type
-    type_Real32    : Type
     type_Real64    : Type
     type_String    : Type
     type_Global    : Type
+    type_Value     : Type
 
     parsed_files   = StringTable<<AST>>()
 
@@ -34,7 +33,8 @@ class Program [singleton]
     all_modules       = Module[]
     modules_by_name   = StringTable<<Module>>()
 
-    #stack = BossValue[]
+    stack             = BossValue[]
+    fp                : Int32
 
   METHODS
     method init
@@ -46,13 +46,12 @@ class Program [singleton]
 
       current_module = global_module
       type_Logical   = TypeLogical(t)
-      type_Byte      = TypeByte(t)
       type_Character = TypeCharacter(t)
       type_Int32     = TypeInt32(t)
-      type_Real32    = TypeReal32(t)
       type_Real64    = TypeReal64(t)
       type_String    = TypeString(t)
       type_Global    = Type( t, "Global" )
+      type_Value     = TypeValue(t)
 
     method include( filepath:String )
       if (parsed_files.contains(filepath)) return
@@ -79,7 +78,8 @@ class Program [singleton]
     method launch
       resolve
       (forEach in all_modules).launch
-      #require stack.is_empty
+      require stack.is_empty
+      require fp == 0
 
 
       #{

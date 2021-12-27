@@ -393,8 +393,8 @@ parser
 
   on "routine"
     identifier
-    createNull  # parameters
-    createNull  # return type
+    procedure_parameters
+    procedure_return_type
     createNull  # attributes
     if (consume(':'))
       single_line_statements
@@ -402,10 +402,44 @@ parser
       multi_line_statements
       mustConsume "endRoutine"
     endIf
-    produce Routine(name:String,parameters,return_type_ref:TypeReference,attributes,statements):Procedure
+    produce Routine(name:String,parameters,return_type_ref,attributes,statements):Procedure
   endOn
 
+  procedure_body
+
+- procedure_parameters
+  beginList
+  if (not consume('(')) produceList
+  procedure_parameter
+  while (consume(',')) procedure_parameter
+  mustConsume ')'
+  produceList
+
+- procedure_parameter
+  consume_eols
+  on IDENTIFIER optional_initial_value optional_type -> Local(name=content,initial_value,type_ref)
+  #on '&' identifier optional_initial_value optional_type -> FlagParameter(name:String,initial_value,type_ref):Parameter
+  mustConsume IDENTIFIER  # generate error message
+
+- optional_initial_value
+  if (consume('=')) consume_eols; expression
+  else              createNull
+
+- procedure_return_type
+  if (not consume('->')) produceNull
+  type
+
+- type
+  on IDENTIFIER -> TypeReference(name=content)
+  syntaxError "Identifier expected."
+
+- optional_type
+  if (consume(':')) type
+  else              createNull
+
+- procedure_body
   multi_line_statements
+
 
 - identifier
   on IDENTIFIER -> Identifier(name=content)
@@ -539,7 +573,7 @@ parser
   endIf
 
 - global_method
-  on "method", name, method_parameters, method_return_type, method_body ->
+  on "method", name, procedure_parameters, procedure_return_type, procedure_body ->
     GlobalMethod(name,parameters,return_type_name:ReturnTypeReference,statements):Procedure
 
 - if_statement
@@ -624,33 +658,8 @@ parser
 
 
 - method
-  on "method", name, method_parameters, method_return_type, method_body ->
+  on "method", name, procedure_parameters, procedure_return_type, procedure_body ->
     Method(name,parameters,return_type_name:String,statements)
-
-- method_parameters
-  beginList
-  if (not consume('(')) produceList
-  method_parameter
-  while (consume(',')) method_parameter
-  mustConsume ')'
-  produceList
-
-- method_parameter
-  consume_eols
-  onPeek IDENTIFIER, name, optional_initial_value, optional_type -> Parameter(name,initial_value,type)
-  on '&',            name, optional_initial_value, optional_type -> FlagParameter(name,initial_value,type)
-  mustConsume IDENTIFIER  # thow an error
-
-- method_return_type
-  if (not consume('->')) produceNull
-  type
-
-- method_body
-  multi_line_statements
-
-- name
-  on IDENTIFIER -> Name( value=t.content:String )
-  mustConsume IDENTIFIER  # previous line didn't match; throw an error
 
 - module_name [binary]
   on "::" -> Scope
@@ -742,18 +751,6 @@ parser
   on "%=", expression -> ModAndAssign(target,expression)
   on "&=", expression -> AndAndAssign(target,expression)
   on "|=", expression -> OrAndAssign(target,expression)
-
-- type
-  on IDENTIFIER -> Type( name=t.content:String )
-  mustConsume IDENTIFIER
-
-- optional_initial_value
-  if (consume('=')) consume_eols; expression
-  else              createNull
-
-- optional_type
-  if (consume(':')) type
-  else              createNull
 
 - var_declarations
   beginList
@@ -848,6 +845,7 @@ parser
   create AddObject(left,right):Binary
   create AddReal64(left,right):Binary
   create AddString(left,right):Binary
+  create AddValue(left,right):Binary
   create CastInt32ToObject(operand):Unary
   create CastInt32ToReal64(operand):Unary
   create CastInt32ToString(operand):Unary
@@ -864,18 +862,21 @@ parser
   create CastToObject(operand):Unary
   create CastToReal64(operand):Unary
   create CastToString(operand):Unary
+  create CastToValue(operand):Unary
   create CallRoutine(args)
   create Description(operand):Unary
   create DescriptionInt32(operand):Unary
   create DescriptionLogical(operand):Unary
   create DescriptionObject(operand):Unary
   create DescriptionReal64(operand):Unary
-  create GlobalMethodDef(type_content_ref:TypeReference,name:String,parameters,return_type_ref:TypeReference,attributes,statements):Procedure
+  create DescriptionValue(operand):Unary
+  create GlobalMethodDef(type_context_ref,name:String,parameters,return_type_ref,attributes,statements):Procedure
   create Literal
-  create Procedure(name:String,parameters,return_type_ref:TypeReference,attributes,statements)
+  create Procedure(name:String,parameters,return_type_ref,attributes,statements)
   create SubtractInt32(left,right):Binary
   create SubtractObject(left,right):Binary
   create SubtractReal64(left,right):Binary
   create SubtractString(left,right):Binary
+  create SubtractValue(left,right):Binary
   create TypeReference(name:String)
 

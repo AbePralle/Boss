@@ -8,12 +8,10 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
     TYPE_UNDEFINED    = 1
     TYPE_NULL
     TYPE_LOGICAL
-    TYPE_BYTE
     TYPE_CHARACTER
     TYPE_INT32
     TYPE_LAST_INTEGER = TYPE_INT32
 
-    TYPE_REAL32
     TYPE_REAL64
     TYPE_LAST_REAL    = TYPE_REAL64
 
@@ -34,9 +32,6 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
     method create->BossValue
       return BossValue(TYPE_UNDEFINED,0,0,0,0,null)
 
-    method create( value:Byte )->BossValue
-      return BossValue(TYPE_BYTE,value,0,0,0,null)
-
     method create( value:Character )->BossValue
       return BossValue(TYPE_CHARACTER,value,0,0,0,null)
 
@@ -45,9 +40,6 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
 
     method create( value:Logical )->BossValue
       return BossValue(TYPE_LOGICAL,which{value:1||0},0,0,0,null)
-
-    method create( value:Real32 )->BossValue
-      return BossValue(TYPE_REAL32,value,0,0,0,null)
 
     method create( value:Real64 )->BossValue
       return BossValue(TYPE_REAL64,value,0,0,0,null)
@@ -102,7 +94,6 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
           case TYPE_NULL:      return "null"
           case TYPE_LOGICAL:   return which{ x:"true" || "false" }
           case TYPE_CHARACTER: return x->Int32->Character->String
-          case TYPE_BYTE:      return x->Int32->String
           case TYPE_INT32:     return x->Int32->String
         endWhich
 
@@ -353,9 +344,6 @@ endClass
     method operator==( other:BossValue )->Logical
       return this is other
 
-    method operator==( other:Byte )->Logical
-      return this == BossValue( other )
-
     method operator==( other:Character )->Logical
       return this == BossValue( ""+other )
 
@@ -368,9 +356,6 @@ endClass
     method operator==( other:Real64 )->Logical
       return this == BossValue( other )
 
-    method operator==( other:Real32 )->Logical
-      return this == BossValue( other )
-
     method operator==( other:Object )->Logical
       return this == BossValue( other )
 
@@ -379,9 +364,6 @@ endClass
 
     method operator<( other:BossValue )->Logical
       return object_id < other.object_id
-
-    method operator<( other:Byte )->Logical
-      return this < BossValue( other )
 
     method operator<( other:Character )->Logical
       return this < BossValue( ""+other )
@@ -393,9 +375,6 @@ endClass
       return this < BossValue( other )
 
     method operator<( other:Real64 )->Logical
-      return this < BossValue( other )
-
-    method operator<( other:Real32 )->Logical
       return this < BossValue( other )
 
     method operator<( other:Object )->Logical
@@ -557,9 +536,6 @@ endClass
     method sorted( compare_fn:(Function(a:BossValue,b:BossValue)->Logical) )->BossValue
       return cloned
 
-    method to->Byte
-      return this->Int32->Byte
-
     method to->Character
       return Character(0)
 
@@ -571,9 +547,6 @@ endClass
 
     method to->Real64
       return this->Int32->Real64
-
-    method to->Real32
-      return this->Real64->Real32
 
     method to->Object
       return null

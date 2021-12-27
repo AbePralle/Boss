@@ -22,9 +22,6 @@ class Type
       context_module = Program.current_module
       Program.current_module.types[ name ] = this
 
-    method cmd_cast( cmd:Cmd )->Cmd
-      return CastToObject( cmd.t, cmd, this )
-
     method description->String
       return name
 
@@ -39,62 +36,35 @@ class TypeLogical : TypePrimitive
   METHODS
     method init( t:Token )
       prior.init( t, "Logical", &is_primitive )
-
-    method cmd_cast( cmd:Cmd )->Cmd
-      return CastToInt32(cmd.t,cmd)
-endClass
-
-class TypeByte : TypePrimitive
-  METHODS
-    method init( t:Token )
-      prior.init( t, "Byte", &is_primitive )
-
-    method cmd_cast( cmd:Cmd )->Cmd
-      return CastToInt32(cmd.t,cmd)
 endClass
 
 class TypeCharacter : TypePrimitive
   METHODS
     method init( t:Token )
       prior.init( t, "Character", &is_primitive )
-
-    method cmd_cast( cmd:Cmd )->Cmd
-      return CastToInt32(cmd.t,cmd)
 endClass
 
 class TypeInt32 : TypePrimitive
   METHODS
     method init( t:Token )
       prior.init( t, "Int32", &is_primitive )
-
-    method cmd_cast( cmd:Cmd )->Cmd
-      return CastToInt32(cmd.t,cmd)
-endClass
-
-class TypeReal32 : TypePrimitive
-  METHODS
-    method init( t:Token )
-      prior.init( t, "Real32", &is_primitive )
-
-    method cmd_cast( cmd:Cmd )->Cmd
-      return CastToReal64(cmd.t,cmd)
 endClass
 
 class TypeReal64 : TypePrimitive
   METHODS
     method init( t:Token )
       prior.init( t, "Real64", &is_primitive )
-
-    method cmd_cast( cmd:Cmd )->Cmd
-      return CastToReal64(cmd.t,cmd)
 endClass
 
 class TypeString : TypePrimitive
   METHODS
     method init( t:Token )
       prior.init( t, "String", &is_primitive )
+endClass
 
-    method cmd_cast( cmd:Cmd )->Cmd
-      return CastToString(cmd.t,cmd)
+class TypeValue : Type
+  METHODS
+    method init( t:Token )
+      prior.init( t, "Value", &!is_primitive )
 endClass
 

@@ -126,11 +126,13 @@ class Visitor<<$ReturnType>>
 
     method on_visit_children( cmd:Procedure )
       if ($ReturnType instanceOf Cmd)
+        cmd.type_context_ref = visit( cmd.type_context_ref )
         cmd.parameters = visit(cmd.parameters)
         cmd.return_type_ref = visit(cmd.return_type_ref)
         cmd.attributes = visit(cmd.attributes)
         cmd.statements = visit(cmd.statements)
       else
+        visit( cmd.type_context_ref )
         visit( cmd.parameters )
         visit( cmd.return_type_ref )
         visit( cmd.attributes )
@@ -139,13 +141,13 @@ class Visitor<<$ReturnType>>
 
     method on_visit_children( cmd:GlobalMethodDef )
       if ($ReturnType instanceOf Cmd)
-        cmd.type_content_ref = visit(cmd.type_content_ref)->(as TypeReference)
+        cmd.type_context_ref = visit( cmd.type_context_ref )
         cmd.parameters = visit(cmd.parameters)
-        cmd.return_type_ref = visit(cmd.return_type_ref)->(as TypeReference)
+        cmd.return_type_ref = visit( cmd.return_type_ref )
         cmd.attributes = visit(cmd.attributes)
         cmd.statements = visit(cmd.statements)
       else
-        visit( cmd.type_content_ref )
+        visit( cmd.type_context_ref )
         visit( cmd.parameters )
         visit( cmd.return_type_ref )
         visit( cmd.attributes )
@@ -157,6 +159,15 @@ class Visitor<<$ReturnType>>
         cmd.args = visit(cmd.args)
       else
         visit( cmd.args )
+      endIf
+
+    method on_visit_children( cmd:Local )
+      if ($ReturnType instanceOf Cmd)
+        cmd.initial_value = visit(cmd.initial_value)
+        cmd.type_ref = visit(cmd.type_ref)
+      else
+        visit( cmd.initial_value )
+        visit( cmd.type_ref )
       endIf
 
 endClass

@@ -582,6 +582,7 @@ endClass
 class Procedure : Cmd
   PROPERTIES
     type_context     : Type
+    type_context_ref : Cmd
     name             : String
     parameters       : Cmd
     return_type_ref  : Cmd
@@ -707,22 +708,18 @@ class TypeReference : Cmd
     method to->Int32:  return name
     method to->Logical: return name?
     method to->String: return name
-
 endClass
 
 class GlobalMethodDef : Procedure
-  PROPERTIES
-    type_content_ref : TypeReference
-
   METHODS
-    method init( t, type_content_ref, name, parameters, return_type_ref, attributes, statements )
+    method init( t, type_context_ref, name, parameter_defs:Cmd, return_type_ref, attributes, statements )
 
     method init( existing:GlobalMethodDef )
       prior.init( existing )
-      if (existing.type_content_ref) type_content_ref = existing.type_content_ref.cloned
+      if (existing.type_context_ref) type_context_ref = existing.type_context_ref.cloned
 
     method description->String
-      return "GlobalMethodDef($,$,$,$,$,$)" (%type_content_ref,%name,%parameters,%return_type_ref,%attributes,%statements)
+      return "GlobalMethodDef($,$,$,$,$,$)" (%type_context_ref,%name,%parameters,%return_type_ref,%attributes,%statements)
 
 endClass
 
@@ -742,5 +739,66 @@ class CallRoutine : Cmd
 
     method description->String
       return "CallRoutine($)" (%args)
+endClass
+
+
+class CastToValue : Unary
+  METHODS
+    method description->String
+      return "CastToValue($)" (%operand)
+
+endClass
+
+class AddValue : Binary
+  METHODS
+    method description->String
+      return "AddValue($,$)" (%left,%right)
+
+endClass
+
+class DescriptionValue : Unary
+  METHODS
+    method description->String
+      return "DescriptionValue($)" (%operand)
+
+endClass
+
+class SubtractValue : Binary
+  METHODS
+    method description->String
+      return "SubtractValue($,$)" (%left,%right)
+
+endClass
+
+class FlagParameter : Parameter
+  METHODS
+    method description->String
+      return "FlagParameter($,$,$)" (%name,%initial_value,%type_ref)
+
+endClass
+
+
+class Local : Cmd
+  PROPERTIES
+    name          : String
+    initial_value : Cmd
+    type_ref      : Cmd
+    type          : Type
+    index         : Int32
+
+  METHODS
+    method init( t, name, initial_value, type_ref )
+
+    method init( existing:Local )
+      prior.init( existing )
+      name = existing.name
+      if (existing.initial_value) initial_value = existing.initial_value.cloned
+      if (existing.type_ref) type_ref = existing.type_ref.cloned
+
+    method description->String
+      return "Local($,$,$)" (%name,%initial_value,%type_ref)
+
+    method type->Type
+      return @type
 endClass
 

@@ -93,13 +93,6 @@ augment LiteralLogical
       return true
 endAugment
 
-augment LiteralByte
-  METHODS
-    method execute->Logical
-      Program.result_Int32 = value
-      return true
-endAugment
-
 augment LiteralCharacter
   METHODS
     method execute->Logical
@@ -111,13 +104,6 @@ augment LiteralInt32
   METHODS
     method execute->Logical
       Program.result_Int32 = value
-      return true
-endAugment
-
-augment LiteralReal32
-  METHODS
-    method execute->Logical
-      Program.result_Real64 = value
       return true
 endAugment
 

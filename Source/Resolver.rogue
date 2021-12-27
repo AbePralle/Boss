@@ -143,7 +143,7 @@ class Resolver : Visitor
         endIf
       endUse
 
-      return visit( match.create_call(null,access.args) )
+      return visit( match.cmd_call(null,access.args) )
 
     method refine_candidates( context:Cmd, access:Access )->Procedure
       local arg_count = which{ access.args:access.args.count || 0 }
@@ -155,6 +155,16 @@ class Resolver : Visitor
 
       return null
 endClass
+
+augment Cmd
+  METHODS
+    method cmd_call( context:Cmd, args:Cmd )->Cmd
+      throw t.error( "[INTERNAL] $.cmd_call() is undefined."(type_name) )
+
+    method cmd_push( operand:Cmd )->Cmd
+      return require_type.cmd_push( operand )
+
+endAugment
 
 # Add
 augment
@@ -171,6 +181,13 @@ augment
     method TypeString.cmd_add( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
       return AddString( t, lhs, rhs )
 
+endAugment
+
+# Call
+augment
+  METHODS
+    method Routine.cmd_call( context:Cmd, args:Cmd )->Cmd
+      return CallRoutine( t, this, args )
 endAugment
 
 # Description
@@ -190,6 +207,22 @@ augment
 
     method TypeString.cmd_description( t:Token, operand:Cmd)->Cmd
       return operand
+
+endAugment
+
+# Push
+augment
+  METHODS
+    method Type.cmd_push( operand:Cmd )->Cmd
+      return operand
+
+      #{
+    method TypeInt32.cmd_add( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+
+    method TypeReal64.cmd_add( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+
+    method TypeString.cmd_add( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      }#
 
 endAugment
 

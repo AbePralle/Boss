@@ -9,16 +9,31 @@ class MethodOrganizer : Visitor
 
     #method on_visit( cmd:GlobalMethodDef )
 
-    method on_visit( cmd:Procedure )
-      if (cmd.return_type_ref)
-        cmd.return_type = this_module.must_find_type( cmd.t, cmd.return_type_ref->String )
-      endIf
+    method on_enter( cmd:Local )
+      cmd.type = cmd.type_ref->Type
 
-      # TODO: parameters
+    method on_visit( cmd:Procedure )
+      if (cmd.type_context_ref) cmd.type_context = cmd.type_context_ref->Type
+      if (cmd.return_type_ref)  cmd.return_type  = cmd.return_type_ref->Type
+
+      if (cmd.parameters)
+        visit( cmd.parameters )
+
+        local origin = which{ cmd.type_context:1 || 0 }
+        forEach (param at i in cmd.parameters)
+          param->(as Local).index = origin + i
+        endForEach
+      endIf
 
       use builder = StringBuilder.pool
         builder.print cmd.name
         builder.print '('
+        if (cmd.parameters)
+          forEach (param at i in cmd.parameters)
+            if (i > 0) builder.print ','
+            builder.print param.type.name
+          endForEach
+        endIf
         builder.print ')'
         cmd.signature = builder->String
       endUse
