@@ -154,13 +154,6 @@ class Visitor<<$ReturnType>>
         visit( cmd.statements )
       endIf
 
-    method on_visit_children( cmd:CallRoutine )
-      if ($ReturnType instanceOf Cmd)
-        cmd.args = visit(cmd.args)
-      else
-        visit( cmd.args )
-      endIf
-
     method on_visit_children( cmd:Local )
       if ($ReturnType instanceOf Cmd)
         cmd.initial_value = visit(cmd.initial_value)
@@ -168,6 +161,13 @@ class Visitor<<$ReturnType>>
       else
         visit( cmd.initial_value )
         visit( cmd.type_ref )
+      endIf
+
+    method on_visit_children( cmd:CallProcedure )
+      if ($ReturnType instanceOf Cmd)
+        cmd.args = visit(cmd.args)
+      else
+        visit( cmd.args )
       endIf
 
 endClass

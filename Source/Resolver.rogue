@@ -26,6 +26,14 @@ class Resolver : Visitor
       if (left_type is not result_type) cmd.left = visit( result_type.cmd_cast(left) )
       if (right_type is not result_type) cmd.right = visit( result_type.cmd_cast(right) )
 
+    method on_visit( cmd:CallRoutine )
+      if (cmd.args)
+        forEach (arg at i in cmd.args)
+          cmd.args[i] = visit( visit(arg).cmd_push )
+        endForEach
+        trace cmd.args
+      endIf
+
     method on( cmd:CastToReal64 )->Cmd
       trace "TODO"
       #{
@@ -72,7 +80,9 @@ class Resolver : Visitor
       return visit( cmd.left.type.cmd_subtract(cmd.t, cmd.left, cmd.right) )
 
     method resolve_access( context:Cmd, access:Access )->Cmd
-      local match : Cmd
+      local match : Procedure
+
+      visit( access.args )  # resolve args to determine types
 
       use Candidates
         local name = access.name
@@ -143,6 +153,15 @@ class Resolver : Visitor
         endIf
       endUse
 
+      # TODO: fill in default values
+
+      # Cast args to parameter types
+      if (access.args)
+        forEach (arg at i in access.args)
+          access.args[i] = arg.cmd_cast_to( match.parameters[i].type )
+        endForEach
+      endIf
+
       return visit( match.cmd_call(null,access.args) )
 
     method refine_candidates( context:Cmd, access:Access )->Procedure
@@ -161,8 +180,9 @@ augment Cmd
     method cmd_call( context:Cmd, args:Cmd )->Cmd
       throw t.error( "[INTERNAL] $.cmd_call() is undefined."(type_name) )
 
-    method cmd_push( operand:Cmd )->Cmd
-      return require_type.cmd_push( operand )
+    method cmd_push->Cmd
+trace require_type
+      return require_type.cmd_push( this )
 
 endAugment
 
@@ -214,15 +234,19 @@ endAugment
 augment
   METHODS
     method Type.cmd_push( operand:Cmd )->Cmd
-      return operand
+      return PushObject( operand.t, operand )
 
-      #{
-    method TypeInt32.cmd_add( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+    method TypeInt32.cmd_push( operand:Cmd )->Cmd
+      return PushNumber( operand.t, operand )
 
-    method TypeReal64.cmd_add( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+    method TypeLogical.cmd_push( operand:Cmd )->Cmd
+      return PushNumber( operand.t, operand )
 
-    method TypeString.cmd_add( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
-      }#
+    method TypeReal64.cmd_push( operand:Cmd )->Cmd
+      return PushNumber( operand.t, operand )
+
+    method TypeValue.cmd_push( operand:Cmd )->Cmd
+      return PushValue( operand.t, operand )
 
 endAugment
 

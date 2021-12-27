@@ -36,6 +36,9 @@ class Module
       endForEach
       is_visiting = false
 
+    method description->String
+      return name
+
     method find_type( name:String, &is_limited )->Type
       if (is_visiting) return null
 

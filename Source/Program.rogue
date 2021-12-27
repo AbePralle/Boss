@@ -22,8 +22,10 @@ class Program [singleton]
     type_Int32     : Type
     type_Real64    : Type
     type_String    : Type
-    type_Global    : Type
     type_Value     : Type
+
+    type_Object    : Type
+    type_Global    : Type
 
     parsed_files   = StringTable<<AST>>()
 
@@ -50,8 +52,9 @@ class Program [singleton]
       type_Int32     = TypeInt32(t)
       type_Real64    = TypeReal64(t)
       type_String    = TypeString(t)
-      type_Global    = Type( t, "Global" )
       type_Value     = TypeValue(t)
+      type_Object    = Type( t, "Object" )
+      type_Global    = Type( t, "Global" )
 
     method include( filepath:String )
       if (parsed_files.contains(filepath)) return

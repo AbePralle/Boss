@@ -849,6 +849,7 @@ parser
   create CastInt32ToObject(operand):Unary
   create CastInt32ToReal64(operand):Unary
   create CastInt32ToString(operand):Unary
+  create CastInt32ToValue(operand):Unary
   create CastObjectToInt32(operand):Unary
   create CastObjectToReal64(operand):Unary
   create CastObjectToString(operand):Unary
@@ -863,7 +864,8 @@ parser
   create CastToReal64(operand):Unary
   create CastToString(operand):Unary
   create CastToValue(operand):Unary
-  create CallRoutine(args)
+  create CallProcedure(args)
+  create CallRoutine(args):CallProcedure
   create Description(operand):Unary
   create DescriptionInt32(operand):Unary
   create DescriptionLogical(operand):Unary
@@ -873,6 +875,9 @@ parser
   create GlobalMethodDef(type_context_ref,name:String,parameters,return_type_ref,attributes,statements):Procedure
   create Literal
   create Procedure(name:String,parameters,return_type_ref,attributes,statements)
+  create PushNumber(operand):Unary
+  create PushObject(operand):Unary
+  create PushValue(operand):Unary
   create SubtractInt32(left,right):Binary
   create SubtractObject(left,right):Binary
   create SubtractReal64(left,right):Binary

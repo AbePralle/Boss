@@ -6,6 +6,11 @@ class Type
       local entry = Program.current_module.types.find( name )
       if (entry) return entry.value
 
+      if (Program.current_module is not Program.global_module)
+        entry = Program.global_module.types.find( name )
+        if (entry) return entry.value
+      endIf
+
       local type = Type( t, name, &!is_primitive )
       return type
 
@@ -62,9 +67,9 @@ class TypeString : TypePrimitive
       prior.init( t, "String", &is_primitive )
 endClass
 
-class TypeValue : Type
+class TypeValue : TypePrimitive
   METHODS
     method init( t:Token )
-      prior.init( t, "Value", &!is_primitive )
+      prior.init( t, "Value", &is_primitive )
 endClass
 

@@ -723,18 +723,15 @@ class GlobalMethodDef : Procedure
 
 endClass
 
-class CallRoutine : Cmd
-  PROPERTIES
-    r    : Procedure
-    args : Cmd
-
+class CallRoutine : CallProcedure
   METHODS
     method init( t, args )
 
-    method init( t, r, args )
+    method init( t, procedure, args )
 
     method init( existing:CallRoutine )
       prior.init( existing )
+      procedure = existing.procedure
       if (existing.args) args = existing.args.cloned
 
     method description->String
@@ -802,3 +799,51 @@ class Local : Cmd
       return @type
 endClass
 
+class PushNumber : Unary
+  METHODS
+    method description->String
+      return "PushNumber($)" (%operand)
+
+endClass
+
+class PushObject : Unary
+  METHODS
+    method description->String
+      return "PushObject($)" (%operand)
+
+endClass
+
+class PushValue : Unary
+  METHODS
+    method description->String
+      return "PushValue($)" (%operand)
+
+endClass
+
+class CallProcedure : Cmd
+  PROPERTIES
+    procedure : Procedure
+    args      : Cmd
+
+  METHODS
+    method init( t, args )
+
+    method init( t, procedure, args )
+
+    method init( existing:CallProcedure )
+      prior.init( existing )
+      procedure = existing.procedure
+      if (existing.args) args = existing.args.cloned
+
+    method description->String
+      return "CallProcedure($)" (%args)
+
+endClass
+
+
+class CastInt32ToValue : Unary
+  METHODS
+    method description->String
+      return "CastInt32ToValue($)" (%operand)
+
+endClass

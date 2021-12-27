@@ -18,6 +18,13 @@ augment Cmd
       endIf
 
   METHODS
+    method cmd_cast_to( target_type:Type )->Cmd
+trace target_type
+trace target_type.type_name
+      local cur_type = require_type
+      if (cur_type is target_type) return this
+      return target_type.cmd_cast( this )
+
     method organize_element
       throw t.error( "[INTERNAL] $.organize_element() is undefined." (type_name) )
 
@@ -72,7 +79,22 @@ augment
       return common_type( left.type, right.type )
 
     method CallRoutine.type->Type
-      return r.return_type
+      return procedure.return_type
+
+    method CastToInt32.type->Type
+      return Program.type_Int32
+
+    method CastToObject.type->Type
+      return Program.type_Object
+
+    method CastToReal64.type->Type
+      return Program.type_Real64
+
+    method CastToString.type->Type
+      return Program.type_String
+
+    method CastToValue.type->Type
+      return Program.type_Value
 
     method DefineModule.organize_element
       Program.set_current_module( t, name )
