@@ -2,10 +2,11 @@ module Boss
 
 class MethodOrganizer : Visitor
   PROPERTIES
-    this_module : Module
+    this_module    : Module
+    this_procedure : Procedure
 
   METHODS
-    method init( this_module )
+    method init( this_module, this_procedure )
 
     #method on_visit( cmd:GlobalMethodDef )
 
@@ -18,10 +19,8 @@ class MethodOrganizer : Visitor
 
       if (cmd.parameters)
         visit( cmd.parameters )
-
-        local origin = which{ cmd.type_context:1 || 0 }
-        forEach (param at i in cmd.parameters)
-          param->(as Local).index = origin + i
+        forEach (param in cmd.parameters)
+          cmd.locals.add( param->(as Local).[index=cmd.locals.count] )
         endForEach
       endIf
 

@@ -1,166 +1,140 @@
 module Boss
 
-augment Cmd
+# execute()
+augment
   METHODS
-    method execute->Logical
+    method Cmd.execute->Logical
       throw t.error( "[INTERNAL] $.execute() is undefined."(type_name) )
-endAugment
 
-augment CmdList
-  METHODS
-    method execute->Logical
+    method CmdList.execute->Logical
       forEach (cmd in list)
         if (not cmd.execute) return false
       endForEach
       return true
-endAugment
 
-augment AddInt32
-  METHODS
-    method execute->Logical
+    method AddInt32.execute->Logical
       if (not left.execute) return false
-      local a = Program.result_Int32
+      local a = Program.execution_result.x->Int32
 
       if (not right.execute) return false
-      Program.result_Int32 += a
+      Program.execution_result = a + Program.execution_result.x->Int32
       return true
-endAugment
 
-augment AddReal64
-  METHODS
-    method execute->Logical
+    method AddReal64.execute->Logical
       if (not left.execute) return false
-      local a = Program.result_Real64
+      local a = Program.execution_result.x
 
       if (not right.execute) return false
-      Program.result_Real64 += a
+      Program.execution_result = a + Program.execution_result.x
       return true
-endAugment
 
-augment CallRoutine
-  METHODS
-    method execute->Logical
+    method CallRoutine.execute->Logical
       if (args)
-        trace args
+        temporarily Program.fp = Program.stack.count
+          forEach (arg in args)
+            if (not arg.execute) return false
+          endForEach
+          if (not procedure.statements.execute) return false
+          Program.stack.count = Program.fp
+        endTemporarily
+
+      else
+        if (not procedure.statements.execute) return false
+        return true
+
       endIf
-      if (not procedure.statements.execute) return false
       return true
-endAugment
 
-augment CastInt32ToReal64
-  METHODS
-    method execute->Logical
+    method CastInt32ToReal64.execute->Logical
       if (not operand.execute) return false
-      Program.result_Real64 = Program.result_Int32->Real64
+      # Program.execution_result is already correct
       return true
-endAugment
 
-augment CastStringToReal64
-  METHODS
-    method execute->Logical
+    method CastToValue.execute->Logical
       if (not operand.execute) return false
-      Program.result_Real64 = Program.result_String->Real64
       return true
-endAugment
 
-augment DescriptionInt32
-  METHODS
-    method execute->Logical
+    method CastStringToReal64.execute->Logical
       if (not operand.execute) return false
-      Program.result_String = Program.result_Int32->String
+      Program.execution_result = Program.execution_result.object->(as String)->Real64
       return true
-endAugment
 
-augment DescriptionReal64
-  METHODS
-    method execute->Logical
+    method DescriptionInt32.execute->Logical
       if (not operand.execute) return false
-      Program.result_String = Program.result_Real64->String
+      Program.execution_result = Program.execution_result.x->Int32->String
       return true
-endAugment
 
-augment LiteralString
-  METHODS
-    method execute->Logical
-      Program.result_String = value
+    method DescriptionReal64.execute->Logical
+      if (not operand.execute) return false
+      Program.execution_result = Program.execution_result.x->String
       return true
-endAugment
 
-augment LiteralLogical
-  METHODS
-    method execute->Logical
-      Program.result_Int32 = which{ value:1 || 0 }
+    method DescriptionValue.execute->Logical
+      if (not operand.execute) return false
+      Program.execution_result = Program.execution_result.description
       return true
-endAugment
 
-augment LiteralCharacter
-  METHODS
-    method execute->Logical
-      Program.result_Int32 = value
+    method GetLocalValue.execute->Logical
+      Program.execution_result = Program.stack[ Program.fp + index ]
       return true
-endAugment
 
-augment LiteralInt32
-  METHODS
-    method execute->Logical
-      Program.result_Int32 = value
+    method LiteralString.execute->Logical
+      Program.execution_result = value
       return true
-endAugment
 
-augment LiteralReal64
-  METHODS
-    method execute->Logical
-      Program.result_Real64 = value
+    method LiteralLogical.execute->Logical
+      Program.execution_result = value
       return true
-endAugment
 
-augment LiteralPi
-  METHODS
-    method execute->Logical
-      Program.result_Real64 = pi
+    method LiteralCharacter.execute->Logical
+      Program.execution_result = value
       return true
-endAugment
 
-augment Print
-  METHODS
-    method execute->Logical
+    method LiteralInt32.execute->Logical
+      Program.execution_result = value
+      return true
+
+    method LiteralReal64.execute->Logical
+      Program.execution_result = value
+      return true
+
+    method LiteralPi.execute->Logical
+      Program.execution_result = pi
+      return true
+
+    method Print.execute->Logical
       forEach (cmd in args.list)
         if (not cmd.execute) return false
-        print Program.result_String
+        print Program.execution_result
       endForEach
       return true
-endAugment
 
-augment Println
-  METHODS
-    method execute->Logical
+    method Println.execute->Logical
       forEach (cmd in args.list)
         if (not cmd.execute) return false
-        print Program.result_String
+        print Program.execution_result
       endForEach
       println
       return true
-endAugment
 
-augment SubtractInt32
-  METHODS
-    method execute->Logical
+    method PushResult.execute->Logical
+      if (not operand.execute) return false
+      Program.stack.add( Program.execution_result )
+      return true
+
+    method SubtractInt32.execute->Logical
       if (not left.execute) return false
-      local a = Program.result_Int32
+      local a = Program.execution_result.x->Int32
 
       if (not right.execute) return false
-      Program.result_Int32 = a - Program.result_Int32
+      Program.execution_result = a - Program.execution_result.x->Int32
       return true
-endAugment
 
-augment SubtractReal64
-  METHODS
-    method execute->Logical
+    method SubtractReal64.execute->Logical
       if (not left.execute) return false
-      local a = Program.result_Real64
+      local a = Program.execution_result.x
 
       if (not right.execute) return false
-      Program.result_Real64 = a - Program.result_Real64
+      Program.execution_result = a - Program.execution_result.x
       return true
 endAugment
-

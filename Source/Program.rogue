@@ -8,9 +8,7 @@ class Program [singleton]
 
   GLOBAL PROPERTIES
     execution_status : Int32
-    result_Int32     : Int32
-    result_Real64    : Real64
-    result_String    : String
+    execution_result : BossValue
 
   PROPERTIES
     t              : Token

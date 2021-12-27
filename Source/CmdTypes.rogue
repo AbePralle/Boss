@@ -19,8 +19,6 @@ augment Cmd
 
   METHODS
     method cmd_cast_to( target_type:Type )->Cmd
-trace target_type
-trace target_type.type_name
       local cur_type = require_type
       if (cur_type is target_type) return this
       return target_type.cmd_cast( this )
@@ -110,6 +108,12 @@ augment
 
     method DescriptionReal64.type->Type
       return Program.type_String
+
+    method GetLocal.type->Type
+      return info.type
+
+    method GetLocalValue.type->Type
+      return Program.type_Value
 
     method LiteralString.type->Type
       return Program.type_String

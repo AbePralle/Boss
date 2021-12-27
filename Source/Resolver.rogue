@@ -3,11 +3,12 @@ uses Utility/WorkList
 
 class Resolver : Visitor
   PROPERTIES
-    this_module : Module
-    this_type   : Type
+    this_module    : Module
+    this_type      : Type
+    this_procedure : Procedure
 
   METHODS
-    method init( this_module, this_type )
+    method init( this_module, this_type, this_procedure )
 
     method on( cmd:Access )->Cmd
       return resolve_access( null, cmd )
@@ -26,13 +27,15 @@ class Resolver : Visitor
       if (left_type is not result_type) cmd.left = visit( result_type.cmd_cast(left) )
       if (right_type is not result_type) cmd.right = visit( result_type.cmd_cast(right) )
 
-    method on_visit( cmd:CallRoutine )
+    method on_visit( cmd:CallProcedure )
       if (cmd.args)
         forEach (arg at i in cmd.args)
           cmd.args[i] = visit( visit(arg).cmd_push )
         endForEach
-        trace cmd.args
       endIf
+
+    method on_visit( cmd:CallRoutine )
+      on_visit( cmd->(as CallProcedure) )
 
     method on( cmd:CastToReal64 )->Cmd
       trace "TODO"
@@ -49,9 +52,29 @@ class Resolver : Visitor
       }#
       return cmd
 
+      #{
+    method on( cmd:CastToValue )->Cmd
+      visit_children( cmd )
+      local from_type = cmd.operand.require_type
+      whichIs (from_type)
+        others: throw
+      endWhichIs
+      }#
+
     method on( cmd:Description )->Cmd
       local operand = visit( cmd.operand ).require_value
       return visit( operand.type.cmd_description(cmd.t, cmd.operand) )
+
+    method on( cmd:GetLocal )->Cmd
+      local type = cmd.info.type
+      if (type is Program.type_Value)
+        return visit( GetLocalValue(cmd.t,cmd.info) )
+      else
+        throw cmd.t.error( "[INTERNAL] Resolver.on(GetLocal) does not handle type $."(cmd.info.type) )
+      endIf
+
+    method on( cmd:GetLocalValue )->Cmd
+      return cmd
 
     method on_visit( cmd:Statements )
       forEach (arg in rewriter=cmd.list.rewriter)
@@ -75,12 +98,22 @@ class Resolver : Visitor
         if (arg) rewriter.write( arg )
       endForEach
 
+    method on_leave( cmd:Procedure )
+      forEach (v at i in cmd.locals)
+        v.index = i
+      endForEach
+
     method on( cmd:Subtract )->Cmd
       on_visit( cmd->(as Binary) )  # resolves children & converts to common type
       return visit( cmd.left.type.cmd_subtract(cmd.t, cmd.left, cmd.right) )
 
     method resolve_access( context:Cmd, access:Access )->Cmd
       local match : Procedure
+
+      if (not context and not access.args and this_procedure)
+        local v = this_procedure.find_local( access.name )
+        if (v) return visit( GetLocal(access.t,v) )
+      endIf
 
       visit( access.args )  # resolve args to determine types
 
@@ -175,13 +208,21 @@ class Resolver : Visitor
       return null
 endClass
 
+augment Procedure
+  METHODS
+    method find_local( name:String )->Local
+      forEach (v in locals step -1)
+        if (v.name == name) return v
+      endForEach
+      return null
+endAugment
+
 augment Cmd
   METHODS
     method cmd_call( context:Cmd, args:Cmd )->Cmd
       throw t.error( "[INTERNAL] $.cmd_call() is undefined."(type_name) )
 
     method cmd_push->Cmd
-trace require_type
       return require_type.cmd_push( this )
 
 endAugment
@@ -228,6 +269,9 @@ augment
     method TypeString.cmd_description( t:Token, operand:Cmd)->Cmd
       return operand
 
+    method TypeValue.cmd_description( t:Token, operand:Cmd)->Cmd
+      return DescriptionValue( t, operand )
+
 endAugment
 
 # Push
@@ -246,7 +290,7 @@ augment
       return PushNumber( operand.t, operand )
 
     method TypeValue.cmd_push( operand:Cmd )->Cmd
-      return PushValue( operand.t, operand )
+      return PushResult( operand.t, operand )
 
 endAugment
 

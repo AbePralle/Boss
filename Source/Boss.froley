@@ -872,12 +872,12 @@ parser
   create DescriptionObject(operand):Unary
   create DescriptionReal64(operand):Unary
   create DescriptionValue(operand):Unary
+  create GetLocal
+  create GetLocalValue:GetLocal
   create GlobalMethodDef(type_context_ref,name:String,parameters,return_type_ref,attributes,statements):Procedure
   create Literal
   create Procedure(name:String,parameters,return_type_ref,attributes,statements)
-  create PushNumber(operand):Unary
-  create PushObject(operand):Unary
-  create PushValue(operand):Unary
+  create PushResult(operand):Unary
   create SubtractInt32(left,right):Binary
   create SubtractObject(left,right):Binary
   create SubtractReal64(left,right):Binary

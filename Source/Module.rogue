@@ -18,10 +18,6 @@ class Module
       Program.all_modules.add( this )
       Program.modules_by_name[ name ] = this
 
-    method analyze( visitor:Visitor )
-      visitor.visit( forEach in (forEach in routines.by_name) )
-      visitor.visit( global_statements )
-
     method collect_routines( m_name:String, list:Procedure[], &is_limited )
       if (is_visiting) return
 
@@ -70,10 +66,16 @@ class Module
       # TODO: arrange class inheritance
 
     method organize_methods
-      analyze( MethodOrganizer(this) )
+      forEach (r in (forEach in routines.by_name))
+        MethodOrganizer(this,r).visit( r )
+      endForEach
+      MethodOrganizer(this,null).visit( global_statements )
 
     method resolve
-      analyze( Resolver(this,null) )
+      forEach (r in (forEach in routines.by_name))
+        Resolver(this,null,r).visit( r )
+      endForEach
+      Resolver(this,null,null).visit( global_statements )
 
     method use_module( m:Module, &is_exported )
       if (m is this) return # happens when this is the default module

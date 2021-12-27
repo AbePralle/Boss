@@ -152,6 +152,9 @@ class CmdList : Cmd
 
     method set( index:Int32, value:Cmd )
       @list[index] = value
+
+    method set_count( new_count:Int32 )
+      @list.count = new_count
 endClass
 
 class Unary( t, operand:Cmd ) : Cmd
@@ -593,6 +596,8 @@ class Procedure : Cmd
     signature        : String
     is_resolved      = false
 
+    locals           = Local[]
+
   METHODS
     method init( t, name, parameters, return_type_ref, attributes, statements )
 
@@ -603,6 +608,7 @@ class Procedure : Cmd
       if (existing.parameters) parameters = existing.parameters.cloned
       if (existing.attributes) attributes = existing.attributes.cloned
       if (existing.statements) statements = existing.statements.cloned
+      locals = existing.locals.cloned
 
     method accepts_arg_count( n:Int32 )->Logical
       local min = which{ parameters:parameters.count || 0 }
@@ -813,10 +819,10 @@ class PushObject : Unary
 
 endClass
 
-class PushValue : Unary
+class PushResult : Unary
   METHODS
     method description->String
-      return "PushValue($)" (%operand)
+      return "PushResult($)" (%operand)
 
 endClass
 
@@ -840,10 +846,36 @@ class CallProcedure : Cmd
 
 endClass
 
-
 class CastInt32ToValue : Unary
   METHODS
     method description->String
       return "CastInt32ToValue($)" (%operand)
 
 endClass
+
+class GetLocal : Cmd
+  PROPERTIES
+    info  : Local
+    index : Int32
+
+  METHODS
+    method init( t )
+
+    method init( t, info )
+      index = info.index
+
+    method init( existing:GetLocal )
+      t = existing.t
+      info = existing.info
+      index = existing.index
+
+    method description->String
+      return "GetLocal"
+endClass
+
+class GetLocalValue : GetLocal
+  METHODS
+    method description->String
+      return "GetLocalValue"
+endClass
+

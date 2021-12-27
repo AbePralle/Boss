@@ -3,7 +3,7 @@ module Boss
 uses Bitmap [export]
 uses Geometry [export]
 
-class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Object )
+class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Object ) [compound]
   ENUMERATE
     TYPE_UNDEFINED    = 1
     TYPE_NULL
