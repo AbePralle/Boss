@@ -31,11 +31,12 @@ class ParserCore [abstract]
     ip_arg = 18
     ip_statement = 19
     ip_access_args = 20
-    ip_expression = 21
-    ip_add_subtract = 22
-    ip_add_subtract__inner = 23
-    ip_term = 24
-    ip_additional_node_types = 25
+    ip_optional_expression = 21
+    ip_expression = 22
+    ip_add_subtract = 23
+    ip_add_subtract__inner = 24
+    ip_term = 25
+    ip_additional_node_types = 26
 
   PROPERTIES
     _tokens          : Token[]
@@ -494,6 +495,14 @@ class ParserCore [abstract]
               _cur_t = _token_stack.pop
               return
             endIf
+            if (_next_t.type == TokenType.KEYWORD_RETURN)
+              _on_t
+              _execute(ip_optional_expression)
+              _pop_frame
+              _push( Return(_cur_t,_node_arg(-1)), 1 )
+              _cur_t = _token_stack.pop
+              return
+            endIf
             _execute(ip_expression)
             _pop_frame
             return
@@ -503,6 +512,14 @@ class ParserCore [abstract]
               return
             endIf
             _execute(ip_args)
+            _pop_frame
+            return
+          case ip_optional_expression
+            if ((_next_t.type == TokenType.EOL))
+              _push( null, 0 )
+              return
+            endIf
+            _execute(ip_expression)
             _pop_frame
             return
           case ip_expression
@@ -638,6 +655,7 @@ class ParserCore [abstract]
             _push( Literal(_cur_t), 0 )
             _push( Procedure(_cur_t,_string_arg(-5),_node_arg(-4),_node_arg(-3),_node_arg(-2),_node_arg(-1)), 5 )
             _push( PushResult(_cur_t,_node_arg(-1)), 1 )
+            _push( ReturnResult(_cur_t,_node_arg(-1)), 1 )
             _push( SubtractInt32(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( SubtractObject(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( SubtractReal64(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )

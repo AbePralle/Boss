@@ -5,7 +5,7 @@ uses Geometry [export]
 
 class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Object ) [compound]
   ENUMERATE
-    TYPE_UNDEFINED    = 1
+    TYPE_UNDEFINED
     TYPE_NULL
     TYPE_LOGICAL
     TYPE_CHARACTER
@@ -23,6 +23,19 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
 
     TYPE_XY
     TYPE_BOX
+
+    # case TYPE_UNDEFINED
+    # case TYPE_NULL
+    # case TYPE_LOGICAL
+    # case TYPE_CHARACTER
+    # case TYPE_INT32
+    # case TYPE_REAL64
+    # case TYPE_STRING
+    # case TYPE_OBJECT
+    # case TYPE_LIST
+    # case TYPE_TABLE
+    # case TYPE_XY
+    # case TYPE_BOX
 
   ENUMERATE
     FORMATTED = 1
@@ -112,6 +125,98 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
       endIf
 
       throw UnsupportedOperationError()
+
+    method operator+( other:BossValue )->BossValue
+      which (type)
+        case TYPE_UNDEFINED
+          if (other.type == TYPE_STRING) return BossValue( "undefined" + other.object )
+          return this
+
+        case TYPE_NULL
+          if (other.type == TYPE_STRING) return BossValue( "null" + other.object )
+          return BossValue()
+
+        case TYPE_LOGICAL
+          which (other.type)
+            case TYPE_LOGICAL: return BossValue( this->Logical and other->Logical )
+            case TYPE_STRING:  return BossValue( this->String + other.object )
+            others:            return BossValue()
+          endWhich
+
+        case TYPE_CHARACTER
+          which (other.type)
+            case TYPE_CHARACTER,
+                 TYPE_INT32:     return BossValue( (x + other.x)->Int32 )
+            case TYPE_REAL64:    return BossValue( x + other.x )
+            case TYPE_STRING:    return BossValue( "$$"(Character(x),other.object) )
+            others:              return BossValue()
+          endWhich
+
+        case TYPE_INT32
+          which (other.type)
+            case TYPE_CHARACTER,
+                 TYPE_INT32:     return BossValue( (x + other.x)->Int32 )
+            case TYPE_REAL64:    return BossValue( x + other.x )
+            case TYPE_STRING:    return BossValue( x->Int32->String + other.object )
+            others:              return BossValue()
+          endWhich
+
+        case TYPE_REAL64
+          which (other.type)
+            case TYPE_CHARACTER,
+                 TYPE_INT32,
+                 TYPE_REAL64:    return BossValue( x + other.x )
+            case TYPE_STRING:    return BossValue( x->String + other.object )
+            others:              return BossValue()
+          endWhich
+
+        case TYPE_STRING
+          return BossValue( this->String + other->String )
+
+        case TYPE_OBJECT
+          return BossValue()
+
+        case TYPE_LIST
+          which (other.type)
+            case TYPE_LIST
+              return BossValue.list( object->(as BossValue[]).cloned.[add(other.object->(as BossValue[]))] )
+            others
+              return BossValue()
+          endWhich
+
+        case TYPE_TABLE
+          which (other.type)
+            case TYPE_TABLE
+              local result_table = StringTable<<BossValue>>( object->(as StringTable<<BossValue>>) )
+              local other_table  = other.object->(as StringTable<<BossValue>>)
+              forEach (entry in other_table.entries)
+                result_table[entry.key] = entry.value
+              endForEach
+              return BossValue.table( result_table )
+            others
+              return BossValue()
+          endWhich
+
+        case TYPE_XY
+          which (other.type)
+            case TYPE_XY
+              return BossValue( XY(x+other.x,y+other.y) )
+            others
+              return BossValue()
+          endWhich
+
+        case TYPE_BOX
+          which (other.type)
+            case TYPE_XY
+              return BossValue( Box(x+other.x,y+other.y,a,b) )
+            case TYPE_BOX
+              return BossValue( this->Box | other->Box )
+            others
+              return BossValue()
+          endWhich
+      endWhich
+
+      return BossValue()
 
     method to->XY
       return XY(x,y)

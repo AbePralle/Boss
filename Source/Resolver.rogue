@@ -30,7 +30,7 @@ class Resolver : Visitor
     method on_visit( cmd:CallProcedure )
       if (cmd.args)
         forEach (arg at i in cmd.args)
-          cmd.args[i] = visit( visit(arg).cmd_push )
+          cmd.args[i] = visit(arg)
         endForEach
       endIf
 
@@ -102,6 +102,13 @@ class Resolver : Visitor
       forEach (v at i in cmd.locals)
         v.index = i
       endForEach
+
+    method on( cmd:Return )->Cmd
+      if (cmd.result) return visit( ReturnResult(cmd.t,cmd.result) )
+      return cmd
+
+    method on_leave( cmd:ReturnResult )
+      cmd.result.require_value
 
     method on( cmd:Subtract )->Cmd
       on_visit( cmd->(as Binary) )  # resolves children & converts to common type
@@ -222,9 +229,6 @@ augment Cmd
     method cmd_call( context:Cmd, args:Cmd )->Cmd
       throw t.error( "[INTERNAL] $.cmd_call() is undefined."(type_name) )
 
-    method cmd_push->Cmd
-      return require_type.cmd_push( this )
-
 endAugment
 
 # Add
@@ -241,6 +245,9 @@ augment
 
     method TypeString.cmd_add( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
       return AddString( t, lhs, rhs )
+
+    method TypeValue.cmd_add( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return AddValue( t, lhs, rhs )
 
 endAugment
 
@@ -271,26 +278,6 @@ augment
 
     method TypeValue.cmd_description( t:Token, operand:Cmd)->Cmd
       return DescriptionValue( t, operand )
-
-endAugment
-
-# Push
-augment
-  METHODS
-    method Type.cmd_push( operand:Cmd )->Cmd
-      return PushObject( operand.t, operand )
-
-    method TypeInt32.cmd_push( operand:Cmd )->Cmd
-      return PushNumber( operand.t, operand )
-
-    method TypeLogical.cmd_push( operand:Cmd )->Cmd
-      return PushNumber( operand.t, operand )
-
-    method TypeReal64.cmd_push( operand:Cmd )->Cmd
-      return PushNumber( operand.t, operand )
-
-    method TypeValue.cmd_push( operand:Cmd )->Cmd
-      return PushResult( operand.t, operand )
 
 endAugment
 

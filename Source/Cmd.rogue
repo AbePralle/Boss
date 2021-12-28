@@ -876,6 +876,38 @@ endClass
 class GetLocalValue : GetLocal
   METHODS
     method description->String
-      return "GetLocalValue"
+      return "GetLocalValue[$]"(index)
 endClass
 
+
+class Return : Cmd
+  PROPERTIES
+    result : Cmd
+
+  METHODS
+    method init( t, result )
+
+    method init( existing:Return )
+      prior.init( existing )
+      if (existing.result) result = existing.result.cloned
+
+    method description->String
+      return "Return($)" (%result)
+
+endClass
+
+class ReturnResult : Cmd
+  PROPERTIES
+    result : Cmd
+
+  METHODS
+    method init( t, result )
+
+    method init( existing:ReturnResult )
+      prior.init( existing )
+      if (existing.result) result = existing.result.cloned
+
+    method description->String
+      return "ReturnResult($)" (%result)
+
+endClass

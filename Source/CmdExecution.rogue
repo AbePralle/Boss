@@ -28,21 +28,37 @@ augment
       Program.execution_result = a + Program.execution_result.x
       return true
 
+    method AddValue.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result
+
+      if (not right.execute) return false
+      Program.execution_result = a + Program.execution_result
+      return true
+
     method CallRoutine.execute->Logical
+      local status : Logical
+
       if (args)
         temporarily Program.fp = Program.stack.count
           forEach (arg in args)
             if (not arg.execute) return false
+            Program.stack.add( Program.execution_result )
           endForEach
-          if (not procedure.statements.execute) return false
+          status = procedure.statements.execute
           Program.stack.count = Program.fp
         endTemporarily
 
       else
-        if (not procedure.statements.execute) return false
-        return true
+        status = procedure.statements.execute
 
       endIf
+
+      if (status) return true
+
+      if (Program.execution_status != Program.EXE_RETURN) return false
+
+      Program.execution_status = Program.EXE_CONTINUE
       return true
 
     method CastInt32ToReal64.execute->Logical
@@ -121,6 +137,15 @@ augment
       if (not operand.execute) return false
       Program.stack.add( Program.execution_result )
       return true
+
+    method Return.execute->Logical
+      Program.execution_status = Program.EXE_RETURN
+      return false
+
+    method ReturnResult.execute->Logical
+      if (not result.execute) return false
+      Program.execution_status = Program.EXE_RETURN
+      return false
 
     method SubtractInt32.execute->Logical
       if (not left.execute) return false
