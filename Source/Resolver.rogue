@@ -103,6 +103,10 @@ class Resolver : Visitor
         v.index = i
       endForEach
 
+      cmd.local_stack_slots = cmd.locals.count
+      if (cmd.parameters) cmd.local_stack_slots -= cmd.parameters.count
+      # TODO: account for object context
+
     method on( cmd:Return )->Cmd
       if (cmd.result) return visit( ReturnResult(cmd.t,cmd.result) )
       return cmd
@@ -216,6 +220,9 @@ class Resolver : Visitor
 endClass
 
 augment Procedure
+  PROPERTIES
+    local_stack_slots : Int32  # in addition to args already on stack
+
   METHODS
     method find_local( name:String )->Local
       forEach (v in locals step -1)
