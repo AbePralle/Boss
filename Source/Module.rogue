@@ -53,9 +53,15 @@ class Module
       return result
 
     method launch
-      local statements = global_statements
-      global_statements = Statements(t)
-      statements.execute
+      if (global_statements.count)
+        local statements = global_statements
+        global_statements = Statements(t)
+
+        local r_launch = Routine( t, "global_statements", null, null, null, statements )
+        MethodOrganizer(this,r_launch).visit( r_launch )
+        Resolver(this,null,r_launch).visit( r_launch )
+        Program.execute( r_launch, null )
+      endIf
 
     method must_find_type( t:Token, name:String )->Type
       local result = find_type( name )

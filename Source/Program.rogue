@@ -54,6 +54,24 @@ class Program [singleton]
       type_Object    = Type( t, "Object" )
       type_Global    = Type( t, "Global" )
 
+    method execute( procedure:Procedure, args:Cmd )->Logical
+      temporarily fp = stack.count
+        if (args)
+          forEach (arg in args)
+            if (not arg.execute) return false
+            stack.add( execution_result )
+          endForEach
+        endIf
+        stack.expand( procedure.local_stack_slots )
+
+        local status = procedure.statements.execute
+        stack.count = fp
+        if (status) return true
+        if (execution_status != EXE_RETURN) return false
+        execution_status = EXE_CONTINUE
+        return true
+      endTemporarily
+
     method include( filepath:String )
       if (parsed_files.contains(filepath)) return
 

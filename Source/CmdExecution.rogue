@@ -37,22 +37,7 @@ augment
       return true
 
     method CallRoutine.execute->Logical
-      temporarily Program.fp = Program.stack.count
-        if (args)
-          forEach (arg in args)
-            if (not arg.execute) return false
-            Program.stack.add( Program.execution_result )
-          endForEach
-        endIf
-        Program.stack.expand( procedure.local_stack_slots )
-
-        local status = procedure.statements.execute
-        Program.stack.count = Program.fp
-        if (status) return true
-        if (Program.execution_status != Program.EXE_RETURN) return false
-        Program.execution_status = Program.EXE_CONTINUE
-        return true
-      endTemporarily
+      return Program.execute( procedure, args )
 
     method CastInt32ToReal64.execute->Logical
       if (not operand.execute) return false
