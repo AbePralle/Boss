@@ -28,6 +28,7 @@ KEYWORD_END_FOR_EACH endForEach  [structural]
 KEYWORD_END_IF       endIf       [structural]
 KEYWORD_END_ROUTINE  endRoutine  [structural]
 KEYWORD_END_WHILE    endWhile    [structural]
+KEYWORD_EXPORT       export
 KEYWORD_FALSE        false
 KEYWORD_FOR_EACH     forEach
 KEYWORD_GLOBAL       global
@@ -36,6 +37,7 @@ KEYWORD_GLOBAL_METHODS(GLOBAL METHODS)       [structural]
 KEYWORD_IF           if
 KEYWORD_IN           in
 KEYWORD_IMPORT       import
+KEYWORD_INCLUDE      include
 KEYWORD_LOCAL        local
 KEYWORD_METHOD       method
 KEYWORD_METHODS      METHODS     [structural]
@@ -385,6 +387,8 @@ parser
   consume_eols
   if (not hasAnother) return
 
+  on "include" string -> Include(filepath:String)
+
   on "module"
     if (nextIs(IDENTIFIER)) identifier
     else                    createNull
@@ -404,6 +408,8 @@ parser
     endIf
     produce Routine(name:String,parameters,return_type_ref,attributes,statements):Procedure
   endOn
+
+  on "uses" module_path uses_attributes-> UsesModule(path,attributes)
 
   procedure_body
 
@@ -444,6 +450,10 @@ parser
 - identifier
   on IDENTIFIER -> Identifier(name=content)
   syntaxError "Identifier expected."
+
+- string
+  on STRING -> LiteralString(value=content):Literal
+  syntaxError "Literal string expected."
 
 #{
 
@@ -735,11 +745,10 @@ parser
   expression
 
 - statement
-
   on "noAction": return
   on "print"     args -> Print(args)
   on "println"   args -> Println(args)
-  on "return" optional_expression -> Return(result)
+  on "return"    optional_expression -> Return(result)
 
   expression
 
@@ -776,6 +785,45 @@ parser
     produce While(condition,statements)
   endOn
 }#
+
+- module_path
+  beginList
+    identifier
+    while (consume('/'))
+      identifier
+    endWhile
+  produceList
+
+- uses_attributes
+  on '['
+    beginList
+      while (hasAnother and not nextIs(']'))
+        uses_attribute
+        consume ','
+      endWhile
+      mustConsume(']')
+    produceList
+  elseOnOthers
+    produceNull
+  endOn
+
+- uses_attribute
+  on "export" -> Attribute(name=content)
+  syntaxError "Illegal attribute for 'uses'. Expected 'export'."
+
+#- import_module_by_path_or_filepath
+#  on STRING
+#    produce ImportModuleByFilepath(filepath=content)
+#  endOn
+#
+#  beginList
+#    identifier
+#    while (consume('/'))
+#      identifier
+#    endWhile
+#  createList
+#
+#  produce ImportModuleByPath(segments)
 
 - access_args
   if (not nextIs('(')) produceNull
@@ -843,6 +891,17 @@ parser
   on "false"     -> LiteralLogical(value="false":Logical)
   on '(', expression, ')': return
   on "pi"        -> LiteralPi
+
+  on "import"
+    if (consume('('))
+      string
+      mustConsume ')'
+    else
+      string
+    endIf
+    produce ImportModule(filepath:String)
+  endOn
+
   syntaxError
 
 - additional_node_types

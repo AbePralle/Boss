@@ -1,6 +1,12 @@
 module Boss
 
 class Module
+  ENUMERATE
+    STATE_UNRESOLVED
+    STATE_TYPES_ORGANIZED
+    STATE_METHODS_ORGANIZED
+    STATE_RESOLVED
+
   PROPERTIES
     t    : Token
     name : String
@@ -10,13 +16,18 @@ class Module
     global_statements : Statements
     routines          = Procedures()
 
-    is_visiting : Logical
+    is_dynamic   : Logical
+    is_visiting  : Logical
+    is_resolving : Logical
+
+    state = STATE_UNRESOLVED : Int32
 
   METHODS
-    method init( t, name )
+    method init( t, name, &dynamic )
       global_statements = Statements(t)
+      is_dynamic = dynamic
       Program.all_modules.add( this )
-      Program.modules_by_name[ name ] = this
+      if (not is_dynamic) Program.modules_by_name[ name ] = this
 
     method collect_routines( m_name:String, list:Procedure[], &is_limited )
       if (is_visiting) return
@@ -24,16 +35,32 @@ class Module
       local matching = routines.by_name[ m_name ]
       if (matching) list.add( matching )
 
-      is_visiting = true
-      forEach (used_m in used_modules)
-        if (not is_limited or used_m.is_exported)
-          used_m.m.collect_routines( m_name, list, &=is_limited )
-        endIf
-      endForEach
-      is_visiting = false
+      temporarily is_visiting = true
+        forEach (used_m in used_modules)
+          if (not is_limited or used_m.is_exported)
+            used_m.m.collect_routines( m_name, list, &=is_limited )
+          endIf
+        endForEach
+      endTemporarily
 
     method description->String
       return name
+
+    method execute->Logical
+      if (not global_statements.count)
+        Program.execution_status = Program.EXE_RETURN
+        Program.execution_result = BossValue()
+        return true
+      endIf
+
+      #local statements = global_statements
+      #global_statements = Statements(t)
+
+      local r_launch = Routine( t, "global_statements", null, null, null, global_statements )
+      MethodOrganizer(this,r_launch).visit( r_launch )
+      Resolver(this,null,r_launch).visit( r_launch )
+      if (Program.execute( r_launch, null )) return true
+      return false
 
     method find_type( name:String, &is_limited )->Type
       if (is_visiting) return null
@@ -41,27 +68,16 @@ class Module
       local result = types[ name ]
       if (result) return result
 
-      is_visiting = true
-      forEach (used_m in used_modules)
-        if (not is_limited or used_m.is_exported)
-          result = used_m.m.find_type( name, &is_limited )
-          if (result) escapeForEach
-        endIf
-      endForEach
-      is_visiting = false
+      temporarily is_visiting = true
+        forEach (used_m in used_modules)
+          if (not is_limited or used_m.is_exported)
+            result = used_m.m.find_type( name, &is_limited )
+            if (result) escapeForEach
+          endIf
+        endForEach
+      endTemporarily
 
       return result
-
-    method launch
-      if (global_statements.count)
-        local statements = global_statements
-        global_statements = Statements(t)
-
-        local r_launch = Routine( t, "global_statements", null, null, null, statements )
-        MethodOrganizer(this,r_launch).visit( r_launch )
-        Resolver(this,null,r_launch).visit( r_launch )
-        Program.execute( r_launch, null )
-      endIf
 
     method must_find_type( t:Token, name:String )->Type
       local result = find_type( name )
@@ -69,21 +85,36 @@ class Module
       throw t.error( "No such type '$'." (name) )
 
     method organize_types
-      # TODO: arrange class inheritance
+      #if (state >= STATE_TYPES_ORGANIZED) return
+      state = STATE_TYPES_ORGANIZED
+
+      temporarily is_resolving = true
+        # TODO: arrange class inheritance
+      endTemporarily
 
     method organize_methods
-      forEach (r in (forEach in routines.by_name))
-        MethodOrganizer(this,r).visit( r )
-      endForEach
-      MethodOrganizer(this,null).visit( global_statements )
+      #if (state >= STATE_METHODS_ORGANIZED) return
+      state = STATE_METHODS_ORGANIZED
+
+      temporarily is_resolving = true
+        forEach (r in (forEach in routines.by_name))
+          MethodOrganizer(this,r).visit( r )
+        endForEach
+        MethodOrganizer(this,null).visit( global_statements )
+      endTemporarily
 
     method resolve
-      forEach (r in (forEach in routines.by_name))
-        Resolver(this,null,r).visit( r )
-      endForEach
-      Resolver(this,null,null).visit( global_statements )
+      #if (state >= STATE_RESOLVED) return
+      state = STATE_RESOLVED
 
-    method use_module( m:Module, &is_exported )
+      temporarily is_resolving = true
+        forEach (r in (forEach in routines.by_name))
+          Resolver(this,null,r).visit( r )
+        endForEach
+        Resolver(this,null,null).visit( global_statements )
+      endTemporarily
+
+    method uses_module( m:Module, &is_exported )
       if (m is this) return # happens when this is the default module
       forEach (existing_m in used_modules)
         if (existing_m.m is m) return

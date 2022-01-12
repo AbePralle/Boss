@@ -24,19 +24,23 @@ class ParserCore [abstract]
     ip_optional_type = 11
     ip_procedure_body = 12
     ip_identifier = 13
-    ip_multi_line_statements = 14
-    ip_single_line_statements = 15
-    ip_control_structure = 16
-    ip_args = 17
-    ip_arg = 18
-    ip_statement = 19
-    ip_access_args = 20
-    ip_optional_expression = 21
-    ip_expression = 22
-    ip_add_subtract = 23
-    ip_add_subtract__inner = 24
-    ip_term = 25
-    ip_additional_node_types = 26
+    ip_string = 14
+    ip_multi_line_statements = 15
+    ip_single_line_statements = 16
+    ip_control_structure = 17
+    ip_args = 18
+    ip_arg = 19
+    ip_statement = 20
+    ip_module_path = 21
+    ip_uses_attributes = 22
+    ip_uses_attribute = 23
+    ip_access_args = 24
+    ip_optional_expression = 25
+    ip_expression = 26
+    ip_add_subtract = 27
+    ip_add_subtract__inner = 28
+    ip_term = 29
+    ip_additional_node_types = 30
 
   PROPERTIES
     _tokens          : Token[]
@@ -56,7 +60,12 @@ class ParserCore [abstract]
 
   METHODS
     method init( file:File )
-      local scanner = Scanner( file )
+      init( Scanner(file) )
+
+    method init( filepath:String, content:String )
+      init( Scanner(filepath,content) )
+
+    method init( scanner:Scanner )
       local tokens = scanner.tokenize
       if (scanner.output.count) print scanner.output; flush
       init( tokens )
@@ -145,11 +154,11 @@ class ParserCore [abstract]
       print( output ).flush
       output.clear
 
-    method _on_t
-     _token_stack.push( _cur_t )
-     _cur_t = _next_t
+    method _on_t->Token
+     local result = _next_t
      ++_position
      _next_t = _peek
+     return result
 
     method _peek->Token
       if (_position < _limit) return _tokens[ _position ]
@@ -159,6 +168,10 @@ class ParserCore [abstract]
     method _pop_frame
       _token_stack.pop_frame
       _cur_t = _token_stack.pop
+
+    method _push_frame
+      _token_stack.push( _cur_t )
+      _token_stack.push_frame
 
     method _push( cmd:Cmd, node_arg_count:Int32 )
       _cmd_stack.discard_from( _cmd_stack.count - node_arg_count )
@@ -248,8 +261,7 @@ class ParserCore [abstract]
       throw _peek.error( message )
 
     method _execute( ip:Int32 )
-      _token_stack.push( _cur_t )
-      _token_stack.push_frame
+      _push_frame
       loop
         ++ip
         which (ip-1)
@@ -287,38 +299,56 @@ class ParserCore [abstract]
             if ((not (_position < _limit)))
               return
             endIf
-            if (_next_t.type == TokenType.KEYWORD_MODULE)
-              _on_t
-              if ((_next_t.type == TokenType.IDENTIFIER))
-                _execute(ip_identifier)
+            if (_next_t.type == TokenType.KEYWORD_INCLUDE)
+              temporarily _cur_t = _on_t
+                _execute(ip_string)
                 _pop_frame
-              else
-                _push( null, 0 )
-              endIf
-              _push( DefineModule(_cur_t,_string_arg(-1)), 1 )
-              _cur_t = _token_stack.pop
-              return
+                _push( Include(_cur_t,_string_arg(-1)), 1 )
+                return
+              endTemporarily
+            endIf
+            if (_next_t.type == TokenType.KEYWORD_MODULE)
+              temporarily _cur_t = _on_t
+                if ((_next_t.type == TokenType.IDENTIFIER))
+                  _execute(ip_identifier)
+                  _pop_frame
+                else
+                  _push( null, 0 )
+                endIf
+                _push( DefineModule(_cur_t,_string_arg(-1)), 1 )
+                return
+              endTemporarily
             endIf
             if (_next_t.type == TokenType.KEYWORD_ROUTINE)
-              _on_t
-              _execute(ip_identifier)
-              _pop_frame
-              _execute(ip_procedure_parameters)
-              _pop_frame
-              _execute(ip_procedure_return_type)
-              _pop_frame
-              _push( null, 0 )
-              if (_consume(TokenType.SYMBOL_COLON))
-                _execute(ip_single_line_statements)
+              temporarily _cur_t = _on_t
+                _execute(ip_identifier)
                 _pop_frame
-              else
-                _execute(ip_multi_line_statements)
+                _execute(ip_procedure_parameters)
                 _pop_frame
-                if (not _consume(TokenType.KEYWORD_END_ROUTINE)) _throw_syntax_error( &expected=TokenType.KEYWORD_END_ROUTINE )
-              endIf
-              _push( Routine(_cur_t,_string_arg(-5),_node_arg(-4),_node_arg(-3),_node_arg(-2),_node_arg(-1)), 5 )
-              _cur_t = _token_stack.pop
-              return
+                _execute(ip_procedure_return_type)
+                _pop_frame
+                _push( null, 0 )
+                if (_consume(TokenType.SYMBOL_COLON))
+                  _execute(ip_single_line_statements)
+                  _pop_frame
+                else
+                  _execute(ip_multi_line_statements)
+                  _pop_frame
+                  if (not _consume(TokenType.KEYWORD_END_ROUTINE)) _throw_syntax_error( &expected=TokenType.KEYWORD_END_ROUTINE )
+                endIf
+                _push( Routine(_cur_t,_string_arg(-5),_node_arg(-4),_node_arg(-3),_node_arg(-2),_node_arg(-1)), 5 )
+                return
+              endTemporarily
+            endIf
+            if (_next_t.type == TokenType.KEYWORD_USES)
+              temporarily _cur_t = _on_t
+                _execute(ip_module_path)
+                _pop_frame
+                _execute(ip_uses_attributes)
+                _pop_frame
+                _push( UsesModule(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
+                return
+              endTemporarily
             endIf
             _execute(ip_procedure_body)
             _pop_frame
@@ -342,14 +372,14 @@ class ParserCore [abstract]
             _execute(ip_consume_eols)
             _pop_frame
             if (_next_t.type == TokenType.IDENTIFIER)
-              _on_t
-              _execute(ip_optional_initial_value)
-              _pop_frame
-              _execute(ip_optional_type)
-              _pop_frame
-              _push( Local(_cur_t,_cur_t.content,_node_arg(-2),_node_arg(-1)), 2 )
-              _cur_t = _token_stack.pop
-              return
+              temporarily _cur_t = _on_t
+                _execute(ip_optional_initial_value)
+                _pop_frame
+                _execute(ip_optional_type)
+                _pop_frame
+                _push( Local(_cur_t,_cur_t.content,_node_arg(-2),_node_arg(-1)), 2 )
+                return
+              endTemporarily
             endIf
             if (not _consume(TokenType.IDENTIFIER)) _throw_syntax_error( &expected=TokenType.IDENTIFIER )
             return
@@ -373,10 +403,10 @@ class ParserCore [abstract]
             return
           case ip_type
             if (_next_t.type == TokenType.IDENTIFIER)
-              _on_t
-              _push( TypeReference(_cur_t,_cur_t.content), 0 )
-              _cur_t = _token_stack.pop
-              return
+              temporarily _cur_t = _on_t
+                _push( TypeReference(_cur_t,_cur_t.content), 0 )
+                return
+              endTemporarily
             endIf
             _throw_syntax_error("Identifier expected.")
             return
@@ -394,12 +424,21 @@ class ParserCore [abstract]
             return
           case ip_identifier
             if (_next_t.type == TokenType.IDENTIFIER)
-              _on_t
-              _push( Identifier(_cur_t,_cur_t.content), 0 )
-              _cur_t = _token_stack.pop
-              return
+              temporarily _cur_t = _on_t
+                _push( Identifier(_cur_t,_cur_t.content), 0 )
+                return
+              endTemporarily
             endIf
             _throw_syntax_error("Identifier expected.")
+            return
+          case ip_string
+            if (_next_t.type == TokenType.STRING)
+              temporarily _cur_t = _on_t
+                _push( LiteralString(_cur_t,_cur_t.content), 0 )
+                return
+              endTemporarily
+            endIf
+            _throw_syntax_error("Literal string expected.")
             return
           case ip_multi_line_statements
             _execute(ip_consume_eols_and_semicolons)
@@ -475,36 +514,72 @@ class ParserCore [abstract]
             return
           case ip_statement
             if (_next_t.type == TokenType.KEYWORD_NO_ACTION)
-              _on_t
-              _cur_t = _token_stack.pop
-              return
+              temporarily _cur_t = _on_t
+                return
+              endTemporarily
             endIf
             if (_next_t.type == TokenType.KEYWORD_PRINT)
-              _on_t
-              _execute(ip_args)
-              _pop_frame
-              _push( Print(_cur_t,_node_arg(-1)), 1 )
-              _cur_t = _token_stack.pop
-              return
+              temporarily _cur_t = _on_t
+                _execute(ip_args)
+                _pop_frame
+                _push( Print(_cur_t,_node_arg(-1)), 1 )
+                return
+              endTemporarily
             endIf
             if (_next_t.type == TokenType.KEYWORD_PRINTLN)
-              _on_t
-              _execute(ip_args)
-              _pop_frame
-              _push( Println(_cur_t,_node_arg(-1)), 1 )
-              _cur_t = _token_stack.pop
-              return
+              temporarily _cur_t = _on_t
+                _execute(ip_args)
+                _pop_frame
+                _push( Println(_cur_t,_node_arg(-1)), 1 )
+                return
+              endTemporarily
             endIf
             if (_next_t.type == TokenType.KEYWORD_RETURN)
-              _on_t
-              _execute(ip_optional_expression)
-              _pop_frame
-              _push( Return(_cur_t,_node_arg(-1)), 1 )
-              _cur_t = _token_stack.pop
-              return
+              temporarily _cur_t = _on_t
+                _execute(ip_optional_expression)
+                _pop_frame
+                _push( Return(_cur_t,_node_arg(-1)), 1 )
+                return
+              endTemporarily
             endIf
             _execute(ip_expression)
             _pop_frame
+            return
+          case ip_module_path
+            _begin_list
+            _execute(ip_identifier)
+            _pop_frame
+            while (_consume(TokenType.SYMBOL_SLASH))
+              _execute(ip_identifier)
+              _pop_frame
+            endWhile
+            _push_list( CmdList(_list_t) )
+            return
+          case ip_uses_attributes
+            if (_next_t.type == TokenType.SYMBOL_OPEN_BRACKET)
+              temporarily _cur_t = _on_t
+                _begin_list
+                while (((_position < _limit) and (not (_next_t.type == TokenType.SYMBOL_CLOSE_BRACKET))))
+                  _execute(ip_uses_attribute)
+                  _pop_frame
+                  _consume(TokenType.SYMBOL_COMMA)
+                endWhile
+                if (not _consume(TokenType.SYMBOL_CLOSE_BRACKET)) _throw_syntax_error( &expected=TokenType.SYMBOL_CLOSE_BRACKET )
+                _push_list( CmdList(_list_t) )
+                return
+              endTemporarily
+            else
+              _push( null, 0 )
+              return
+            endIf
+          case ip_uses_attribute
+            if (_next_t.type == TokenType.KEYWORD_EXPORT)
+              temporarily _cur_t = _on_t
+                _push( Attribute(_cur_t,_cur_t.content), 0 )
+                return
+              endTemporarily
+            endIf
+            _throw_syntax_error("Illegal attribute for 'uses'. Expected 'export'.")
             return
           case ip_access_args
             if ((not (_next_t.type == TokenType.SYMBOL_OPEN_PAREN)))
@@ -534,86 +609,100 @@ class ParserCore [abstract]
             return
           case ip_add_subtract__inner
             if (_next_t.type == TokenType.SYMBOL_PLUS)
-              _on_t
-              _consume_eols
-              _execute(ip_term)
-              _pop_frame
-              _push( Add(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
-              _execute(ip_add_subtract__inner)
-              _pop_frame
-              _cur_t = _token_stack.pop
-              return
+              temporarily _cur_t = _on_t
+                _consume_eols
+                _execute(ip_term)
+                _pop_frame
+                _push( Add(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
+                _execute(ip_add_subtract__inner)
+                _pop_frame
+                return
+              endTemporarily
             endIf
             if (_next_t.type == TokenType.SYMBOL_MINUS)
-              _on_t
-              _consume_eols
-              _execute(ip_term)
-              _pop_frame
-              _push( Subtract(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
-              _execute(ip_add_subtract__inner)
-              _pop_frame
-              _cur_t = _token_stack.pop
-              return
+              temporarily _cur_t = _on_t
+                _consume_eols
+                _execute(ip_term)
+                _pop_frame
+                _push( Subtract(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
+                _execute(ip_add_subtract__inner)
+                _pop_frame
+                return
+              endTemporarily
             endIf
             return
           case ip_term
             if (_next_t.type == TokenType.STRING)
-              _on_t
-              _push( LiteralString(_cur_t,_cur_t.content), 0 )
-              _cur_t = _token_stack.pop
-              return
+              temporarily _cur_t = _on_t
+                _push( LiteralString(_cur_t,_cur_t.content), 0 )
+                return
+              endTemporarily
             endIf
             if (_next_t.type == TokenType.INTEGER)
-              _on_t
-              _push( LiteralInt32(_cur_t,_string_to_Integer(_cur_t.content)), 0 )
-              _cur_t = _token_stack.pop
-              return
+              temporarily _cur_t = _on_t
+                _push( LiteralInt32(_cur_t,_string_to_Integer(_cur_t.content)), 0 )
+                return
+              endTemporarily
             endIf
             if (_next_t.type == TokenType.REAL_NUMBER)
-              _on_t
-              _push( LiteralReal64(_cur_t,_string_to_Real(_cur_t.content)), 0 )
-              _cur_t = _token_stack.pop
-              return
+              temporarily _cur_t = _on_t
+                _push( LiteralReal64(_cur_t,_string_to_Real(_cur_t.content)), 0 )
+                return
+              endTemporarily
             endIf
             if (_next_t.type == TokenType.CHARACTER)
-              _on_t
-              _push( LiteralCharacter(_cur_t,_string_to_Character(_cur_t.content)), 0 )
-              _cur_t = _token_stack.pop
-              return
+              temporarily _cur_t = _on_t
+                _push( LiteralCharacter(_cur_t,_string_to_Character(_cur_t.content)), 0 )
+                return
+              endTemporarily
             endIf
             if (_next_t.type == TokenType.IDENTIFIER)
-              _on_t
-              _execute(ip_access_args)
-              _pop_frame
-              _push( Access(_cur_t,_cur_t.content,_node_arg(-1)), 1 )
-              _cur_t = _token_stack.pop
-              return
+              temporarily _cur_t = _on_t
+                _execute(ip_access_args)
+                _pop_frame
+                _push( Access(_cur_t,_cur_t.content,_node_arg(-1)), 1 )
+                return
+              endTemporarily
             endIf
             if (_next_t.type == TokenType.KEYWORD_TRUE)
-              _on_t
-              _push( LiteralLogical(_cur_t,_string_to_Logical("true")), 0 )
-              _cur_t = _token_stack.pop
-              return
+              temporarily _cur_t = _on_t
+                _push( LiteralLogical(_cur_t,_string_to_Logical("true")), 0 )
+                return
+              endTemporarily
             endIf
             if (_next_t.type == TokenType.KEYWORD_FALSE)
-              _on_t
-              _push( LiteralLogical(_cur_t,_string_to_Logical("false")), 0 )
-              _cur_t = _token_stack.pop
-              return
+              temporarily _cur_t = _on_t
+                _push( LiteralLogical(_cur_t,_string_to_Logical("false")), 0 )
+                return
+              endTemporarily
             endIf
             if (_next_t.type == TokenType.SYMBOL_OPEN_PAREN)
-              _on_t
-              _execute(ip_expression)
-              _pop_frame
-              if (not _consume(TokenType.SYMBOL_CLOSE_PAREN)) _throw_syntax_error( &expected=TokenType.SYMBOL_CLOSE_PAREN )
-              _cur_t = _token_stack.pop
-              return
+              temporarily _cur_t = _on_t
+                _execute(ip_expression)
+                _pop_frame
+                if (not _consume(TokenType.SYMBOL_CLOSE_PAREN)) _throw_syntax_error( &expected=TokenType.SYMBOL_CLOSE_PAREN )
+                return
+              endTemporarily
             endIf
             if (_next_t.type == TokenType.KEYWORD_PI)
-              _on_t
-              _push( LiteralPi(_cur_t), 0 )
-              _cur_t = _token_stack.pop
-              return
+              temporarily _cur_t = _on_t
+                _push( LiteralPi(_cur_t), 0 )
+                return
+              endTemporarily
+            endIf
+            if (_next_t.type == TokenType.KEYWORD_IMPORT)
+              temporarily _cur_t = _on_t
+                if (_consume(TokenType.SYMBOL_OPEN_PAREN))
+                  _execute(ip_string)
+                  _pop_frame
+                  if (not _consume(TokenType.SYMBOL_CLOSE_PAREN)) _throw_syntax_error( &expected=TokenType.SYMBOL_CLOSE_PAREN )
+                else
+                  _execute(ip_string)
+                  _pop_frame
+                endIf
+                _push( ImportModule(_cur_t,_string_arg(-1)), 1 )
+                return
+              endTemporarily
             endIf
             _throw_syntax_error
             return

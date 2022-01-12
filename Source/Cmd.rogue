@@ -911,3 +911,95 @@ class ReturnResult : Cmd
       return "ReturnResult($)" (%result)
 
 endClass
+
+class Attribute : Cmd
+  PROPERTIES
+    name : String
+
+  METHODS
+    method init( t, name )
+
+    method init( existing:Attribute )
+      prior.init( existing )
+      name = existing.name
+
+    method description->String
+      return "Attribute($)" (%name)
+
+    method to->Character
+      return Cmd.to_character(name)
+
+    method to->Int32:  return name
+    method to->Logical: return name?
+    method to->String: return name
+
+endClass
+
+class UsesModule : Cmd
+  PROPERTIES
+    path       : Cmd
+    attributes : Cmd
+
+  METHODS
+    method init( t, path, attributes )
+
+    method init( existing:UsesModule )
+      prior.init( existing )
+      if (existing.path) path = existing.path.cloned
+      if (existing.attributes) attributes = existing.attributes.cloned
+
+    method description->String
+      return "UsesModule($,$)" (%path,%attributes)
+
+    method is_exported->Logical
+      if (not attributes) return false
+      if ((forEach in attributes)->String == "export") return true
+      return false
+
+endClass
+
+class ImportModule : Cmd
+  PROPERTIES
+    filepath : String
+
+  METHODS
+    method init( t, filepath )
+
+    method init( existing:ImportModule )
+      prior.init( existing )
+      filepath = existing.filepath
+
+    method description->String
+      return "ImportModule($)" (%filepath)
+
+    method to->Character
+      return Cmd.to_character(filepath)
+
+    method to->Int32:  return filepath
+    method to->Logical: return filepath?
+    method to->String: return filepath
+
+endClass
+
+class Include : Cmd
+  PROPERTIES
+    filepath : String
+
+  METHODS
+    method init( t, filepath )
+
+    method init( existing:Include )
+      prior.init( existing )
+      filepath = existing.filepath
+
+    method description->String
+      return "Include($)" (%filepath)
+
+    method to->Character
+      return Cmd.to_character(filepath)
+
+    method to->Int32:  return filepath
+    method to->Logical: return filepath?
+    method to->String: return filepath
+
+endClass

@@ -29,8 +29,8 @@ class ScannerCore [abstract]
   PROPERTIES
     _filepath     : String
     _scanner      : ::Scanner
-    _src_line     = 1
-    _src_column   = 1
+    line          = 1
+    column        = 1
 
     tokens        = Token[]
     buffer        = StringBuilder()
@@ -69,15 +69,17 @@ class ScannerCore [abstract]
     _scan_pattern_15 = ScanPattern( "[0-9a-fA-F]" )
     _scan_pattern_16 = ScanPattern( "[ ]*" )
     _scan_table_0 = ScanTable("gW7/HQo8Ij4nQEBGJlAtVipkIWpecH1yXXQpdjp4LIEeJIEgfIEiPYEsPoEyPIE8e4FGW4FIKIFKJYFMLoFSK4FUP4FeO4FkL4FmfoFsAAABAAIBJ0QDAAgCfExbTgQAGgAFAT1UNAAdAz5eLWA9YgYAHgAwAAcBPWgxAAkBPW4fAAoACwAMAA0ADgM6gQA8gQI+gQwPAP8BPIEG/wE6gQoZAP8BPoEQ/wI6gRY+gRgpAP8BOoEcKgAQABEALgJ8gSg9gSoSADUAFAE9gTATABYCPYE4PoE6FQAXABsCPYFCPIFEGAAcACAAIQAiACMBPYFQMwAkACUCK4FaPYFcJgAvACcBOoFiKAArACwBPYFqMgAtAA==")
-    _scan_table_1 = ScanTable("hgYAE0coYYEGY4EgbYEyZYFcZoJiZ4MMaYMibINATYNSboNsb4QWcIQcUIQ6coRgc4UOdIUcdYVGd4V0/wFMLP8BTzD/AUI0/wFBOP8BTDwBASBA/wJQRk1s/wFSSv8BT07/AVBS/wFFVv8BUlr/AVRe/wFJYv8BRWb/AVNqDwD/AUVw/wFUdP8BSHj/AU98/wFEgQD/AVOBBBAA/wF1gQr/AWeBDv8BbYES/wFlgRb/AW6BGv8BdIEeAgD/AWyBJP8BYYEo/wFzgSz/AXOBMAMA/wJvgThlgUr/AWSBPP8BdYFA/wFsgUT/AWWBSAQA/wF0gU7/AWiBUv8Bb4FW/wFkgVoVAP8CbIFiboF0/wFzgWb/AWWBagUBSYFu/wFmgXIGAP8BZIF4/wVDggRGghZJgjBSgjZXglD/AWyCCP8BYYIM/wFzghD/AXOCFAcA/wFvghr/AXKCHv8BRYIi/wFhgib/AWOCKv8BaIIuCAD/AWaCNAkA/wFvgjr/AXWCPv8BdIJC/wFpgkb/AW6CSv8BZYJOCgD/AWiCVP8BaYJY/wFsglz/AWWCYAsA/wJhgmhvgnb/AWyCbP8Bc4Jw/wFlgnQMAP8BcoJ6/wFFgn7/AWGDAv8BY4MG/wFogwoNAP8BbIMQ/wFvgxT/AWKDGP8BYYMc/wFsgyAOAP8DZoMqboMsbYMuEQASAP8BcIMy/wFvgzb/AXKDOv8BdIM+EwD/AW+DRP8BY4NI/wFhg0z/AWyDUBQA/wFFg1b/AVSDWv8BSINe/wFPg2L/AUSDZv8BU4NqFgD/Am+DcnWEDP8BQYN2/wFjg3r/AXSDfv8BaYQC/wFvhAb/AW6EChcA/wFshBD/AWyEFBgA/wFmhBoZAP8CaYQicoQkGgD/AWmEKP8BboQs/wF0hDAbAWyENP8BboQ4HAD/AVKEPv8BT4RC/wFQhEb/AUWESv8BUoRO/wFUhFL/AUmEVv8BRYRa/wFThF4dAP8CZYRmb4R4/wF0hGr/AXWEbv8BcoRy/wFuhHYeAP8BdYR8/wF0hQD/AWmFBP8BboUI/wFlhQwfAP8BdIUS/wFlhRb/AXCFGiAA/wJohSJyhTz/AWmFJv8Bc4Uq/wFDhS7/AWGFMv8BbIU2/wFshTohAP8BdYVA/wFlhUQiAP8CboVMc4Vq/wFkhVD/AWWFVP8BZoVY/wFphVz/AW6FYP8BZYVk/wFkhWgjAP8BZYVu/wFzhXIkAP8BaIV4/wFphXz/AWyGAP8BZYYEJQA=")
+    _scan_table_1 = ScanTable("hi4AE0coYYEGY4EgbYEyZYFcZoJ2Z4MgaYM2bINoTYN6boQUb4Q+cIREUIRicoUIc4U2dIVEdYVud4Yc/wFMLP8BTzD/AUI0/wFBOP8BTDwBASBA/wJQRk1s/wFSSv8BT07/AVBS/wFFVv8BUlr/AVRe/wFJYv8BRWb/AVNqEAD/AUVw/wFUdP8BSHj/AU98/wFEgQD/AVOBBBEA/wF1gQr/AWeBDv8BbYES/wFlgRb/AW6BGv8BdIEeAgD/AWyBJP8BYYEo/wFzgSz/AXOBMAMA/wJvgThlgUr/AWSBPP8BdYFA/wFsgUT/AWWBSAQA/wF0gU7/AWiBUv8Bb4FW/wFkgVoXAP8DbIFkboF2eIJk/wFzgWj/AWWBbAUBSYFw/wFmgXQGAP8BZIF6/wVDggZGghhJgjJSgjhXglL/AWyCCv8BYYIO/wFzghL/AXOCFgcA/wFvghz/AXKCIP8BRYIk/wFhgij/AWOCLP8BaIIwCAD/AWaCNgkA/wFvgjz/AXWCQP8BdIJE/wFpgkj/AW6CTP8BZYJQCgD/AWiCVv8BaYJa/wFsgl7/AWWCYgsA/wFwgmj/AW+CbP8BcoJw/wF0gnQMAP8CYYJ8b4MK/wFsgwD/AXODBP8BZYMIDQD/AXKDDv8BRYMS/wFhgxb/AWODGv8BaIMeDgD/AWyDJP8Bb4Mo/wFigyz/AWGDMP8BbIM0DwD/A2aDPm6DQG2DVhIAEwFjg0T/AWyDSP8BdYNM/wFkg1D/AWWDVBUA/wFwg1r/AW+DXv8BcoNi/wF0g2YUAP8Bb4Ns/wFjg3D/AWGDdP8BbIN4FgD/AUWDfv8BVIQC/wFIhAb/AU+ECv8BRIQO/wFThBIYAP8Cb4QadYQ0/wFBhB7/AWOEIv8BdIQm/wFphCr/AW+ELv8BboQyGQD/AWyEOP8BbIQ8GgD/AWaEQhsA/wJphEpyhEwcAP8BaYRQ/wFuhFT/AXSEWB0BbIRc/wFuhGAeAP8BUoRm/wFPhGr/AVCEbv8BRYRy/wFShHb/AVSEev8BSYR+/wFFhQL/AVOFBh8A/wJlhQ5vhSD/AXSFEv8BdYUW/wFyhRr/AW6FHiAA/wF1hST/AXSFKP8BaYUs/wFuhTD/AWWFNCEA/wF0hTr/AWWFPv8BcIVCIgD/AmiFSnKFZP8BaYVO/wFzhVL/AUOFVv8BYYVa/wFshV7/AWyFYiMA/wF1hWj/AWWFbCQA/wJuhXRzhhL/AWSFeP8BZYV8/wFmhgD/AWmGBP8BboYI/wFlhgz/AWSGECUA/wFlhhb/AXOGGiYA/wFohiD/AWmGJP8BbIYo/wFlhiwnAA==")
     _scan_table_2 = ScanTable("RgACUAZNLP8BUgr/AU8O/wFQEv8BRRb/AVIa/wFUHv8BSSL/AUUm/wFTKgEA/wFFMP8BVDT/AUg4/wFPPP8BRED/AVNEAgA=")
     _scan_table_3 = ScanTable("EgABMAT/A2IMYw54EAEAAgADAA==")
 
   METHODS
     method init( file:File )
       init( file.filepath, ::Scanner(file) )
+      line   = 1
+      column = 1
 
-    method init( filepath:String, content:String )
+    method init( filepath:String, content:String, line=1, column=1 )
       init( filepath, ::Scanner(content) )
 
     method init( _filepath, _scanner )
@@ -108,8 +110,6 @@ class ScannerCore [abstract]
       tokens = Token[]
       buffer.clear
       output.clear
-      _src_line = 1
-      _src_column = 1
       halt = false
 
     method _describe_character( c:Character )->String
@@ -162,7 +162,7 @@ class ScannerCore [abstract]
       return true
 
     method _t( type:TokenType, content=null:String )->Token
-      return Token( type, _filepath, _scanner.source, _src_line, _src_column, content )
+      return Token( type, _filepath, _scanner.source, line, column, content )
 
     method _throw_expected_string_error( st:String )
       local message = "Syntax error - expected $, found " (st)
@@ -189,8 +189,8 @@ class ScannerCore [abstract]
         which (ip-1)
           case ip_main
             _scan_pattern_0.scan(_scanner)
-            _src_line   = _scanner.line
-            _src_column = _scanner.column
+            line   = _scanner.line
+            column = _scanner.column
             if (not _execute(ip_scan_comment)) return false
             if ((not _scanner.has_another))
               _add( TokenType.EOL )
@@ -472,81 +472,87 @@ class ScannerCore [abstract]
                   _add( TokenType.KEYWORD_END_WHILE )
                   return false
                 case 12
-                  _add( TokenType.KEYWORD_FALSE )
+                  _add( TokenType.KEYWORD_EXPORT )
                   return false
                 case 13
-                  _add( TokenType.KEYWORD_FOR_EACH )
+                  _add( TokenType.KEYWORD_FALSE )
                   return false
                 case 14
-                  _add( TokenType.KEYWORD_GLOBAL )
+                  _add( TokenType.KEYWORD_FOR_EACH )
                   return false
                 case 15
-                  _add( TokenType.KEYWORD_GLOBAL_PROPERTIES )
+                  _add( TokenType.KEYWORD_GLOBAL )
                   return false
                 case 16
-                  _add( TokenType.KEYWORD_GLOBAL_METHODS )
+                  _add( TokenType.KEYWORD_GLOBAL_PROPERTIES )
                   return false
                 case 17
-                  _add( TokenType.KEYWORD_IF )
+                  _add( TokenType.KEYWORD_GLOBAL_METHODS )
                   return false
                 case 18
-                  _add( TokenType.KEYWORD_IN )
+                  _add( TokenType.KEYWORD_IF )
                   return false
                 case 19
-                  _add( TokenType.KEYWORD_IMPORT )
+                  _add( TokenType.KEYWORD_IN )
                   return false
                 case 20
-                  _add( TokenType.KEYWORD_LOCAL )
+                  _add( TokenType.KEYWORD_IMPORT )
                   return false
                 case 21
-                  _add( TokenType.KEYWORD_METHOD )
+                  _add( TokenType.KEYWORD_INCLUDE )
                   return false
                 case 22
-                  _add( TokenType.KEYWORD_METHODS )
+                  _add( TokenType.KEYWORD_LOCAL )
                   return false
                 case 23
-                  _add( TokenType.KEYWORD_NO_ACTION )
+                  _add( TokenType.KEYWORD_METHOD )
                   return false
                 case 24
-                  _add( TokenType.KEYWORD_NULL )
+                  _add( TokenType.KEYWORD_METHODS )
                   return false
                 case 25
-                  _add( TokenType.KEYWORD_OF )
+                  _add( TokenType.KEYWORD_NO_ACTION )
                   return false
                 case 26
-                  _add( TokenType.KEYWORD_PI )
+                  _add( TokenType.KEYWORD_NULL )
                   return false
                 case 27
-                  _add( TokenType.KEYWORD_PRINT )
+                  _add( TokenType.KEYWORD_OF )
                   return false
                 case 28
-                  _add( TokenType.KEYWORD_PRINTLN )
+                  _add( TokenType.KEYWORD_PI )
                   return false
                 case 29
-                  _add( TokenType.KEYWORD_PROPERTIES )
+                  _add( TokenType.KEYWORD_PRINT )
                   return false
                 case 30
-                  _add( TokenType.KEYWORD_RETURN )
+                  _add( TokenType.KEYWORD_PRINTLN )
                   return false
                 case 31
-                  _add( TokenType.KEYWORD_ROUTINE )
+                  _add( TokenType.KEYWORD_PROPERTIES )
                   return false
                 case 32
-                  _add( TokenType.KEYWORD_STEP )
+                  _add( TokenType.KEYWORD_RETURN )
                   return false
                 case 33
-                  _add( TokenType.KEYWORD_THIS_CALL )
+                  _add( TokenType.KEYWORD_ROUTINE )
                   return false
                 case 34
-                  _add( TokenType.KEYWORD_TRUE )
+                  _add( TokenType.KEYWORD_STEP )
                   return false
                 case 35
-                  _add( TokenType.KEYWORD_UNDEFINED )
+                  _add( TokenType.KEYWORD_THIS_CALL )
                   return false
                 case 36
-                  _add( TokenType.KEYWORD_USES )
+                  _add( TokenType.KEYWORD_TRUE )
                   return false
                 case 37
+                  _add( TokenType.KEYWORD_UNDEFINED )
+                  return false
+                case 38
+                  _add( TokenType.KEYWORD_USES )
+                  return false
+                case 39
                   _add( TokenType.KEYWORD_WHILE )
                   return false
                 others

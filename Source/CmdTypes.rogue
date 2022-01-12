@@ -115,6 +115,12 @@ augment
     method GetLocalValue.type->Type
       return Program.type_Value
 
+    method ImportModule.type->Type
+      return Program.type_Value
+
+    method Include.organize_element
+      Program.include( t, filepath )
+
     method LiteralString.type->Type
       return Program.type_String
 
@@ -141,5 +147,17 @@ augment
 
     method TypeReference.to->Type
       return Type( t, name )
+
+    method UsesModule.organize_element
+      use builder = StringBuilder.pool
+        forEach (segment at i in path)
+          if (i > 0) builder.print '/'
+          builder.print segment->String
+        endForEach
+        local filepath = builder->String
+        local m = Program.find_module( t, path.last->String )
+        Program.current_module.uses_module( m, &=is_exported )
+        Program.include( filepath, m )
+      endUse
 
 endAugment

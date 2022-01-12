@@ -72,6 +72,9 @@ augment
       Program.execution_result = Program.stack[ Program.fp + index ]
       return true
 
+    method ImportModule.execute->Logical
+      return Program.import( t, filepath )
+
     method LiteralString.execute->Logical
       Program.execution_result = value
       return true

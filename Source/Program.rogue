@@ -42,7 +42,7 @@ class Program [singleton]
 
       default_module = Module( t, "Default" )
       global_module  = Module( t, "Global" )
-      default_module.use_module( global_module )
+      default_module.uses_module( global_module )
 
       current_module = global_module
       type_Logical   = TypeLogical(t)
@@ -53,6 +53,9 @@ class Program [singleton]
       type_Value     = TypeValue(t)
       type_Object    = Type( t, "Object" )
       type_Global    = Type( t, "Global" )
+
+    method create_dynamic_module( t:Token, name:String )->Module
+      return Module( t, name, &dynamic )
 
     method execute( procedure:Procedure, args:Cmd )->Logical
       temporarily fp = stack.count
@@ -72,31 +75,61 @@ class Program [singleton]
         return true
       endTemporarily
 
-    method include( filepath:String )
-      if (parsed_files.contains(filepath)) return
+    method find_module( t:Token, name:String )->Module
+      if (name is null)
+        return default_module
+      elseIf (modules_by_name.contains(name))
+        return modules_by_name[ name ]
+      else
+        return Module( t, name )  # Module adds itself to lookup tables.
+      endIf
+
+    method import( t:Token, filepath:String )->Logical
+      try
+        local m = create_dynamic_module( t, filepath )
+        Program.include( filepath, m )
+        return m.execute
+      catch (err:Error)
+        Program.execution_status = EXE_EXCEPTION
+        return false
+      endTry
+
+    method include( filepath:String, module_context=Program.default_module:Module )
+      include( t, filepath, module_context )
+
+    method include( t:Token, filepath:String, module_context=Program.default_module:Module )
+      filepath .= with_trailing( ".boss" )
+
+      local is_static = not module_context.is_dynamic
+      if (is_static and parsed_files.contains(filepath)) return
 
       if (not File.exists(filepath))
         throw t.error( "No such file '$'."(filepath) )
       endIf
 
       filepath = File.abs( filepath )
-      if (parsed_files.contains(filepath)) return
-      parsed_files[ filepath ] = null # placeholder to avoid recursive includes
+      if (is_static and parsed_files.contains(filepath)) return
 
-      current_module = default_module
+      # placeholders to avoid recursive includes
+      if (is_static) parsed_files[ filepath ] = null
 
-      local tokens = Scanner( File(filepath) ).tokenize
-      preprocess( tokens )
+      temporarily current_module = module_context
+        local tokens = Scanner( File(filepath) ).tokenize
+        preprocess( tokens )
 
-      local ast = Parser(tokens).parse->(as AST)
-      parsed_files[ filepath ] = ast
-      if (ast)
-        (forEach in ast.elements).organize_element
-      endIf
+        local ast = Parser(tokens).parse->(as AST)
+        if (is_static) parsed_files[ filepath ] = ast
+        if (ast)
+          (forEach in ast.elements).organize_element
+        endIf
+      endTemporarily
 
     method launch
       resolve
-      (forEach in all_modules).launch
+      (forEach in all_modules).execute
+      if (execution_status == EXE_EXCEPTION)
+        println "[EXCEPTION]"
+      endIf
       require stack.is_empty
       require fp == 0
 
