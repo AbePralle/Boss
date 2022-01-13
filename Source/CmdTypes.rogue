@@ -95,7 +95,14 @@ augment
       return Program.type_Value
 
     method DefineModule.organize_element
-      Program.set_current_module( t, name )
+      if (Program.current_module.is_dynamic)
+        local cur_name = Program.current_module.name
+        if (cur_name != name)
+          throw t.error( "Code from imported module '$' cannot switch module contexts."(cur_name) )
+        endIf
+      else
+        Program.set_current_module( t, name )
+      endIf
 
     method DescriptionInt32.type->Type
       return Program.type_String

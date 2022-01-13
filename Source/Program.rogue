@@ -3,12 +3,13 @@ module Boss
 class Program [singleton]
   DEFINITIONS
     EXE_CONTINUE  = 0
-    EXE_EXCEPTION = 1
+    EXE_ERROR     = 1
     EXE_RETURN    = 2
 
   GLOBAL PROPERTIES
     execution_status : Int32
     execution_result : BossValue
+    execution_error  : Error
 
   PROPERTIES
     t              : Token
@@ -55,6 +56,7 @@ class Program [singleton]
       type_Global    = Type( t, "Global" )
 
     method create_dynamic_module( t:Token, name:String )->Module
+      name = File.filename(name).before_last(".boss")
       return Module( t, name, &dynamic )
 
     method execute( procedure:Procedure, args:Cmd )->Logical
@@ -90,7 +92,8 @@ class Program [singleton]
         Program.include( filepath, m )
         return m.execute
       catch (err:Error)
-        Program.execution_status = EXE_EXCEPTION
+        Program.execution_status = EXE_ERROR
+        execution_error = err
         return false
       endTry
 
@@ -127,8 +130,8 @@ class Program [singleton]
     method launch
       resolve
       (forEach in all_modules).execute
-      if (execution_status == EXE_EXCEPTION)
-        println "[EXCEPTION]"
+      if (execution_status == EXE_ERROR)
+        throw execution_error
       endIf
       require stack.is_empty
       require fp == 0
