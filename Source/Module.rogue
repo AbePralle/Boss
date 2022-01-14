@@ -58,8 +58,8 @@ class Module
       #global_statements = Statements(t)
 
       local r_launch = Routine( t, "global_statements", null, null, null, global_statements )
-      MethodOrganizer(this,r_launch).visit( r_launch )
-      Resolver(this,null,r_launch).visit( r_launch )
+      MethodOrganizer( this ).visit( null, r_launch )
+      Resolver( this ).visit( null, r_launch )
       if (Program.execute( r_launch, null )) return true
       return false
 
@@ -91,7 +91,8 @@ class Module
       state = STATE_TYPES_ORGANIZED
 
       temporarily is_resolving = true
-        TypeOrganizer( this ).visit( forEach in types.values )
+        local type_organizer = TypeOrganizer( this )
+        type_organizer.visit( forEach in types )
       endTemporarily
 
     method organize_methods
@@ -101,9 +102,11 @@ class Module
       state = STATE_METHODS_ORGANIZED
 
       temporarily is_resolving = true
+        local method_organizer = MethodOrganizer( this )
         forEach (r in (forEach in routines_by_name))
-          MethodOrganizer(this,r).visit( r )
+          method_organizer.visit( null, r )
         endForEach
+        method_organizer.visit( forEach in types )
       endTemporarily
 
     method resolve
@@ -113,10 +116,11 @@ class Module
       state = STATE_RESOLVED
 
       temporarily is_resolving = true
+        local resolver = Resolver( this )
         forEach (r in (forEach in routines_by_name))
-          Resolver(this,null,r).visit( r )
+          resolver.visit( null, r )
         endForEach
-        Resolver( this, null, null ).visit( forEach in types.values )
+        resolver.visit( forEach in types )
       endTemporarily
 
     method uses_module( m:Module, &is_exported )

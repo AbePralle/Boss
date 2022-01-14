@@ -20,7 +20,9 @@ class TypeOrganizer : Visitor
 
           forEach (p in constructor_properties)
             block p = p->(as Local)
-              m_init.parameters.add( Local(p.t,p.name,p.initial_value,null) )
+              p.is_parameter = true
+              p.is_auto_store = true
+              m_init.parameters.add( p )
               if (p.type_ref) p.type = p.type_ref->Type
               if (p.type)
                 type.properties[ p.name ] = Property( p.t, type, p.name, p.initial_value, p.type )

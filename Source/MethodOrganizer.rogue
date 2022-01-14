@@ -3,12 +3,19 @@ module Boss
 class MethodOrganizer : Visitor
   PROPERTIES
     this_module      : Module
+    this_type        : Type
     this_procedure   : Procedure
 
     current_statements_rewriter : ListRewriter<<Cmd>>
 
   METHODS
-    method init( this_module, this_procedure )
+    method init( this_module )
+
+    method visit( this_type )
+      visit( this_type, forEach in (forEach in this_type.methods_by_name) )
+
+    method visit( this_type, this_procedure )
+      visit( this_procedure )
 
     #method on_visit( cmd:GlobalMethodDef )
 

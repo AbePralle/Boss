@@ -10,10 +10,16 @@ class Resolver : Visitor
     current_statements_rewriter : ListRewriter<<Cmd>>
 
   METHODS
-    method init( this_module, this_type, this_procedure )
+    method init( this_module )
 
     method visit( this_type )
       visit( forEach in this_type.methods )
+
+    method visit( this_type, this_procedure )
+      if (not this_procedure.is_resolved)
+        this_procedure.is_resolved = true
+        visit( this_procedure )
+      endIf
 
     method on( cmd:Access )->Cmd
       return resolve_access( null, cmd )
@@ -86,7 +92,14 @@ trace m_init
         endIf
       endIf
 
-      #method on_enter( cmd:Method )
+    method on_enter( cmd:Method )
+      forEach (p in cmd.parameters step -1)
+        block p = p->(as Local)
+          if (p.is_auto_store)
+            # TODO
+          endIf
+        endBlock
+      endForEach
 
     method on_visit( cmd:Print )
       forEach (arg in rewriter=cmd.args.list.rewriter)

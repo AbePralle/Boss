@@ -401,17 +401,17 @@ parser
     identifier
     procedure_parameters
     procedure_return_type
-    createNull  # attributes
+    createNull  # attribute_names
     if (consume(':'))
       single_line_statements
     else
       multi_line_statements
       mustConsume "endRoutine"
     endIf
-    produce Routine(name:String,parameters,return_type_ref,attributes,statements):Procedure
+    produce Routine(name:String,parameters,return_type_ref,attribute_names,statements):Procedure
   endOn
 
-  on "uses" module_path uses_attributes-> UsesModule(path,attributes)
+  on "uses" module_path uses_attributes-> UsesModule(path,attribute_names)
 
   if (nextHasAttribute(structural))
     syntaxError
@@ -469,7 +469,7 @@ parser
   class_attributes
   class_sections
   mustConsume "endClass"
-  produce ClassDef( name, constructor_properties, base_types, attributes, sections )
+  produce ClassDef( name, constructor_properties, base_types, attribute_names, sections )
 
 - constructor_properties
   if (not nextIs('(')) produceNull
@@ -957,12 +957,12 @@ parser
   create CreateObject(type:Type,cmd_init)
   create Description(operand):Unary
   create GetLocal(info:Local)
-  #create GlobalMethodDef(type_context_ref,name:String,parameters,return_type_ref,attributes,statements):Procedure
+  #create GlobalMethodDef(type_context_ref,name:String,parameters,return_type_ref,attribute_names,statements):Procedure
   create Literal
   create LiteralNull(type:Type):Literal
   create LiteralValueUndefined:Literal
-  create Method(name:String,parameters,return_type_ref,attributes,statements):Procedure
-  create Procedure(name:String,parameters,return_type_ref,attributes,statements)
+  create Method(name:String,parameters,return_type_ref,attribute_names,statements):Procedure
+  create Procedure(name:String,parameters,return_type_ref,attribute_names,statements)
   create Property( type_context:Type, name:String, initial_value, type:Type )
   create PushResult(operand):Unary
   create ReturnResult(result)

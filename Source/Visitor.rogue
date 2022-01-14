@@ -129,13 +129,13 @@ class Visitor<<$ReturnType>>
         cmd.type_context_ref = visit( cmd.type_context_ref )
         cmd.parameters = visit(cmd.parameters)
         cmd.return_type_ref = visit(cmd.return_type_ref)
-        cmd.attributes = visit(cmd.attributes)
+        cmd.attribute_names = visit(cmd.attribute_names)
         cmd.statements = visit(cmd.statements)
       else
         visit( cmd.type_context_ref )
         visit( cmd.parameters )
         visit( cmd.return_type_ref )
-        visit( cmd.attributes )
+        visit( cmd.attribute_names )
         visit( cmd.statements )
       endIf
 
@@ -145,13 +145,13 @@ class Visitor<<$ReturnType>>
         cmd.type_context_ref = visit( cmd.type_context_ref )
         cmd.parameters = visit(cmd.parameters)
         cmd.return_type_ref = visit( cmd.return_type_ref )
-        cmd.attributes = visit(cmd.attributes)
+        cmd.attribute_names = visit(cmd.attribute_names)
         cmd.statements = visit(cmd.statements)
       else
         visit( cmd.type_context_ref )
         visit( cmd.parameters )
         visit( cmd.return_type_ref )
-        visit( cmd.attributes )
+        visit( cmd.attribute_names )
         visit( cmd.statements )
       endIf
       }#
@@ -198,13 +198,13 @@ class Visitor<<$ReturnType>>
         cmd.name = visit(cmd.name)
         cmd.constructor_properties = visit(cmd.constructor_properties)
         cmd.base_types = visit(cmd.base_types)
-        cmd.attributes = visit(cmd.attributes)
+        cmd.attribute_names = visit(cmd.attribute_names)
         cmd.sections = visit(cmd.sections)
       else
         visit( cmd.name )
         visit( cmd.constructor_properties )
         visit( cmd.base_types )
-        visit( cmd.attributes )
+        visit( cmd.attribute_names )
         visit( cmd.sections )
       endIf
 

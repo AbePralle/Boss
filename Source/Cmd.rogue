@@ -555,6 +555,9 @@ class Println : Cmd
 endClass
 
 class Procedure : Cmd
+  DEFINITIONS
+    ATTRIBUTE_RESOLVED = 1
+
   PROPERTIES
     type_context     : Type
     type_context_ref : Cmd
@@ -562,7 +565,8 @@ class Procedure : Cmd
     parameters       : Cmd
     return_type_ref  : Cmd
     return_type      : Type
-    attributes       : Cmd
+    attributes       : Int32
+    attribute_names  : Cmd
     statements       : Cmd
 
     signature        : String
@@ -570,14 +574,14 @@ class Procedure : Cmd
     locals           = Local[]
 
   METHODS
-    method init( t, name, parameters, return_type_ref, attributes, statements )
+    method init( t, name, parameters, return_type_ref, attribute_names, statements )
 
     method init( existing:Procedure )
       prior.init( existing )
       type_context = existing.type_context
       name = existing.name
       if (existing.parameters) parameters = existing.parameters.cloned
-      if (existing.attributes) attributes = existing.attributes.cloned
+      if (existing.attribute_names) attribute_names = existing.attribute_names.cloned
       if (existing.statements) statements = existing.statements.cloned
       locals = existing.locals.cloned
 
@@ -593,6 +597,13 @@ class Procedure : Cmd
     method context_signature->String
       if (not type_context) return signature
       return "$.$" (type_context,signature)
+
+    method is_resolved->Logical
+      return (attributes & ATTRIBUTE_RESOLVED)
+
+    method set_is_resolved( setting:Logical )
+      if (setting) attributes |= ATTRIBUTE_RESOLVED
+      else         attributes &= !ATTRIBUTE_RESOLVED
 
 endClass
 
@@ -690,14 +701,14 @@ endClass
 #{
 class GlobalMethodDef : Procedure
   METHODS
-    method init( t, type_context_ref, name, parameter_defs:Cmd, return_type_ref, attributes, statements )
+    method init( t, type_context_ref, name, parameter_defs:Cmd, return_type_ref, attribute_names, statements )
 
     method init( existing:GlobalMethodDef )
       prior.init( existing )
       if (existing.type_context_ref) type_context_ref = existing.type_context_ref.cloned
 
     method description->String
-      return "GlobalMethodDef($,$,$,$,$,$)" (%type_context_ref,%name,%parameters,%return_type_ref,%attributes,%statements)
+      return "GlobalMethodDef($,$,$,$,$,$)" (%type_context_ref,%name,%parameters,%return_type_ref,%attribute_names,%statements)
 
 endClass
 }#
@@ -755,12 +766,16 @@ endClass
 
 
 class Local : Cmd
+  DEFINITIONS
+    ATTRIBUTE_PARAMETER  = 1
+    ATTRIBUTE_AUTO_STORE = 2
+
   PROPERTIES
     name          : String
     initial_value : Cmd
     type_ref      : Cmd
     type          : Type
-    is_parameter  : Logical
+    attributes    : Int32
     fp_offset     = -1
 
   METHODS
@@ -777,6 +792,20 @@ class Local : Cmd
 
     method description->String
       return "Local($,$,$)" (%name,%initial_value,%type_ref)
+
+    method is_auto_store->Logical
+      return (attributes & ATTRIBUTE_AUTO_STORE)
+
+    method is_parameter->Logical
+      return (attributes & ATTRIBUTE_PARAMETER)
+
+    method set_is_auto_store( setting:Logical )
+      if (setting) attributes |= ATTRIBUTE_AUTO_STORE
+      else         attributes &= !ATTRIBUTE_AUTO_STORE
+
+    method set_is_parameter( setting:Logical )
+      if (setting) attributes |= ATTRIBUTE_PARAMETER
+      else         attributes &= !ATTRIBUTE_PARAMETER
 
     method type->Type
       return @type
@@ -906,22 +935,22 @@ endClass
 class UsesModule : Cmd
   PROPERTIES
     path       : Cmd
-    attributes : Cmd
+    attribute_names : Cmd
 
   METHODS
-    method init( t, path, attributes )
+    method init( t, path, attribute_names )
 
     method init( existing:UsesModule )
       prior.init( existing )
       if (existing.path) path = existing.path.cloned
-      if (existing.attributes) attributes = existing.attributes.cloned
+      if (existing.attribute_names) attribute_names = existing.attribute_names.cloned
 
     method description->String
-      return "UsesModule($,$)" (%path,%attributes)
+      return "UsesModule($,$)" (%path,%attribute_names)
 
     method is_exported->Logical
-      if (not attributes) return false
-      if ((forEach in attributes)->String == "export") return true
+      if (not attribute_names) return false
+      if ((forEach in attribute_names)->String == "export") return true
       return false
 
 endClass
@@ -977,22 +1006,22 @@ class ClassDef : Cmd
     name                   : Cmd
     constructor_properties : Cmd
     base_types             : Cmd
-    attributes             : Cmd
+    attribute_names             : Cmd
     sections               : Cmd
 
   METHODS
-    method init( t, name, constructor_properties, base_types, attributes, sections )
+    method init( t, name, constructor_properties, base_types, attribute_names, sections )
 
     method init( existing:ClassDef )
       prior.init( existing )
       if (existing.name) name = existing.name.cloned
       if (existing.constructor_properties) constructor_properties = existing.constructor_properties.cloned
       if (existing.base_types) base_types = existing.base_types.cloned
-      if (existing.attributes) attributes = existing.attributes.cloned
+      if (existing.attribute_names) attribute_names = existing.attribute_names.cloned
       if (existing.sections) sections = existing.sections.cloned
 
     method description->String
-      return "ClassDef($,$,$,$,$)" (%name,%constructor_properties,%base_types,%attributes,%sections)
+      return "ClassDef($,$,$,$,$)" (%name,%constructor_properties,%base_types,%attribute_names,%sections)
 
 endClass
 
@@ -1063,7 +1092,7 @@ endClass
 
 class Method : Procedure
   METHODS
-    method init( t, name, parameters, return_type_ref, attributes, statements )
+    method init( t, name, parameters, return_type_ref, attribute_names, statements )
 
     method init( t, type_context, name )
       parameters = CmdList( t )
@@ -1074,7 +1103,7 @@ class Method : Procedure
       if (existing.type_context_ref) type_context_ref = existing.type_context_ref.cloned
 
     method description->String
-      return "Method($,$,$,$,$,$)" (%type_context_ref,%name,%parameters,%return_type_ref,%attributes,%statements)
+      return which{ signature || name }
 
 endClass
 
