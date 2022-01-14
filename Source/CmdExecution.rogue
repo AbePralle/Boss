@@ -53,9 +53,24 @@ augment
       Program.execution_result = Program.execution_result.object->(as String)->Real64
       return true
 
+    method DescriptionCharacter.execute->Logical
+      if (not operand.execute) return false
+      Program.execution_result = Program.execution_result.x->Int32->Character.to_escaped_ascii
+      return true
+
     method DescriptionInt32.execute->Logical
       if (not operand.execute) return false
       Program.execution_result = Program.execution_result.x->Int32->String
+      return true
+
+    method DescriptionLogical.execute->Logical
+      if (not operand.execute) return false
+      Program.execution_result = which{ Program.execution_result.x:"true" || "false" }
+      return true
+
+    method DescriptionObject.execute->Logical
+      if (not operand.execute) return false
+      Program.execution_result = Program.execution_result.description
       return true
 
     method DescriptionReal64.execute->Logical
@@ -68,8 +83,8 @@ augment
       Program.execution_result = Program.execution_result.description
       return true
 
-    method GetLocalValue.execute->Logical
-      Program.execution_result = Program.stack[ Program.fp + index ]
+    method GetLocal.execute->Logical
+      Program.execution_result = Program.stack[ Program.fp + fp_offset ]
       return true
 
     method ImportModule.execute->Logical
@@ -96,6 +111,16 @@ augment
       return true
 
     method LiteralPi.execute->Logical
+      Program.execution_result = pi
+      return true
+
+    method Local.execute->Logical
+      # Local declaration
+      assert initial_value
+      if (not initial_value.execute) return false
+      Program.stack[ Program.fp + fp_offset ] = Program.execution_result
+      return true
+
       Program.execution_result = pi
       return true
 

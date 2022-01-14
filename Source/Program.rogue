@@ -77,6 +77,9 @@ class Program [singleton]
         return true
       endTemporarily
 
+    method find_module( name:String )->Module
+      return modules_by_name[ name ]
+
     method find_module( t:Token, name:String )->Module
       if (name is null)
         return default_module
@@ -84,6 +87,16 @@ class Program [singleton]
         return modules_by_name[ name ]
       else
         return Module( t, name )  # Module adds itself to lookup tables.
+      endIf
+
+    method find_type( name:String )->Type
+      if (name.contains("::"))
+        local m = find_module( name.before_first("::") )
+        return m.find_type( name.after_first("::") )
+      else
+        local type = default_module.find_type( name )
+        if (type) return type
+        return global_module.find_type( name )
       endIf
 
     method import( t:Token, filepath:String )->Logical

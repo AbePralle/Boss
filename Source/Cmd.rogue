@@ -594,7 +594,6 @@ class Procedure : Cmd
     statements       : Cmd
 
     signature        : String
-    is_resolved      = false
 
     locals           = Local[]
 
@@ -787,7 +786,8 @@ class Local : Cmd
     initial_value : Cmd
     type_ref      : Cmd
     type          : Type
-    index         : Int32
+    is_parameter  : Logical
+    fp_offset     = -1
 
   METHODS
     method init( t, name, initial_value, type_ref )
@@ -797,6 +797,9 @@ class Local : Cmd
       name = existing.name
       if (existing.initial_value) initial_value = existing.initial_value.cloned
       if (existing.type_ref) type_ref = existing.type_ref.cloned
+      type = existing.@type
+      is_parameter = existing.is_parameter
+      fp_offset = existing.fp_offset
 
     method description->String
       return "Local($,$,$)" (%name,%initial_value,%type_ref)
@@ -855,30 +858,21 @@ endClass
 
 class GetLocal : Cmd
   PROPERTIES
-    info  : Local
-    index : Int32
+    info      : Local
+    fp_offset : Int32
 
   METHODS
-    method init( t )
-
     method init( t, info )
-      index = info.index
+      fp_offset = info.fp_offset
 
     method init( existing:GetLocal )
       t = existing.t
       info = existing.info
-      index = existing.index
+      fp_offset = existing.fp_offset
 
     method description->String
       return "GetLocal"
 endClass
-
-class GetLocalValue : GetLocal
-  METHODS
-    method description->String
-      return "GetLocalValue[$]"(index)
-endClass
-
 
 class Return : Cmd
   PROPERTIES
@@ -1001,5 +995,94 @@ class Include : Cmd
     method to->Int32:  return filepath
     method to->Logical: return filepath?
     method to->String: return filepath
+
+endClass
+
+class ClassDef : Cmd
+  PROPERTIES
+    name                   : Cmd
+    constructor_properties : Cmd
+    base_types             : Cmd
+    attributes             : Cmd
+    sections               : Cmd
+
+  METHODS
+    method init( t, name, constructor_properties, base_types, attributes, sections )
+
+    method init( existing:ClassDef )
+      prior.init( existing )
+      if (existing.name) name = existing.name.cloned
+      if (existing.constructor_properties) constructor_properties = existing.constructor_properties.cloned
+      if (existing.base_types) base_types = existing.base_types.cloned
+      if (existing.attributes) attributes = existing.attributes.cloned
+      if (existing.sections) sections = existing.sections.cloned
+
+    method description->String
+      return "ClassDef($,$,$,$,$)" (%name,%constructor_properties,%base_types,%attributes,%sections)
+
+endClass
+
+class LocalDeclarations : Cmd
+  PROPERTIES
+    declarations : Cmd
+    type_ref     : Cmd
+
+  METHODS
+    method init( t, declarations, type_ref )
+
+    method init( existing:LocalDeclarations )
+      prior.init( existing )
+      if (existing.declarations) declarations = existing.declarations.cloned
+      if (existing.type_ref) type_ref = existing.type_ref.cloned
+
+    method description->String
+      return "LocalDeclarations($,$)" (%declarations,%type_ref)
+
+endClass
+
+class LiteralValueUndefined : Literal
+  METHODS
+    method description->String
+      return "LiteralValueUndefined"
+endClass
+
+class LiteralNull : Literal
+  PROPERTIES
+    type : Type
+
+  METHODS
+    method init( t, type )
+
+    method init( existing:LiteralNull )
+      prior.init( existing )
+      type = existing.type
+
+    method description->String
+      return "LiteralNull($)" (%type)
+
+    method type->Type
+      return @type
+
+endClass
+
+class Property : Cmd
+  PROPERTIES
+    type_context  : Type
+    name          : String
+    initial_value : Cmd
+    type          : Type
+
+  METHODS
+    method init( t, type_context, name, initial_value, type )
+
+    method init( existing:Property )
+      prior.init( existing )
+      type_context = existing.type_context
+      name = existing.name
+      if (existing.initial_value) initial_value = existing.initial_value.cloned
+      type = existing.type
+
+    method description->String
+      return "Property($,$,$,$)" (%type_context,%name,%initial_value,%type)
 
 endClass

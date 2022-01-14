@@ -12,6 +12,7 @@ $include "Program.rogue"
 $include "Resolver.rogue"
 $include "Scanner.rogue"
 $include "Type.rogue"
+$include "TypeOrganizer.rogue"
 uses Boss
 uses Utility/CommandLineParser
 

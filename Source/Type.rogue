@@ -11,20 +11,20 @@ class Type
         if (entry) return entry.value
       endIf
 
-      local type = Type( t, name, &!is_primitive )
-      return type
+      return Type( t, name, &!is_primitive )
 
   PROPERTIES
-    context_module : Module
+    module_context : Module
     t              : Token
     name           : String
     is_primitive   : Logical
+    definition     : ClassDef
 
-    #global_methods_by_name
+    properties     = Property[]
 
   METHODS
     method init( t, name, is_primitive )
-      context_module = Program.current_module
+      module_context = Program.current_module
       Program.current_module.types[ name ] = this
 
     method description->String

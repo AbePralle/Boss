@@ -387,6 +387,8 @@ parser
   consume_eols
   if (not hasAnother) return
 
+  on "class" class: return
+
   on "include" string -> Include(filepath:String)
 
   on "module"
@@ -411,14 +413,19 @@ parser
 
   on "uses" module_path uses_attributes-> UsesModule(path,attributes)
 
+  if (nextHasAttribute(structural))
+    syntaxError
+  endIf
+
   procedure_body
 
 - procedure_parameters
   beginList
-  if (not consume('(')) produceList
-  procedure_parameter
-  while (consume(',')) procedure_parameter
-  mustConsume ')'
+    if (not consume('(')) produceList
+    if (consume(')')) produceList
+    procedure_parameter
+    while (consume(',')) procedure_parameter
+    mustConsume ')'
   produceList
 
 - procedure_parameter
@@ -455,50 +462,39 @@ parser
   on STRING -> LiteralString(value=content):Literal
   syntaxError "Literal string expected."
 
-#{
-
-  on "class", class -> ClassDefinition( name, base_types, attributes, elements )
-  on "module", module_name, EOL -> ModuleDeclaration(name )
-
-  if (not nextHasAttribute(structural)) multi_line_statements; return
-  syntaxError
-
-- consume_eols
-  while (consume(EOL)) noAction
-
-- consume_end_commands
-  while (consume(EOL) or consume(';')) noAction
-
-- consume_semicolons
-  while (consume(';')) noAction
-
 - class
   type
+  constructor_properties
   base_types
   class_attributes
   class_sections
   mustConsume "endClass"
+  produce ClassDef( name, constructor_properties, base_types, attributes, sections )
+
+- constructor_properties
+  if (not nextIs('(')) produceNull
+  procedure_parameters
 
 - base_types
   beginList
-  if (not consume(':')) produceList
-  type
-  while (consume(','))
-    consume_eols
+    if (not consume(':')) produceList
     type
-  endWhile
+    while (consume(','))
+      consume_eols
+      type
+    endWhile
   produceList
 
 - class_attributes
   beginList
-  if (not consume('[')) produceList
-  type
-  consume_eols
-  while (not nextIs(']'))
-    type
-    consume_eols
-  endWhile
-  mustConsume ']'
+    if (not consume('[')) produceList
+    if (consume(']')) produceList
+    while (hasAnother and not nextIs(']'))
+      type
+      if (consume(',')) consume_eols
+      else              consume_eols; consume(',')
+    endWhile
+    mustConsume ']'
   produceList
 
 - class_sections
@@ -510,6 +506,7 @@ parser
 
 - class_section
   consume_eols
+#{
   on "GLOBAL PROPERTIES"
     consume_eols
     while (not nextHasAttribute(structural))
@@ -537,7 +534,25 @@ parser
     endWhile
     return
   endOn
+}#
   if (not nextIs("endClass")) syntaxError
+
+
+#{
+
+  on "module", module_name, EOL -> ModuleDeclaration(name )
+
+  if (not nextHasAttribute(structural)) multi_line_statements; return
+  syntaxError
+
+- consume_eols
+  while (consume(EOL)) noAction
+
+- consume_end_commands
+  while (consume(EOL) or consume(';')) noAction
+
+- consume_semicolons
+  while (consume(';')) noAction
 
 - forEach_loop
   on "forEach"
@@ -679,11 +694,11 @@ parser
 
 - global_properties
   consume_eols
-  onPeek IDENTIFIER, var_declarations, mustConsume(EOL) -> GlobalProperties( declarations, type )
+  onPeek IDENTIFIER, local_declarations, mustConsume(EOL) -> GlobalProperties( declarations, type )
 
 - properties
   consume_eols
-  onPeek IDENTIFIER, var_declarations, mustConsume(EOL) -> Properties( declarations, type )
+  onPeek IDENTIFIER, local_declarations, mustConsume(EOL) -> Properties( declarations, type )
 }#
 
 - multi_line_statements
@@ -709,12 +724,12 @@ parser
   produceList Statements
 
 - control_structure
+  on "local"  local_declarations: return
 #{
   onPeek "forEach", forEach_loop: return
   onPeek "if",      if_statement: return
   onPeek "while",   while_loop:   return
-  on "global", var_declarations -> GlobalDeclarations( declarations, type )
-  on "local",  var_declarations -> LocalDeclarations( declarations, type )
+  on "global", local_declarations -> GlobalDeclarations( declarations, type )
 }#
   statement
 
@@ -761,22 +776,30 @@ parser
   on "%=", expression -> ModAndAssign(target,expression)
   on "&=", expression -> AndAndAssign(target,expression)
   on "|=", expression -> OrAndAssign(target,expression)
+}#
 
-- var_declarations
+- local_declarations
   beginList
-  consume_eols
-  var_declaration
-  while (consume(','))
     consume_eols
-    var_declaration
-  endWhile
+    local_declaration
+    while (consume(','))
+      consume_eols
+      local_declaration
+    endWhile
   createList
   optional_type
 
-- var_declaration
-  on IDENTIFIER, optional_initial_value -> VarDeclaration( name=t.content:String, initial_value )
-  mustConsume IDENTIFIER
+  produce LocalDeclarations( declarations, type_ref )
 
+- local_declaration
+  on IDENTIFIER
+    optional_initial_value
+    createNull
+    produce Local( name=content, initial_value, type_ref )
+  endOn
+  mustConsume IDENTIFIER  # throws error
+
+#{
 - while_loop
   on "while"
     expression
@@ -936,11 +959,13 @@ parser
   create DescriptionObject(operand):Unary
   create DescriptionReal64(operand):Unary
   create DescriptionValue(operand):Unary
-  create GetLocal
-  create GetLocalValue:GetLocal
+  create GetLocal(info:Local)
   create GlobalMethodDef(type_context_ref,name:String,parameters,return_type_ref,attributes,statements):Procedure
   create Literal
+  create LiteralNull(type:Type):Literal
+  create LiteralValueUndefined:Literal
   create Procedure(name:String,parameters,return_type_ref,attributes,statements)
+  create Property( type_context:Type, name:String, initial_value, type:Type )
   create PushResult(operand):Unary
   create ReturnResult(result)
   create SubtractInt32(left,right):Binary
@@ -950,3 +975,5 @@ parser
   create SubtractValue(left,right):Binary
   create TypeReference(name:String)
 
+nativeTypes
+  Type

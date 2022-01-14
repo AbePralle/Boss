@@ -1,0 +1,26 @@
+module Boss
+
+class TypeOrganizer : Visitor
+  PROPERTIES
+    this_module    : Module
+    this_type      : Type
+    this_procedure : Procedure
+
+  METHODS
+    method init( this_module )
+
+    method visit( type:Type )
+      this_type = type
+
+      if (type.definition)
+        local constructor_properties = type.definition.constructor_properties
+        if (constructor_properties)
+          forEach (p in constructor_properties)
+            block p = p->(as Local)
+              type.properties.add( Property(p.t,type,p.name,p.initial_value,p.type) )
+            endBlock
+          endForEach
+        endIf
+      endIf
+endClass
+

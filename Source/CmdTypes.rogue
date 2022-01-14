@@ -67,6 +67,32 @@ augment
       return CastToValue(cmd.t,cmd)
 endAugment
 
+# cmd_default_value()
+augment
+  METHODS
+    method Type.cmd_default_value( cmd_t:Token )->Cmd
+      return LiteralNull( cmd_t, this )
+
+    method TypeCharacter.cmd_default_value( cmd_t:Token )->Cmd
+      return LiteralCharacter( cmd_t, 0 )
+
+    method TypeInt32.cmd_default_value( cmd_t:Token )->Cmd
+      return LiteralInt32( cmd_t, 0 )
+
+    method TypeLogical.cmd_default_value( cmd_t:Token )->Cmd
+      return LiteralLogical( cmd_t, false )
+
+    method TypeReal64.cmd_default_value( cmd_t:Token )->Cmd
+      return LiteralReal64( cmd_t, 0 )
+
+    method TypeString.cmd_default_value( cmd_t:Token )->Cmd
+      return LiteralString( cmd_t, null )
+
+    method TypeValue.cmd_default_value( cmd_t:Token )->Cmd
+      return LiteralValueUndefined( cmd_t )
+endAugment
+
+
 # type()
 augment
   METHODS
@@ -94,6 +120,21 @@ augment
     method CastToValue.type->Type
       return Program.type_Value
 
+    method ClassDef.organize_element
+      local existing = Program.current_module.types[ name ]
+      if (existing)
+        local qualified_name : String
+        if (Program.current_module is Program.default_module)
+          qualified_name = name
+        else
+          qualified_name = "$::$"(Program.current_module.name,name)
+        endIf
+        throw t.error( "Class $ is already defined."(qualified_name) )
+      endIf
+
+      local type = Type( t, name, &!is_primitive )
+      type.definition = this
+
     method DefineModule.organize_element
       if (Program.current_module.is_dynamic)
         local cur_name = Program.current_module.name
@@ -117,10 +158,7 @@ augment
       return Program.type_String
 
     method GetLocal.type->Type
-      return info.type
-
-    method GetLocalValue.type->Type
-      return Program.type_Value
+      return info.@type
 
     method ImportModule.type->Type
       return Program.type_Value
@@ -128,23 +166,29 @@ augment
     method Include.organize_element
       Program.include( t, filepath )
 
-    method LiteralString.type->Type
-      return Program.type_String
-
-    method LiteralLogical.type->Type
-      return Program.type_Logical
-
     method LiteralCharacter.type->Type
       return Program.type_Character
 
     method LiteralInt32.type->Type
       return Program.type_Int32
 
-    method LiteralReal64.type->Type
-      return Program.type_Real64
+    method LiteralLogical.type->Type
+      return Program.type_Logical
+
+    method LiteralNull.type->Type
+      return @type
 
     method LiteralPi.type->Type
       return Program.type_Real64
+
+    method LiteralReal64.type->Type
+      return Program.type_Real64
+
+    method LiteralString.type->Type
+      return Program.type_String
+
+    method LiteralValueUndefined.type->Type
+      return Program.type_Value
 
     method Routine.organize_element
       Program.current_module.routines.add( this )

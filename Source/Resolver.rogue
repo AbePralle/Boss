@@ -7,6 +7,8 @@ class Resolver : Visitor
     this_type      : Type
     this_procedure : Procedure
 
+    current_statements_rewriter : ListRewriter<<Cmd>>
+
   METHODS
     method init( this_module, this_type, this_procedure )
 
@@ -65,24 +67,20 @@ class Resolver : Visitor
       local operand = visit( cmd.operand ).require_value
       return visit( operand.type.cmd_description(cmd.t, cmd.operand) )
 
-    method on( cmd:GetLocal )->Cmd
-      local type = cmd.info.type
-      if (type is Program.type_Value)
-        return visit( GetLocalValue(cmd.t,cmd.info) )
-      else
-        throw cmd.t.error( "[INTERNAL] Resolver.on(GetLocal) does not handle type $."(cmd.info.type) )
+    method on_visit( cmd:Local )
+      if (not cmd.is_parameter)
+        if (cmd.type_ref)
+          cmd.type = cmd.type_ref->Type
+          if (not cmd.initial_value) cmd.initial_value = cmd.type.cmd_default_value( cmd.t )
+          cmd.initial_value = visit( visit(cmd.initial_value).cmd_cast_to( cmd.@type ) )
+        elseIf (not cmd.@type)
+          if (not cmd.initial_value)
+            throw cmd.t.error( "Local variable declarations must have an initial value assignment or an assigned ': Type'." )
+          endIf
+          cmd.initial_value = visit( cmd.initial_value )
+          cmd.type = cmd.initial_value.require_type
+        endIf
       endIf
-
-    method on( cmd:GetLocalValue )->Cmd
-      return cmd
-
-    method on_visit( cmd:Statements )
-      forEach (arg in rewriter=cmd.list.rewriter)
-        arg = visit( arg )
-        if (arg) rewriter.write( arg )
-        #local type = arg.type
-        #if (type) arg = type.cmd_stack_pop( arg )
-      endForEach
 
     method on_visit( cmd:Print )
       forEach (arg in rewriter=cmd.args.list.rewriter)
@@ -100,7 +98,7 @@ class Resolver : Visitor
 
     method on_leave( cmd:Procedure )
       forEach (v at i in cmd.locals)
-        v.index = i
+        v.fp_offset = i
       endForEach
 
       cmd.local_stack_slots = cmd.locals.count
@@ -113,6 +111,14 @@ class Resolver : Visitor
 
     method on_leave( cmd:ReturnResult )
       cmd.result.require_value
+
+    method on_visit( cmd:Statements )
+      temporarily current_statements_rewriter = cmd.list.rewriter
+        forEach (element in current_statements_rewriter)
+          local visited_element = visit( element )
+          if (visited_element) current_statements_rewriter.write( visited_element )
+        endForEach
+      endTemporarily
 
     method on( cmd:Subtract )->Cmd
       on_visit( cmd->(as Binary) )  # resolves children & converts to common type

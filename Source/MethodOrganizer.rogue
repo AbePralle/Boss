@@ -2,8 +2,10 @@ module Boss
 
 class MethodOrganizer : Visitor
   PROPERTIES
-    this_module    : Module
-    this_procedure : Procedure
+    this_module      : Module
+    this_procedure   : Procedure
+
+    current_statements_rewriter : ListRewriter<<Cmd>>
 
   METHODS
     method init( this_module, this_procedure )
@@ -11,34 +13,53 @@ class MethodOrganizer : Visitor
     #method on_visit( cmd:GlobalMethodDef )
 
     method on_enter( cmd:Local )
-      cmd.type = cmd.type_ref->Type
+      if (cmd.fp_offset == -1)
+        cmd.fp_offset = this_procedure.locals.count
+        cmd.is_parameter = cmd.fp_offset < this_procedure.parameters.count
+        if (cmd.is_parameter)
+          require cmd.type_ref
+          cmd.type = cmd.type_ref->Type
+        endIf
+        this_procedure.locals.add( cmd )
+      endIf
 
-    method on_visit( cmd:Procedure )
+    method on( cmd:LocalDeclarations )->Cmd
+      if (cmd.type_ref)
+        forEach (decl in cmd.declarations)
+          block decl = decl->(as Local)
+            decl.type_ref = cmd.type_ref
+            block decl = visit( decl )
+              if (decl) current_statements_rewriter.write( decl )
+            endBlock
+          endBlock
+        endForEach
+      else
+        forEach (decl in cmd.declarations)
+          decl = visit( decl )
+          if (decl) current_statements_rewriter.write( decl )
+        endForEach
+      endIf
+      return null
+
+    method on_enter( cmd:Procedure )
+      ensure cmd.parameters( cmd.t )
       if (cmd.type_context_ref) cmd.type_context = cmd.type_context_ref->Type
       if (cmd.return_type_ref)  cmd.return_type  = cmd.return_type_ref->Type
 
-      if (cmd.parameters)
-        visit( cmd.parameters )
-        forEach (param in cmd.parameters)
-          cmd.locals.add( param->(as Local).[index=cmd.locals.count] )
-        endForEach
-      endIf
-
+    method on_leave( cmd:Procedure )
       use builder = StringBuilder.pool
         builder.print cmd.name
         builder.print '('
-        if (cmd.parameters)
-          forEach (param at i in cmd.parameters)
-            if (i > 0) builder.print ','
-            builder.print param.type.name
-          endForEach
-        endIf
+        forEach (param at i in cmd.parameters)
+          if (i > 0) builder.print ','
+          builder.print param.type.name
+        endForEach
         builder.print ')'
         cmd.signature = builder->String
       endUse
 
-    method on_visit( cmd:Routine )
-      on_visit( cmd->(as Procedure) )
+    method on_leave( cmd:Routine )
+      on_leave( cmd->(as Procedure) )
 
       local sig = cmd.signature
       if (this_module.routines.by_signature.contains(sig))
@@ -46,13 +67,13 @@ class MethodOrganizer : Visitor
       endIf
       this_module.routines.by_signature[ sig ] = cmd
 
-      #{
-      if (Program.routines_by_signature.contains(cmd.signature))
-        throw cmd.t.error( "A definition for routine $ already exists."(cmd.signature) )
-      endIf
-      Program.routines_by_signature[cmd.signature] = cmd
-      }#
+    method on_visit( cmd:Statements )
+      temporarily current_statements_rewriter = cmd.list.rewriter
+        forEach (element in current_statements_rewriter)
+          local visited_element = visit( element )
+          if (visited_element) current_statements_rewriter.write( visited_element )
+        endForEach
+      endTemporarily
 
-    method organize_procedure( cmd:Procedure )
 endClass
 

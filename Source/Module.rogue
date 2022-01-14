@@ -62,7 +62,7 @@ class Module
       if (Program.execute( r_launch, null )) return true
       return false
 
-    method find_type( name:String, &is_limited )->Type
+    method find_type( name:String, &extended_search )->Type
       if (is_visiting) return null
 
       local result = types[ name ]
@@ -70,8 +70,8 @@ class Module
 
       temporarily is_visiting = true
         forEach (used_m in used_modules)
-          if (not is_limited or used_m.is_exported)
-            result = used_m.m.find_type( name, &is_limited )
+          if (extended_search or used_m.is_exported)
+            result = used_m.m.find_type( name, &!extended_search )
             if (result) escapeForEach
           endIf
         endForEach
@@ -85,33 +85,36 @@ class Module
       throw t.error( "No such type '$'." (name) )
 
     method organize_types
-      #if (state >= STATE_TYPES_ORGANIZED) return
+      if (is_resolving) return
+      if (state >= STATE_TYPES_ORGANIZED) return
       state = STATE_TYPES_ORGANIZED
 
       temporarily is_resolving = true
-        # TODO: arrange class inheritance
+        TypeOrganizer( this ).visit( forEach in types.values )
       endTemporarily
 
     method organize_methods
-      #if (state >= STATE_METHODS_ORGANIZED) return
+      if (is_resolving) return
+      if (state >= STATE_METHODS_ORGANIZED) return
+      organize_types
       state = STATE_METHODS_ORGANIZED
 
       temporarily is_resolving = true
         forEach (r in (forEach in routines.by_name))
           MethodOrganizer(this,r).visit( r )
         endForEach
-        MethodOrganizer(this,null).visit( global_statements )
       endTemporarily
 
     method resolve
-      #if (state >= STATE_RESOLVED) return
+      if (is_resolving) return
+      if (state >= STATE_RESOLVED) return
+      organize_methods
       state = STATE_RESOLVED
 
       temporarily is_resolving = true
         forEach (r in (forEach in routines.by_name))
           Resolver(this,null,r).visit( r )
         endForEach
-        Resolver(this,null,null).visit( global_statements )
       endTemporarily
 
     method uses_module( m:Module, &is_exported )
