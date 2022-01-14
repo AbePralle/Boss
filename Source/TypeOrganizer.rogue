@@ -15,9 +15,16 @@ class TypeOrganizer : Visitor
       if (type.definition)
         local constructor_properties = type.definition.constructor_properties
         if (constructor_properties)
+          local m_init = Method( constructor_properties.t, type, "init" )
+          type.add( m_init )
+
           forEach (p in constructor_properties)
             block p = p->(as Local)
-              type.properties.add( Property(p.t,type,p.name,p.initial_value,p.type) )
+              m_init.parameters.add( Local(p.t,p.name,p.initial_value,null) )
+              if (p.type_ref) p.type = p.type_ref->Type
+              if (p.type)
+                type.properties[ p.name ] = Property( p.t, type, p.name, p.initial_value, p.type )
+              endIf
             endBlock
           endForEach
         endIf

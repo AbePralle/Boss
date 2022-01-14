@@ -12,6 +12,9 @@ class Resolver : Visitor
   METHODS
     method init( this_module, this_type, this_procedure )
 
+    method visit( this_type )
+      visit( forEach in this_type.methods )
+
     method on( cmd:Access )->Cmd
       return resolve_access( null, cmd )
 
@@ -64,7 +67,8 @@ class Resolver : Visitor
       }#
 
     method on( cmd:Constructor )->Cmd
-      # TODO
+      local m_init = find_procedure( cmd.type_context, "init", cmd.args )
+trace m_init
       return cmd
 
     method on_visit( cmd:Local )
@@ -81,6 +85,8 @@ class Resolver : Visitor
           cmd.type = cmd.initial_value.require_type
         endIf
       endIf
+
+      #method on_enter( cmd:Method )
 
     method on_visit( cmd:Print )
       forEach (arg in rewriter=cmd.args.list.rewriter)
@@ -228,7 +234,11 @@ class Resolver : Visitor
       visit( args )  # resolve args to determine types
 
       use Candidates
-        this_module.collect_routines( name, Candidates.list )
+        if (type_context)
+          type_context.collect_methods( name, Candidates.list )
+        else
+          this_module.collect_routines( name, Candidates.list )
+        endIf
         return refine_candidates( type_context, args )
       endUse
 

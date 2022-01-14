@@ -1062,11 +1062,12 @@ class Property : Cmd
 endClass
 
 class Method : Procedure
-  PROPERTIES
-    type_context_ref : Cmd
-
   METHODS
-    method init( t, type_context_ref, name, parameters, return_type_ref, attributes, statements )
+    method init( t, name, parameters, return_type_ref, attributes, statements )
+
+    method init( t, type_context, name )
+      parameters = CmdList( t )
+      statements = Statements( t )
 
     method init( existing:Method )
       prior.init( existing )

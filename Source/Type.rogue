@@ -20,12 +20,24 @@ class Type
     is_primitive   : Logical
     definition     : ClassDef
 
-    properties     = Property[]
+    properties           = StringTable<<Property>>()
+    methods              = Method[]
+    methods_by_name      = StringTable<<Method[]>>()
+    methods_by_signature = StringTable<<Method>>()
 
   METHODS
     method init( t, name, is_primitive )
       module_context = Program.current_module
       Program.current_module.types[ name ] = this
+
+    method add( m:Method )
+      methods.add( m )
+      ensure methods_by_name[ m.name ]
+      methods_by_name[ m.name ].add( m )
+
+    method collect_methods( m_name:String, list:Procedure[] )
+      local matching = methods_by_name[ m_name ]
+      if (matching) list.add( forEach in matching )
 
     method description->String
       return name

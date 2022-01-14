@@ -201,7 +201,8 @@ augment
       return Program.type_Value
 
     method Routine.organize_element
-      Program.current_module.routines.add( this )
+      ensure Program.current_module.routines_by_name[ name ]
+      Program.current_module.routines_by_name[ name ].add( this )
 
     method Statements.organize_element
       Program.current_module.global_statements.add( this )

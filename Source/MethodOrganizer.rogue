@@ -41,6 +41,15 @@ class MethodOrganizer : Visitor
       endIf
       return null
 
+    method on_leave( cmd:Method )
+      on_leave( cmd->(as Procedure) )
+
+      local sig = cmd.signature
+      if (cmd.type_context.methods_by_signature.contains(sig))
+        throw cmd.t.error( "Type $ already defines method $."(cmd.type_context.name,sig) )
+      endIf
+      cmd.type_context.methods_by_signature[ sig ] = cmd
+
     method on_enter( cmd:Procedure )
       ensure cmd.parameters( cmd.t )
       if (cmd.type_context_ref) cmd.type_context = cmd.type_context_ref->Type
@@ -62,10 +71,10 @@ class MethodOrganizer : Visitor
       on_leave( cmd->(as Procedure) )
 
       local sig = cmd.signature
-      if (this_module.routines.by_signature.contains(sig))
+      if (this_module.routines_by_signature.contains(sig))
         throw cmd.t.error( "Module $ already defines routine $."(this_module.name,sig) )
       endIf
-      this_module.routines.by_signature[ sig ] = cmd
+      this_module.routines_by_signature[ sig ] = cmd
 
     method on_visit( cmd:Statements )
       temporarily current_statements_rewriter = cmd.list.rewriter

@@ -3,11 +3,11 @@ module Boss
 class BossObject
   PROPERTIES
     type       : Type
-    properties : Array<<BossValue>>
+    properties : BossValue[]
 
   METHODS
     method init( type )
-      properties = Array<<BossValue>>( type.properties.count )
+      properties = Dim<<BossValue>>( type.properties.count )
 
     method description->String
       return type.name

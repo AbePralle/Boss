@@ -11,10 +11,11 @@ class Module
     t    : Token
     name : String
 
-    used_modules      = UsedModule[]
-    types             = StringTable<<Type>>()
-    global_statements : Statements
-    routines          = Procedures()
+    used_modules          = UsedModule[]
+    types                 = StringTable<<Type>>()
+    global_statements     : Statements
+    routines_by_name      = StringTable<<Routine[]>>()
+    routines_by_signature = StringTable<<Routine>>()
 
     is_dynamic   : Logical
     is_visiting  : Logical
@@ -32,8 +33,8 @@ class Module
     method collect_routines( m_name:String, list:Procedure[], &is_limited )
       if (is_visiting) return
 
-      local matching = routines.by_name[ m_name ]
-      if (matching) list.add( matching )
+      local matching = routines_by_name[ m_name ]
+      if (matching) list.add( forEach in matching )
 
       temporarily is_visiting = true
         forEach (used_m in used_modules)
@@ -100,7 +101,7 @@ class Module
       state = STATE_METHODS_ORGANIZED
 
       temporarily is_resolving = true
-        forEach (r in (forEach in routines.by_name))
+        forEach (r in (forEach in routines_by_name))
           MethodOrganizer(this,r).visit( r )
         endForEach
       endTemporarily
@@ -112,9 +113,10 @@ class Module
       state = STATE_RESOLVED
 
       temporarily is_resolving = true
-        forEach (r in (forEach in routines.by_name))
+        forEach (r in (forEach in routines_by_name))
           Resolver(this,null,r).visit( r )
         endForEach
+        Resolver( this, null, null ).visit( forEach in types.values )
       endTemporarily
 
     method uses_module( m:Module, &is_exported )
