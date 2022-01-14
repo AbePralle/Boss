@@ -1,5 +1,6 @@
 module Boss
 
+$include "BossObject.rogue"
 $include "BossValue.rogue"
 $include "Candidates.rogue"
 $include "CmdExecution.rogue"

@@ -63,6 +63,10 @@ class Resolver : Visitor
       endWhichIs
       }#
 
+    method on( cmd:Constructor )->Cmd
+      # TODO
+      return cmd
+
     method on_visit( cmd:Local )
       if (not cmd.is_parameter)
         if (cmd.type_ref)
@@ -123,84 +127,91 @@ class Resolver : Visitor
     method on_visit( cmd:Unary )
       cmd.operand = visit( cmd.operand ).require_value
 
-    method resolve_access( context:Cmd, access:Access )->Cmd
-      local match : Procedure
+    method resolve_access( context:Cmd, access:Access, &suppress_error )->Cmd
+      if (context)
+        context  = visit( context ).require_value
 
-      if (not context and not access.args and this_procedure)
-        local v = this_procedure.find_local( access.name )
-        if (v) return visit( GetLocal(access.t,v) )
+      else
+        if (access.args)
+          # Call or constructor
+          local type = this_module.find_type( access.name, &extended_search )
+          if (type)
+            return visit( type.cmd_create_object(access.args) )
+          endIf
+
+        else
+          local v = this_procedure.find_local( access.name )
+          if (v) return visit( GetLocal(access.t,v) )
+        endIf
       endIf
 
-      visit( access.args )  # resolve args to determine types
+      local call_context = which{ context:context.require_type || this_type }
+      local match = find_procedure( call_context, access.name, access.args )
 
-      use Candidates
-        local name = access.name
-        this_module.collect_routines( name, Candidates.list )
+      if (not match)
+        if (suppress_error) return null
 
-        match = refine_candidates( context, access )
-
-        if (not match)
-          local sig = name
-          if (access.args)
-            sig += '('
-            forEach (arg at i in access.args)
-              if (i > 0) sig += ','
-              sig += arg.require_type
-            endForEach
-            sig += ')'
-          endIf
-
-          local mesg : String
-          if (access.args)
-            which (Candidates.count)
-              case 0
-                mesg = "No such "
-                if (context)       mesg += "method "
-                elseIf (this_type) mesg += "method or routine "
-                else               mesg += "routine "
-
-                if (context)       mesg += context.type + "."
-                elseIf (this_type) mesg += this_type + "."
-
-                mesg += sig + '.'
-
-              case 1
-                mesg = "Call to "
-                if (context)       mesg += context.type + "."
-                elseIf (this_type) mesg += this_type + "."
-
-                mesg += sig
-                mesg += " has arguments that are incompatible with the best candidate:\n\n"
-                mesg += "  " + Candidates[0].context_signature
-
-              others
-                mesg = "Ambiguous call to "
-                if (context)       mesg += context.type + "."
-                elseIf (this_type) mesg += this_type + "."
-
-                mesg += sig
-                mesg += ". Candidates:\n\n"
-                forEach (m in Candidates)
-                  mesg += "  " + m.context_signature
-                endForEach
-
-            endWhich
-          else
-            if (context)
-              if (access.args) mesg = "No such method '$' exists in type '$'." (sig,context.type)
-              else             mesg = "No such property or method '$' exists in type '$'." (sig,context.type)
-            elseIf (this_type)
-              if (access.args) mesg = "No such method or routine '$'."(sig)
-              else             mesg = "No such variable, method, or routine '$'."(sig)
-            else
-              if (access.args) mesg = "No such routine '$'."(sig)
-              else             mesg = "No such variable or routine '$'."(sig)
-            endIf
-          endIf
-
-          throw access.t.error( mesg )
+        local sig = access.name
+        if (access.args)
+          sig += '('
+          forEach (arg at i in access.args)
+            if (i > 0) sig += ','
+            sig += arg.require_type
+          endForEach
+          sig += ')'
         endIf
-      endUse
+
+        local mesg : String
+        if (access.args)
+          which (Candidates.count)
+            case 0
+              mesg = "No such "
+              if (context)       mesg += "method "
+              elseIf (this_type) mesg += "method or routine "
+              else               mesg += "routine "
+
+              if (context)       mesg += context.type + "."
+              elseIf (this_type) mesg += this_type + "."
+
+              mesg += sig + '.'
+
+            case 1
+              mesg = "Call to "
+              if (context)       mesg += context.type + "."
+              elseIf (this_type) mesg += this_type + "."
+
+              mesg += sig
+              mesg += " has arguments that are incompatible with the best candidate:\n\n"
+              mesg += "  " + Candidates[0].context_signature
+
+            others
+              mesg = "Ambiguous call to "
+              if (context)       mesg += context.type + "."
+              elseIf (this_type) mesg += this_type + "."
+
+              mesg += sig
+              mesg += ". Candidates:\n\n"
+              forEach (m in Candidates)
+                mesg += "  " + m.context_signature
+              endForEach
+
+          endWhich
+
+        else
+          if (context)
+            if (access.args) mesg = "No such method '$' exists in type '$'." (sig,context.type)
+            else             mesg = "No such property or method '$' exists in type '$'." (sig,context.type)
+          elseIf (this_type)
+            if (access.args) mesg = "No such method or routine '$'."(sig)
+            else             mesg = "No such variable, method, or routine '$'."(sig)
+          else
+            if (access.args) mesg = "No such routine '$'."(sig)
+            else             mesg = "No such variable or routine '$'."(sig)
+          endIf
+        endIf
+
+        throw access.t.error( mesg )
+      endIf
 
       # TODO: fill in default values
 
@@ -213,8 +224,16 @@ class Resolver : Visitor
 
       return visit( match.cmd_call(null,access.args) )
 
-    method refine_candidates( context:Cmd, access:Access )->Procedure
-      local arg_count = which{ access.args:access.args.count || 0 }
+    method find_procedure( type_context:Type, name:String, args:Cmd )->Procedure
+      visit( args )  # resolve args to determine types
+
+      use Candidates
+        this_module.collect_routines( name, Candidates.list )
+        return refine_candidates( type_context, args )
+      endUse
+
+    method refine_candidates( type_context:Type, args:Cmd )->Procedure
+      local arg_count = which{ args:args.count || 0 }
       forEach (m in Candidates)
         if (m.accepts_arg_count(arg_count)) Candidates.keep m
       endForEach

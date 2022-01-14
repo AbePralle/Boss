@@ -67,6 +67,13 @@ augment
       return CastToValue(cmd.t,cmd)
 endAugment
 
+# cmd_create_object()
+augment
+  METHODS
+    method Type.cmd_create_object( args:Cmd )->Cmd
+      return CreateObject( args.t, this, Constructor(args.t,this,args) )
+endAugment
+
 # cmd_default_value()
 augment
   METHODS
@@ -134,6 +141,9 @@ augment
 
       local type = Type( t, name, &!is_primitive )
       type.definition = this
+
+    method CreateObject.type->Type
+      return @type
 
     method DefineModule.organize_element
       if (Program.current_module.is_dynamic)

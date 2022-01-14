@@ -53,6 +53,10 @@ augment
       Program.execution_result = Program.execution_result.object->(as String)->Real64
       return true
 
+    method CreateObject.execute->Logical
+      Program.execution_result = BossObject( @type )
+      return true
+
     method Description.execute->Logical
       if (not operand.execute) return false
       Program.execution_result = Program.execution_result.description

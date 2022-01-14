@@ -1,0 +1,18 @@
+module Boss
+
+class BossObject
+  PROPERTIES
+    type       : Type
+    properties : Array<<BossValue>>
+
+  METHODS
+    method init( type )
+      properties = Array<<BossValue>>( type.properties.count )
+
+    method description->String
+      return type.name
+
+    method to->BossValue
+      return BossValue( this )
+endClass
+

@@ -953,12 +953,15 @@ parser
   create CastToValue(operand):Unary
   create CallProcedure(args)
   create CallRoutine(args):CallProcedure
+  create Constructor(type_context:Type,args)
+  create CreateObject(type:Type,cmd_init)
   create Description(operand):Unary
   create GetLocal(info:Local)
-  create GlobalMethodDef(type_context_ref,name:String,parameters,return_type_ref,attributes,statements):Procedure
+  #create GlobalMethodDef(type_context_ref,name:String,parameters,return_type_ref,attributes,statements):Procedure
   create Literal
   create LiteralNull(type:Type):Literal
   create LiteralValueUndefined:Literal
+  create Method(type_context_ref,name:String,parameters,return_type_ref,attributes,statements):Procedure
   create Procedure(name:String,parameters,return_type_ref,attributes,statements)
   create Property( type_context:Type, name:String, initial_value, type:Type )
   create PushResult(operand):Unary
