@@ -954,11 +954,6 @@ parser
   create CallProcedure(args)
   create CallRoutine(args):CallProcedure
   create Description(operand):Unary
-  create DescriptionInt32(operand):Unary
-  create DescriptionLogical(operand):Unary
-  create DescriptionObject(operand):Unary
-  create DescriptionReal64(operand):Unary
-  create DescriptionValue(operand):Unary
   create GetLocal(info:Local)
   create GlobalMethodDef(type_context_ref,name:String,parameters,return_type_ref,attributes,statements):Procedure
   create Literal

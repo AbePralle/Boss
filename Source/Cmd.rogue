@@ -383,34 +383,6 @@ class Description : Unary
 
 endClass
 
-class DescriptionInt32 : Unary
-  METHODS
-    method description->String
-      return "DescriptionInt32($)" (%operand)
-
-endClass
-
-class DescriptionLogical : Unary
-  METHODS
-    method description->String
-      return "DescriptionLogical($)" (%operand)
-
-endClass
-
-class DescriptionObject : Unary
-  METHODS
-    method description->String
-      return "DescriptionObject($)" (%operand)
-
-endClass
-
-class DescriptionReal64 : Unary
-  METHODS
-    method description->String
-      return "DescriptionReal64($)" (%operand)
-
-endClass
-
 class Identifier : Cmd
   PROPERTIES
     name : String

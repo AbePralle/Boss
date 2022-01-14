@@ -53,32 +53,7 @@ augment
       Program.execution_result = Program.execution_result.object->(as String)->Real64
       return true
 
-    method DescriptionCharacter.execute->Logical
-      if (not operand.execute) return false
-      Program.execution_result = Program.execution_result.x->Int32->Character.to_escaped_ascii
-      return true
-
-    method DescriptionInt32.execute->Logical
-      if (not operand.execute) return false
-      Program.execution_result = Program.execution_result.x->Int32->String
-      return true
-
-    method DescriptionLogical.execute->Logical
-      if (not operand.execute) return false
-      Program.execution_result = which{ Program.execution_result.x:"true" || "false" }
-      return true
-
-    method DescriptionObject.execute->Logical
-      if (not operand.execute) return false
-      Program.execution_result = Program.execution_result.description
-      return true
-
-    method DescriptionReal64.execute->Logical
-      if (not operand.execute) return false
-      Program.execution_result = Program.execution_result.x->String
-      return true
-
-    method DescriptionValue.execute->Logical
+    method Description.execute->Logical
       if (not operand.execute) return false
       Program.execution_result = Program.execution_result.description
       return true

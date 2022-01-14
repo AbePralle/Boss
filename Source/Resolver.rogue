@@ -63,10 +63,6 @@ class Resolver : Visitor
       endWhichIs
       }#
 
-    method on( cmd:Description )->Cmd
-      local operand = visit( cmd.operand ).require_value
-      return visit( operand.type.cmd_description(cmd.t, cmd.operand) )
-
     method on_visit( cmd:Local )
       if (not cmd.is_parameter)
         if (cmd.type_ref)
@@ -123,6 +119,9 @@ class Resolver : Visitor
     method on( cmd:Subtract )->Cmd
       on_visit( cmd->(as Binary) )  # resolves children & converts to common type
       return visit( cmd.left.type.cmd_subtract(cmd.t, cmd.left, cmd.right) )
+
+    method on_visit( cmd:Unary )
+      cmd.operand = visit( cmd.operand ).require_value
 
     method resolve_access( context:Cmd, access:Access )->Cmd
       local match : Procedure
@@ -275,23 +274,7 @@ endAugment
 augment
   METHODS
     method Type.cmd_description( t:Token, operand:Cmd)->Cmd
-      return DescriptionObject( t, operand )
-
-    method TypeInt32.cmd_description( t:Token, operand:Cmd)->Cmd
-      return DescriptionInt32( t, operand )
-
-    method TypeLogical.cmd_description( t:Token, operand:Cmd)->Cmd
-      return DescriptionLogical( t, operand )
-
-    method TypeReal64.cmd_description( t:Token, operand:Cmd)->Cmd
-      return DescriptionReal64( t, operand )
-
-    method TypeString.cmd_description( t:Token, operand:Cmd)->Cmd
-      return operand
-
-    method TypeValue.cmd_description( t:Token, operand:Cmd)->Cmd
-      return DescriptionValue( t, operand )
-
+      return Description( t, operand )
 endAugment
 
 # Subtract
