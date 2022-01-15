@@ -1,0 +1,63 @@
+module Boss
+
+class Categorizer : Visitor
+  PROPERTIES
+    this_module    : Module
+    this_type      : Type
+    this_procedure : Procedure
+
+  METHODS
+    method on( cmd:ClassDef )->Cmd
+      local existing = Program.current_module.types[ cmd.name ]
+      if (existing)
+        local qualified_name : String
+        if (Program.current_module is Program.default_module)
+          qualified_name = cmd.name
+        else
+          qualified_name = "$::$"(Program.current_module.name,cmd.name)
+        endIf
+        throw cmd.t.error( "Class $ is already defined."(qualified_name) )
+      endIf
+
+      local type = Type( cmd.t, cmd.name, &!is_primitive )
+      type.definition = cmd
+      return null
+
+    method on( cmd:DefineModule )->Cmd
+      if (Program.current_module.is_dynamic)
+        local cur_name = Program.current_module.name
+        if (cur_name != cmd.name)
+          throw cmd.t.error( "Code from imported module '$' cannot switch module contexts."(cur_name) )
+        endIf
+      else
+        Program.set_current_module( cmd.t, cmd.name )
+      endIf
+      return null
+
+    method on( cmd:Include )->Cmd
+      Program.include( cmd.t, cmd.filepath )
+      return null
+
+    method on( cmd:RoutineDef )->Cmd
+      ensure Program.current_module.routines_by_name[ cmd.name ]
+      Program.current_module.routines_by_name[ cmd.name ].add( cmd->Routine )
+      return null
+
+    method on( cmd:Statements )->Cmd
+      Program.current_module.global_statements.add( cmd )
+      return null
+
+    method on( cmd:UsesModule )->Cmd
+      use builder = StringBuilder.pool
+        forEach (segment at i in cmd.path)
+          if (i > 0) builder.print '/'
+          builder.print segment->String
+        endForEach
+        local filepath = builder->String
+        local m = Program.find_module( cmd.t, cmd.path.last->String )
+        Program.current_module.uses_module( m, &is_exported=cmd.is_exported )
+        Program.include( filepath, m )
+      endUse
+      return null
+endClass
+

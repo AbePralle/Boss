@@ -136,11 +136,13 @@ class Program [singleton]
         local ast = Parser(tokens).parse->(as AST)
         if (is_static) parsed_files[ filepath ] = ast
         if (ast)
-          (forEach in ast.elements).organize_element
+          Categorizer().visit( ast )
+          #(forEach in ast.elements).organize_element
         endIf
       endTemporarily
 
     method launch
+      #{
       resolve
       (forEach in all_modules).execute
       if (execution_status == EXE_ERROR)
@@ -148,37 +150,18 @@ class Program [singleton]
       endIf
       require stack.is_empty
       require fp == 0
-
-
-      #{
-    method load( file:File )->Module
-      local filepath = file.filepath
-      if (modules_by_filepath.contains(filepath))
-        # First check unmodified path in case of any special mappings
-        return modules_by_filepath[ filepath ]
-      endIf
-
-      if (not file.exists)
-        local message = "No such file '$'."(file.filepath)
-        if (is_configured) throw t.error( message )
-        else               throw CompileError( message )
-      endIf
-
-      filepath = file.abs
-      if (modules_by_filepath.contains(filepath))
-        return modules_by_filepath[ filepath ]
-      endIf
-
-      return Module( File(filepath) )
       }#
+
 
     method preprocess( tokens:Token[] )
       noAction
 
     method resolve
+      #{
       (forEach in all_modules).organize_types
       (forEach in all_modules).organize_methods
       (forEach in all_modules).resolve
+      }#
 
     method set_current_module( @current_module )
 

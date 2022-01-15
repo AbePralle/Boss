@@ -23,8 +23,10 @@ augment Cmd
       if (cur_type is target_type) return this
       return target_type.cmd_cast( this )
 
+      #{
     method organize_element
       throw t.error( "[INTERNAL] $.organize_element() is undefined." (type_name) )
+      }#
 
     method require_type->Type
       local result = type
@@ -127,6 +129,7 @@ augment
     method CastToValue.type->Type
       return Program.type_Value
 
+      #{
     method ClassDef.organize_element
       local existing = Program.current_module.types[ name ]
       if (existing)
@@ -141,10 +144,12 @@ augment
 
       local type = Type( t, name, &!is_primitive )
       type.definition = this
+      }#
 
     method CreateObject.type->Type
       return @type
 
+      #{
     method DefineModule.organize_element
       if (Program.current_module.is_dynamic)
         local cur_name = Program.current_module.name
@@ -154,6 +159,7 @@ augment
       else
         Program.set_current_module( t, name )
       endIf
+      }#
 
     method DescriptionInt32.type->Type
       return Program.type_String
@@ -173,8 +179,10 @@ augment
     method ImportModule.type->Type
       return Program.type_Value
 
+      #{
     method Include.organize_element
       Program.include( t, filepath )
+      }#
 
     method LiteralCharacter.type->Type
       return Program.type_Character
@@ -200,16 +208,21 @@ augment
     method LiteralValueUndefined.type->Type
       return Program.type_Value
 
+      #{
     method RoutineDef.organize_element
       ensure Program.current_module.routines_by_name[ name ]
       Program.current_module.routines_by_name[ name ].add( this->Routine )
+      }#
 
+      #{
     method Statements.organize_element
       Program.current_module.global_statements.add( this )
+      }#
 
     method TypeReference.to->Type
       return Type( t, name )
 
+      #{
     method UsesModule.organize_element
       use builder = StringBuilder.pool
         forEach (segment at i in path)
@@ -221,5 +234,6 @@ augment
         Program.current_module.uses_module( m, &=is_exported )
         Program.include( filepath, m )
       endUse
+      }#
 
 endAugment
