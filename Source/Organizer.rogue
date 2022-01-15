@@ -1,0 +1,48 @@
+module Boss
+
+class Organizer : Visitor
+  PROPERTIES
+    this_module    : Module
+    this_type      : Type
+    this_procedure : Procedure
+
+  METHODS
+    method init( this_module )
+
+    method visit( type:Type )
+      if (type.is_organized) return
+      type.is_organized = true
+
+      this_type = type
+
+      if (type.definition)
+        local constructor_properties = type.definition.constructor_properties
+        if (constructor_properties)
+          local m_init = Method( constructor_properties.t, type, "init" )
+          type.add( m_init )
+
+          forEach (p in constructor_properties)
+            block p = p->(as LocalDef)->Local
+              p.is_parameter = true
+              p.is_auto_store = true
+              m_init.parameters.add( p )
+              if (p.@type)
+                type.properties[ p.name ] = Property( p.t, type, p.name, p.initial_value, p.@type )
+              endIf
+            endBlock
+          endForEach
+        endIf
+      endIf
+endClass
+
+augment
+  METHODS
+    method Type.organize
+      if (is_organized) return
+      Organizer( module_context ).visit( this )
+
+    method Type.resolve
+      if (is_resolved) return
+      # TODO
+endAugment
+

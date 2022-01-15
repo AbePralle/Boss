@@ -1,11 +1,10 @@
 module Boss
 
 class Module
-  ENUMERATE
-    STATE_UNRESOLVED
-    STATE_TYPES_ORGANIZED
-    STATE_METHODS_ORGANIZED
-    STATE_RESOLVED
+  BOSS_ATTRIBUTE( is_dynamic,   1 )
+  BOSS_ATTRIBUTE( is_organized, 2 )
+  BOSS_ATTRIBUTE( is_resolved,  4 )
+  BOSS_ATTRIBUTE( is_visiting,  8 )
 
   PROPERTIES
     t    : Token
@@ -17,11 +16,7 @@ class Module
     routines_by_name      = StringTable<<Routine[]>>()
     routines_by_signature = StringTable<<Routine>>()
 
-    is_dynamic   : Logical
-    is_visiting  : Logical
-    is_resolving : Logical
-
-    state = STATE_UNRESOLVED : Int32
+    attributes : Int32
 
   METHODS
     method init( t, name, &dynamic )
@@ -57,11 +52,15 @@ class Module
       #local statements = global_statements
       #global_statements = Statements(t)
 
+      #{
       local r_launch = Routine( t, "global_statements", global_statements )
       MethodOrganizer( this ).visit( null, r_launch )
       Resolver( this ).visit( null, r_launch )
       if (Program.execute( r_launch, null )) return true
       return false
+      }#
+      trace "TODO"
+      return true
 
     method find_type( name:String, &extended_search )->Type
       if (is_visiting) return null
@@ -85,6 +84,7 @@ class Module
       if (result) return result
       throw t.error( "No such type '$'." (name) )
 
+      #{
     method organize_types
       if (is_resolving) return
       if (state >= STATE_TYPES_ORGANIZED) return
@@ -122,6 +122,22 @@ class Module
         endForEach
         resolver.visit( forEach in types )
       endTemporarily
+      }#
+
+    method organize
+      if (is_organized) return
+      is_organized = true
+      local organizer = Organizer( this )
+      organizer.visit( forEach in types )
+      #forEach (r in (forEach in routines_by_name))
+      #    method_organizer.visit( null, r )
+      #  endForEach
+      #method_organizer.visit( forEach in types )
+
+    method resolve
+      if (is_resolved) return
+      is_resolved = true
+      organize
 
     method uses_module( m:Module, &is_exported )
       if (m is this) return # happens when this is the default module

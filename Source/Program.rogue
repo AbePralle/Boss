@@ -136,14 +136,13 @@ class Program [singleton]
         local ast = Parser(tokens).parse->(as AST)
         if (is_static) parsed_files[ filepath ] = ast
         if (ast)
-          Categorizer().visit( ast )
-          #(forEach in ast.elements).organize_element
+          Collector().visit( ast )
         endIf
       endTemporarily
 
     method launch
-      #{
       resolve
+      #{
       (forEach in all_modules).execute
       if (execution_status == EXE_ERROR)
         throw execution_error
@@ -157,6 +156,7 @@ class Program [singleton]
       noAction
 
     method resolve
+      (forEach in all_modules).resolve
       #{
       (forEach in all_modules).organize_types
       (forEach in all_modules).organize_methods

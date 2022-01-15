@@ -430,7 +430,7 @@ parser
 
 - procedure_parameter
   consume_eols
-  on IDENTIFIER optional_initial_value optional_type -> Local(name=content,initial_value,type_ref)
+  on IDENTIFIER optional_initial_value optional_type -> LocalDef(name=content,initial_value,type_ref)
   #on '&' identifier optional_initial_value optional_type -> FlagParameter(name:String,initial_value,type_ref):Parameter
   mustConsume IDENTIFIER  # generate error message
 
@@ -795,7 +795,7 @@ parser
   on IDENTIFIER
     optional_initial_value
     createNull
-    produce Local( name=content, initial_value, type_ref )
+    produce LocalDef( name=content, initial_value, type_ref )
   endOn
   mustConsume IDENTIFIER  # throws error
 
@@ -960,6 +960,7 @@ parser
   create Literal
   create LiteralNull(type:Type):Literal
   create LiteralValueUndefined:Literal
+  create Local(name:String,initial_value)
   create Method(name:String,statements):Procedure
   create MethodDef(name:String,parameters,return_type_ref,attribute_names,statements):ProcedureDef
   create Procedure(name:String,statements)

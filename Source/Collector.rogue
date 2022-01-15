@@ -1,12 +1,14 @@
 module Boss
 
-class Categorizer : Visitor
-  PROPERTIES
-    this_module    : Module
-    this_type      : Type
-    this_procedure : Procedure
-
+class Collector : Visitor
   METHODS
+    method on( cmd:AST )->Cmd
+      visit( forEach in cmd.elements )
+      return null
+
+    method on( cmd:Cmd )->Cmd
+      throw cmd.t.error( "[INTERNAL] Unexpected $ in Collector."(cmd.type_name) )
+
     method on( cmd:ClassDef )->Cmd
       local existing = Program.current_module.types[ cmd.name ]
       if (existing)

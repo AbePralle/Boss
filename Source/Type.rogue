@@ -1,6 +1,10 @@
 module Boss
 
 class Type
+  BOSS_ATTRIBUTE( is_organized, 1 )
+  BOSS_ATTRIBUTE( is_resolved,  2 )
+  BOSS_ATTRIBUTE( is_primitive, 4 )
+
   GLOBAL METHODS
     method create( t:Token, name:String )->Type
       local entry = Program.current_module.types.find( name )
@@ -17,7 +21,8 @@ class Type
     module_context : Module
     t              : Token
     name           : String
-    is_primitive   : Logical
+    attributes     : Int32
+
     definition     : ClassDef
 
     properties           = StringTable<<Property>>()
@@ -26,7 +31,8 @@ class Type
     methods_by_signature = StringTable<<Method>>()
 
   METHODS
-    method init( t, name, is_primitive )
+    method init( t, name, is_primitive:Logical )
+      this.is_primitive = is_primitive
       module_context = Program.current_module
       Program.current_module.types[ name ] = this
 

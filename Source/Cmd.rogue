@@ -812,28 +812,51 @@ class Local : Cmd
   PROPERTIES
     name          : String
     initial_value : Cmd
-    type_ref      : Cmd
     type          : Type
     attributes    : Int32
     fp_offset     = -1
 
   METHODS
-    method init( t, name, initial_value, type_ref )
+    method init( t, name, initial_value )
+      init( t, name, initial_value, type )
+
+    method init( t, name, initial_value, type )
 
     method init( existing:Local )
       prior.init( existing )
       name = existing.name
       if (existing.initial_value) initial_value = existing.initial_value.cloned
-      if (existing.type_ref) type_ref = existing.type_ref.cloned
       type = existing.@type
-      is_parameter = existing.is_parameter
+      attributes = existing.attributes
       fp_offset = existing.fp_offset
 
     method description->String
-      return "Local($,$,$)" (%name,%initial_value,%type_ref)
+      return "Local($,$,$)" (%name,%initial_value,%type)
 
     method type->Type
       return @type
+endClass
+
+class LocalDef : Cmd
+  PROPERTIES
+    name          : String
+    initial_value : Cmd
+    type_ref      : Cmd
+
+  METHODS
+    method init( t, name, initial_value, type_ref )
+
+    method init( existing:LocalDef )
+      prior.init( existing )
+      name = existing.name
+      if (existing.initial_value) initial_value = existing.initial_value.cloned
+      if (existing.type_ref) type_ref = existing.type_ref.cloned
+
+    method description->String
+      return "LocalDef($,$,$)" (%name,%initial_value,%type_ref)
+
+    method to->Local
+      return Local( t, name, initial_value, type_ref->Type )
 endClass
 
 class PushNumber : Unary
