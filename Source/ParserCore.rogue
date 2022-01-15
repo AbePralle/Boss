@@ -351,7 +351,7 @@ class ParserCore [abstract]
                   _pop_frame
                   if (not _consume(TokenType.KEYWORD_END_ROUTINE)) _throw_syntax_error( &expected=TokenType.KEYWORD_END_ROUTINE )
                 endIf
-                _push( Routine(_cur_t,_string_arg(-5),_node_arg(-4),_node_arg(-3),_node_arg(-2),_node_arg(-1)), 5 )
+                _push( RoutineDef(_cur_t,_string_arg(-5),_node_arg(-4),_node_arg(-3),_node_arg(-2),_node_arg(-1)), 5 )
                 return
               endTemporarily
             endIf
@@ -877,11 +877,14 @@ class ParserCore [abstract]
             _push( Literal(_cur_t), 0 )
             _push( LiteralNull(_cur_t,_node_arg(-1)->(as Type)), 1 )
             _push( LiteralValueUndefined(_cur_t), 0 )
-            _push( Method(_cur_t,_string_arg(-5),_node_arg(-4),_node_arg(-3),_node_arg(-2),_node_arg(-1)), 5 )
-            _push( Procedure(_cur_t,_string_arg(-5),_node_arg(-4),_node_arg(-3),_node_arg(-2),_node_arg(-1)), 5 )
+            _push( Method(_cur_t,_string_arg(-2),_node_arg(-1)), 2 )
+            _push( MethodDef(_cur_t,_string_arg(-5),_node_arg(-4),_node_arg(-3),_node_arg(-2),_node_arg(-1)), 5 )
+            _push( Procedure(_cur_t,_string_arg(-2),_node_arg(-1)), 2 )
+            _push( ProcedureDef(_cur_t,_string_arg(-5),_node_arg(-4),_node_arg(-3),_node_arg(-2),_node_arg(-1)), 5 )
             _push( Property(_cur_t,_node_arg(-4)->(as Type),_string_arg(-3),_node_arg(-2),_node_arg(-1)->(as Type)), 4 )
             _push( PushResult(_cur_t,_node_arg(-1)), 1 )
             _push( ReturnResult(_cur_t,_node_arg(-1)), 1 )
+            _push( Routine(_cur_t,_string_arg(-2),_node_arg(-1)), 2 )
             _push( SubtractInt32(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( SubtractObject(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( SubtractReal64(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )

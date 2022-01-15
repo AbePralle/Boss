@@ -57,7 +57,7 @@ class Module
       #local statements = global_statements
       #global_statements = Statements(t)
 
-      local r_launch = Routine( t, "global_statements", null, null, null, global_statements )
+      local r_launch = Routine( t, "global_statements", global_statements )
       MethodOrganizer( this ).visit( null, r_launch )
       Resolver( this ).visit( null, r_launch )
       if (Program.execute( r_launch, null )) return true

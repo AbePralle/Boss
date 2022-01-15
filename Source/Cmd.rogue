@@ -555,34 +555,36 @@ class Println : Cmd
 endClass
 
 class Procedure : Cmd
-  DEFINITIONS
-    ATTRIBUTE_RESOLVED = 1
+  BOSS_ATTRIBUTE( is_resolved, 1 )
 
   PROPERTIES
     type_context     : Type
-    type_context_ref : Cmd
     name             : String
-    parameters       : Cmd
-    return_type_ref  : Cmd
+    signature        : String
+    parameters       : Local[]
     return_type      : Type
     attributes       : Int32
-    attribute_names  : Cmd
     statements       : Cmd
-
-    signature        : String
 
     locals           = Local[]
 
   METHODS
-    method init( t, name, parameters, return_type_ref, attribute_names, statements )
+    method init( t, name, statements )
+      init( t, null, name, statements )
+
+    method init( t, type_context, name, statements=null )
+      parameters = Local[]
+      locals     = Local[]
+      if (not statements) statements = Statements( t )
 
     method init( existing:Procedure )
       prior.init( existing )
       type_context = existing.type_context
       name = existing.name
-      if (existing.parameters) parameters = existing.parameters.cloned
-      if (existing.attribute_names) attribute_names = existing.attribute_names.cloned
-      if (existing.statements) statements = existing.statements.cloned
+      signature = existing.signature
+      parameters = existing.parameters.cloned
+      attributes = existing.attributes
+      statements = existing.statements.cloned
       locals = existing.locals.cloned
 
     method accepts_arg_count( n:Int32 )->Logical
@@ -591,24 +593,61 @@ class Procedure : Cmd
       return (n >= min and n <= max)
 
     method description->String
-      if (signature) return signature
-      return name
+      return which{ signature || name }
 
     method context_signature->String
       if (not type_context) return signature
       return "$.$" (type_context,signature)
 
-    method is_resolved->Logical
-      return (attributes & ATTRIBUTE_RESOLVED)
+endClass
 
-    method set_is_resolved( setting:Logical )
-      if (setting) attributes |= ATTRIBUTE_RESOLVED
-      else         attributes &= !ATTRIBUTE_RESOLVED
+class ProcedureDef : Cmd
+  BOSS_ATTRIBUTE( is_resolved, 1 )
+
+  PROPERTIES
+    name             : String
+    parameters       : Cmd
+    return_type_ref  : Cmd
+    attributes       : Int32
+    attribute_names  : Cmd
+    statements       : Cmd
+
+  METHODS
+    method init( t, name, parameters, return_type_ref, attribute_names, statements )
+
+    method init( existing:ProcedureDef )
+      prior.init( existing )
+      name = existing.name
+      if (existing.parameters) parameters = existing.parameters.cloned
+      if (existing.attribute_names) attribute_names = existing.attribute_names.cloned
+      if (existing.statements) statements = existing.statements.cloned
+
+    method accepts_arg_count( n:Int32 )->Logical
+      local min = which{ parameters:parameters.count || 0 }
+      local max = min
+      return (n >= min and n <= max)
+
+    method description->String
+      return name
 
 endClass
 
 class Routine : Procedure
   METHODS
+endClass
+
+class RoutineDef : ProcedureDef
+  METHODS
+    method to->Routine
+      local result = Routine( t, name, statements )
+      result.parameters.add( (forEach in parameters)->(as Local) )
+      if (return_type_ref) result.return_type = return_type_ref->Type
+      if (attribute_names)
+        forEach (attribute in attribute_names)
+          # TOOD
+        endForEach
+      endIf
+      return result
 endClass
 
 class Statements : CmdList
@@ -699,7 +738,7 @@ class TypeReference : Cmd
 endClass
 
 #{
-class GlobalMethodDef : Procedure
+class GlobalMethodDef : ProcedureDef
   METHODS
     method init( t, type_context_ref, name, parameter_defs:Cmd, return_type_ref, attribute_names, statements )
 
@@ -766,9 +805,8 @@ endClass
 
 
 class Local : Cmd
-  DEFINITIONS
-    ATTRIBUTE_PARAMETER  = 1
-    ATTRIBUTE_AUTO_STORE = 2
+  BOSS_ATTRIBUTE( is_parameter,  1 )
+  BOSS_ATTRIBUTE( is_auto_store, 2 )
 
   PROPERTIES
     name          : String
@@ -792,20 +830,6 @@ class Local : Cmd
 
     method description->String
       return "Local($,$,$)" (%name,%initial_value,%type_ref)
-
-    method is_auto_store->Logical
-      return (attributes & ATTRIBUTE_AUTO_STORE)
-
-    method is_parameter->Logical
-      return (attributes & ATTRIBUTE_PARAMETER)
-
-    method set_is_auto_store( setting:Logical )
-      if (setting) attributes |= ATTRIBUTE_AUTO_STORE
-      else         attributes &= !ATTRIBUTE_AUTO_STORE
-
-    method set_is_parameter( setting:Logical )
-      if (setting) attributes |= ATTRIBUTE_PARAMETER
-      else         attributes &= !ATTRIBUTE_PARAMETER
 
     method type->Type
       return @type
@@ -1092,18 +1116,23 @@ endClass
 
 class Method : Procedure
   METHODS
-    method init( t, name, parameters, return_type_ref, attribute_names, statements )
-
-    method init( t, type_context, name )
-      parameters = CmdList( t )
-      statements = Statements( t )
-
-    method init( existing:Method )
-      prior.init( existing )
-      if (existing.type_context_ref) type_context_ref = existing.type_context_ref.cloned
-
     method description->String
       return which{ signature || name }
+
+endClass
+
+class MethodDef : ProcedureDef
+  METHODS
+    method to->Method
+      local result = Method( t, name, statements )
+      result.parameters.add( (forEach in parameters)->(as Local) )
+      if (return_type_ref) result.return_type = return_type_ref->Type
+      if (attribute_names)
+        forEach (attribute in attribute_names)
+          # TOOD
+        endForEach
+      endIf
+      return result
 
 endClass
 

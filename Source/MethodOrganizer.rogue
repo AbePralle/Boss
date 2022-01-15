@@ -17,7 +17,7 @@ class MethodOrganizer : Visitor
     method visit( this_type, this_procedure )
       visit( this_procedure )
 
-    #method on_visit( cmd:GlobalMethodDef )
+    #method on_visit( cmd:GlobalMethod )
 
     method on_enter( cmd:Local )
       if (cmd.fp_offset == -1)
@@ -56,11 +56,6 @@ class MethodOrganizer : Visitor
         throw cmd.t.error( "Type $ already defines method $."(cmd.type_context.name,sig) )
       endIf
       cmd.type_context.methods_by_signature[ sig ] = cmd
-
-    method on_enter( cmd:Procedure )
-      ensure cmd.parameters( cmd.t )
-      if (cmd.type_context_ref) cmd.type_context = cmd.type_context_ref->Type
-      if (cmd.return_type_ref)  cmd.return_type  = cmd.return_type_ref->Type
 
     method on_leave( cmd:Procedure )
       use builder = StringBuilder.pool

@@ -408,7 +408,7 @@ parser
       multi_line_statements
       mustConsume "endRoutine"
     endIf
-    produce Routine(name:String,parameters,return_type_ref,attribute_names,statements):Procedure
+    produce RoutineDef(name:String,parameters,return_type_ref,attribute_names,statements):ProcedureDef
   endOn
 
   on "uses" module_path uses_attributes-> UsesModule(path,attribute_names)
@@ -599,7 +599,7 @@ parser
 
 - global_method
   on "method", name, procedure_parameters, procedure_return_type, procedure_body ->
-    GlobalMethod(name,parameters,return_type_name:ReturnTypeReference,statements):Procedure
+    GlobalMethod(name,parameters,return_type_name:ReturnTypeReference,statements):ProcedureDef
 
 - if_statement
   on "if"
@@ -684,7 +684,7 @@ parser
 
 - method
   on "method", name, procedure_parameters, procedure_return_type, procedure_body ->
-    Method(name,parameters,return_type_name:String,statements)
+    MethodDef(name,parameters,return_type_name:String,statements)
 
 - module_name [binary]
   on "::" -> Scope
@@ -957,15 +957,17 @@ parser
   create CreateObject(type:Type,cmd_init)
   create Description(operand):Unary
   create GetLocal(info:Local)
-  #create GlobalMethodDef(type_context_ref,name:String,parameters,return_type_ref,attribute_names,statements):Procedure
   create Literal
   create LiteralNull(type:Type):Literal
   create LiteralValueUndefined:Literal
-  create Method(name:String,parameters,return_type_ref,attribute_names,statements):Procedure
-  create Procedure(name:String,parameters,return_type_ref,attribute_names,statements)
+  create Method(name:String,statements):Procedure
+  create MethodDef(name:String,parameters,return_type_ref,attribute_names,statements):ProcedureDef
+  create Procedure(name:String,statements)
+  create ProcedureDef(name:String,parameters,return_type_ref,attribute_names,statements)
   create Property( type_context:Type, name:String, initial_value, type:Type )
   create PushResult(operand):Unary
   create ReturnResult(result)
+  create Routine(name:String,statements):Procedure
   create SubtractInt32(left,right):Binary
   create SubtractObject(left,right):Binary
   create SubtractReal64(left,right):Binary

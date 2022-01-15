@@ -1,5 +1,7 @@
 module Boss
 
+$include "Macros.rogue"
+
 $include "BossObject.rogue"
 $include "BossValue.rogue"
 $include "Candidates.rogue"
