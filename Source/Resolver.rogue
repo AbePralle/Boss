@@ -93,7 +93,7 @@ trace m_init
         endIf
       endIf
 
-    method on_enter( cmd:Method )
+    method on_visit( cmd:Method )
       forEach (p in cmd.parameters step -1)
         block p = p->(as Local)
           if (p.is_auto_store)
@@ -101,6 +101,7 @@ trace m_init
           endIf
         endBlock
       endForEach
+      visit_children( cmd )
 
     method on_visit( cmd:Print )
       forEach (arg in rewriter=cmd.args.list.rewriter)
@@ -110,13 +111,17 @@ trace m_init
 
       if (cmd.args.count == 0) throw cmd.t.error( "One or more arguments expected." )
 
-    method on_leave( cmd:Println )
+    method on_visit( cmd:Println )
+      visit_children( cmd )
+
       forEach (arg in rewriter=cmd.args.list.rewriter)
         arg = visit( Description(arg.t,arg) ).require_value
         if (arg) rewriter.write( arg )
       endForEach
 
-    method on_leave( cmd:Procedure )
+    method on_visit( cmd:Procedure )
+      visit_children( cmd )
+
       forEach (v at i in cmd.locals)
         v.fp_offset = i
       endForEach
@@ -129,7 +134,8 @@ trace m_init
       if (cmd.result) return visit( ReturnResult(cmd.t,cmd.result) )
       return cmd
 
-    method on_leave( cmd:ReturnResult )
+    method on_visit( cmd:ReturnResult )
+      visit_children( cmd )
       cmd.result.require_value
 
     method on_visit( cmd:Statements )

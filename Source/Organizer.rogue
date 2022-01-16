@@ -39,12 +39,13 @@ class Organizer : Visitor
     method visit( this_type, this_procedure )
       visit( this_procedure )
 
-    method on_enter( cmd:Local )
+    method on_visit( cmd:Local )
       if (cmd.fp_offset == -1)
         cmd.fp_offset = this_procedure.locals.count
         cmd.is_parameter = cmd.fp_offset < this_procedure.parameters.count
         this_procedure.locals.add( cmd )
       endIf
+      visit_children( cmd )
 
     method on( cmd:LocalDeclarations )->Cmd
       if (cmd.type_ref)
