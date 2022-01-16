@@ -557,6 +557,7 @@ endClass
 class Procedure : Cmd
   BOSS_ATTRIBUTE( is_organized, 1 )
   BOSS_ATTRIBUTE( is_resolved,  2 )
+  BOSS_ATTRIBUTE( is_global,    4 )  # routine or global method
 
   PROPERTIES
     module_context   : Module
@@ -644,9 +645,11 @@ class Routine : Procedure
   METHODS
     method init( t:Token, module_context:Module, name:String, statements=null:Cmd )
       prior.init( t, module_context, name, statements )
+      is_global = true
 
     method init( existing:Procedure )
       prior.init( existing )
+      is_global = true
 endClass
 
 class RoutineDef : ProcedureDef
@@ -1219,5 +1222,12 @@ class Constructor : Cmd
 
     method description->String
       return "Constructor($,$)" (%type_context,%args)
+
+endClass
+
+class CallMethod : CallProcedure
+  METHODS
+    method description->String
+      return "CallMethod($)" (%args)
 
 endClass

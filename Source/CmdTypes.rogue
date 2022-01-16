@@ -70,11 +70,11 @@ augment
 endAugment
 
 # cmd_create_object()
-augment
-  METHODS
-    method Type.cmd_create_object( args:Cmd )->Cmd
-      return CreateObject( args.t, this, Constructor(args.t,this,args) )
-endAugment
+#augment
+#  METHODS
+#    method Type.cmd_create_object( args:Cmd )->Cmd
+#      return CreateObject( args.t, this, Constructor(args.t,this,args) )
+#endAugment
 
 # cmd_default_value()
 augment

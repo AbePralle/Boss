@@ -77,6 +77,25 @@ class Program [singleton]
         return true
       endTemporarily
 
+    method execute( context:BossObject, procedure:Procedure, args:Cmd )->Logical
+      temporarily fp = stack.count
+        stack.add( context )
+        if (args)
+          forEach (arg in args)
+            if (not arg.execute) return false
+            stack.add( execution_result )
+          endForEach
+        endIf
+        stack.expand( procedure.local_stack_slots )
+
+        local status = procedure.statements.execute
+        stack.count = fp
+        if (status) return true
+        if (execution_status != EXE_RETURN) return false
+        execution_status = EXE_CONTINUE
+        return true
+      endTemporarily
+
     method find_module( name:String )->Module
       return modules_by_name[ name ]
 

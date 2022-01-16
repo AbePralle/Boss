@@ -868,6 +868,7 @@ class ParserCore [abstract]
             _push( CastToReal64(_cur_t,_node_arg(-1)), 1 )
             _push( CastToString(_cur_t,_node_arg(-1)), 1 )
             _push( CastToValue(_cur_t,_node_arg(-1)), 1 )
+            _push( CallMethod(_cur_t,_node_arg(-1)), 1 )
             _push( CallProcedure(_cur_t,_node_arg(-1)), 1 )
             _push( CallRoutine(_cur_t,_node_arg(-1)), 1 )
             _push( Constructor(_cur_t,_node_arg(-2)->(as Type),_node_arg(-1)), 2 )

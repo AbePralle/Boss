@@ -951,6 +951,7 @@ parser
   create CastToReal64(operand):Unary
   create CastToString(operand):Unary
   create CastToValue(operand):Unary
+  create CallMethod(args):CallProcedure
   create CallProcedure(args)
   create CallRoutine(args):CallProcedure
   create Constructor(type_context:Type,args)
