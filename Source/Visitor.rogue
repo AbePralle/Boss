@@ -8,25 +8,40 @@ endClass
 class Visitor<<$ReturnType>>
   METHODS
     method on( cmd:Cmd )->$ReturnType
-      # Overload with extended Cmd type to redefine handling, or else overload
-      # on_visit(CmdType) and optionally call visit_children(cmd) from it.
-      # For a regular 'Visitor' (Visitor<<Cmd>>) the AST is rebuilt with the
-      # return value of this call, so return 'cmd' to keep this subtree or else
-      # return a different Cmd to replace this subtree. There is no need to
-      # overload methods for any particular command.
-      call_on_visit( cmd )
-      if ($ReturnType instanceOf Cmd) return cmd
-      else                            return $ReturnType.meta.default_value
+      # Default per-node call sequence for regular 'Visitor' AKA 'Visitor<<Cmd>>':
+      #   CALL                  OVERLOADABLE METHOD
+      #   --------------------  -----------------------------------------
+      #   visit(cmd)            -> on(cmd:CmdType)->Cmd (or ->ResultType)
+      #   visit_content(cmd)       -> on_visit(cmd:CmdType)
+      #     visit_node(cmd)           -> on_visit_node(cmd:CmdType)
+      #     visit_children(cmd)       -> on_visit_children(cmd:CmdType)
+      #                            on_validate(cmd:CmdType)->Cmd/ResultType
+      #
+      # For a regular 'Visitor' AKA 'Visitor<<Cmd>>':
+      # - The AST is rebuilt with the return value of this call, so return
+      #   'cmd' to keep this subtree or else return a different Cmd node to
+      #   replace this subtree.
+      visit_content( cmd )
+      if ($ReturnType instanceOf Cmd)
+        return validate( cmd )
+      else
+        validate( cmd )
+        return $ReturnType.meta.default_value
+      endIf
 
     method on_visit( cmd:Cmd )
       # Called from on(CmdType). If you overload this method with an extended
       # Cmd type, this node's children will only be visited if and
       # when you call visit_children(cmd).
+      visit_node( cmd )
       visit_children( cmd )
 
+    method on_validate( cmd:Cmd )->$ReturnType
+      if ($ReturnType instanceOf Cmd) return cmd
+      else                            return $ReturnType.meta.default_value
+
     method visit( cmd:Cmd )->$ReturnType [propagated]
-      # Calling to invoke the appropriate on/on_visit() for the given
-      # Cmd type.
+      # Call to invoke the appropriate on/on_visit() for the given Cmd type.
       #
       # For example:
       #   method on( cmd:Binary )->Cmd
@@ -40,13 +55,27 @@ class Visitor<<$ReturnType>>
       endIf
       return cmd.dispatch<<ThisType,$ReturnType>>( this )
 
-    method visit_children( cmd:Cmd ) [propagated]
-      # Call from an 'on()' handler to visit subtrees.
-      cmd.dispatch_on_visit_children<<ThisType>>( this )
+    method visit_node( cmd:Cmd )->Cmd [propagated]
+      # Call from 'on()' or 'on_visit()' handler to visit the current node's properties.
+      cmd.dispatch_on_visit_node<<ThisType>>( this )
+      return cmd
 
-    method call_on_visit( cmd:Cmd ) [propagated]
+    method visit_children( cmd:Cmd )->Cmd [propagated]
+      # Call from 'on()' or 'on_visit()' handler to visit subtrees.
+      cmd.dispatch_on_visit_children<<ThisType>>( this )
+      return cmd
+
+    method visit_content( cmd:Cmd )->Cmd [propagated]
       # Primarily for internal use - see on(Cmd) for usage.
       cmd.dispatch_on_visit<<ThisType>>( this )
+      return cmd
+
+    method validate( cmd:Cmd )->$ReturnType [propagated]
+      return cmd.dispatch_on_validate<<ThisType,$ReturnType>>( this )
+
+    method on_visit_node( cmd:Cmd )
+      # Overloaded automatically by the Froley compiler
+      noAction
 
     method on_visit_children( cmd:Cmd )
       # Overloaded automatically by the Froley compiler

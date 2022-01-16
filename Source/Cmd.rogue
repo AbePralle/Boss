@@ -35,8 +35,14 @@ class Cmd( t:Token )
     method dispatch_on_visit<<$VisitorType>>( visitor:$VisitorType ) [propagated]
       visitor.on_visit( this )
 
+    method dispatch_on_visit_node<<$VisitorType>>( visitor:$VisitorType ) [propagated]
+      visitor.on_visit_node( this )
+
     method dispatch_on_visit_children<<$VisitorType>>( visitor:$VisitorType ) [propagated]
       visitor.on_visit_children( this )
+
+    method dispatch_on_validate<<$VisitorType,$ReturnType>>( visitor:$VisitorType )->$ReturnType [propagated]
+      return visitor.on_validate( this )
 
     method first->Cmd
       throw UnsupportedOperationError()

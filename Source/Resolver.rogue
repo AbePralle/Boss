@@ -26,9 +26,8 @@ class Resolver : Visitor
     method on( cmd:Access )->Cmd
       return resolve_access( null, cmd )
 
-    method on( cmd:Add )->Cmd
-      on_visit( cmd->(as Binary) )  # resolves children & converts to common type
-      return visit( cmd.left.type.cmd_add(cmd.t, cmd.left, cmd.right) )
+    method on_validate( cmd:Add )->Cmd
+      return validate( cmd.left.type.cmd_add(cmd.t, cmd.left, cmd.right) )
 
     method on_visit( cmd:Binary )
       visit_children( cmd )
@@ -37,20 +36,20 @@ class Resolver : Visitor
       local left_type = left.require_type
       local right_type = right.require_type
       local result_type = Cmd.common_type( left_type, right_type )
-      if (left_type is not result_type) cmd.left = visit( result_type.cmd_cast(left) )
-      if (right_type is not result_type) cmd.right = visit( result_type.cmd_cast(right) )
+      if (left_type is not result_type) cmd.left = validate( result_type.cmd_cast(left) )
+      if (right_type is not result_type) cmd.right = validate( result_type.cmd_cast(right) )
 
-    method on_visit( cmd:CallProcedure )
-      if (cmd.args)
-        forEach (arg at i in cmd.args)
-          cmd.args[i] = visit(arg)
-        endForEach
-      endIf
+      #method on_visit( cmd:CallProcedure )
+      #  if (cmd.args)
+      #    forEach (arg at i in cmd.args)
+      #      cmd.args[i] = visit(arg)
+      #    endForEach
+      #  endIf
 
-    method on_visit( cmd:CallRoutine )
-      on_visit( cmd->(as CallProcedure) )
+    #method on_visit( cmd:CallRoutine )
+      #on_visit( cmd->(as CallProcedure) )
 
-    method on( cmd:CastToReal64 )->Cmd
+    method on_validate( cmd:CastToReal64 )->Cmd
       trace "TODO"
       #{
       local operand = visit( cmd.operand ).require_value
@@ -66,7 +65,7 @@ class Resolver : Visitor
       return cmd
 
       #{
-    method on( cmd:CastToValue )->Cmd
+    method on_validate( cmd:CastToValue )->Cmd
       visit_children( cmd )
       local from_type = cmd.operand.require_type
       whichIs (from_type)
@@ -83,7 +82,7 @@ trace m_init
       if (not cmd.is_parameter)
         if (cmd.type)
           if (not cmd.initial_value) cmd.initial_value = cmd.type.cmd_default_value( cmd.t )
-          cmd.initial_value = visit( visit(cmd.initial_value).cmd_cast_to( cmd.@type ) )
+          cmd.initial_value = validate( visit(cmd.initial_value).cmd_cast_to( cmd.@type ) )
         elseIf (not cmd.@type)
           if (not cmd.initial_value)
             throw cmd.t.error( "Local variable declarations must have an initial value assignment or an assigned ': Type'." )
@@ -105,7 +104,7 @@ trace m_init
 
     method on_visit( cmd:Print )
       forEach (arg in rewriter=cmd.args.list.rewriter)
-        arg = visit( Description(arg.t,arg) ).require_value
+        arg = validate( Description(arg.t,arg) ).require_value
         if (arg) rewriter.write( arg )
       endForEach
 
@@ -115,7 +114,7 @@ trace m_init
       visit_children( cmd )
 
       forEach (arg in rewriter=cmd.args.list.rewriter)
-        arg = visit( Description(arg.t,arg) ).require_value
+        arg = validate( Description(arg.t,arg) ).require_value
         if (arg) rewriter.write( arg )
       endForEach
 
@@ -146,9 +145,8 @@ trace m_init
         endForEach
       endTemporarily
 
-    method on( cmd:Subtract )->Cmd
-      on_visit( cmd->(as Binary) )  # resolves children & converts to common type
-      return visit( cmd.left.type.cmd_subtract(cmd.t, cmd.left, cmd.right) )
+    method on_validate( cmd:Subtract )->Cmd
+      return validate( cmd.left.type.cmd_subtract(cmd.t, cmd.left, cmd.right) )
 
     method on_visit( cmd:Unary )
       cmd.operand = visit( cmd.operand ).require_value
@@ -162,7 +160,7 @@ trace m_init
           # Call or constructor
           local type = this_module.find_type( access.name, &extended_search )
           if (type)
-            return visit( type.cmd_create_object(access.args) )
+            return validate( type.cmd_create_object(access.args) )
           endIf
 
         else
@@ -244,11 +242,11 @@ trace m_init
       # Cast args to parameter types
       if (access.args)
         forEach (arg at i in access.args)
-          access.args[i] = arg.cmd_cast_to( match.parameters[i].type )
+          access.args[i] = validate( arg.cmd_cast_to(match.parameters[i].type) )
         endForEach
       endIf
 
-      return visit( match.cmd_call(null,access.args) )
+      return validate( match.cmd_call(null,access.args) )
 
     method find_procedure( type_context:Type, name:String, args:Cmd )->Procedure
       visit( args )  # resolve args to determine types
