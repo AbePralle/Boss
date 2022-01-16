@@ -954,8 +954,7 @@ parser
   create CallMethod(args):CallProcedure
   create CallProcedure(args)
   create CallRoutine(args):CallProcedure
-  create Constructor(type_context:Type,args)
-  create CreateObject(type:Type,cmd_init)
+  create CreateObject(of_type:Type,m_init:Procedure,args)
   create Description(operand):Unary
   create GetLocal(info:Local)
   create Literal

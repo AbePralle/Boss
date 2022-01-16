@@ -1188,40 +1188,24 @@ endClass
 
 class CreateObject : Cmd
   PROPERTIES
-    type     : Type
-    cmd_init : Cmd
+    of_type : Type
+    m_init  : Procedure
+    args    : Cmd
 
   METHODS
-    method init( t, type, cmd_init )
+    method init( t, of_type, m_init, args )
 
     method init( existing:CreateObject )
       prior.init( existing )
-      type = existing.type
-      if (existing.cmd_init) cmd_init = existing.cmd_init.cloned
-
-    method description->String
-      return "CreateObject($,$)" (%type,%cmd_init)
-
-    method to->Type
-      return @type
-
-endClass
-
-class Constructor : Cmd
-  PROPERTIES
-    type_context : Type
-    args         : Cmd
-
-  METHODS
-    method init( t, type_context, args )
-
-    method init( existing:Constructor )
-      prior.init( existing )
-      type_context = existing.type_context
+      of_type = existing.of_type
+      m_init = existing.m_init
       if (existing.args) args = existing.args.cloned
 
     method description->String
-      return "Constructor($,$)" (%type_context,%args)
+      return "CreateObject($,$)" (%of_type,%m_init)
+
+    method to->Type
+      return of_type
 
 endClass
 

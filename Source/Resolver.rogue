@@ -74,14 +74,6 @@ class Resolver : Visitor
       endWhichIs
       }#
 
-    method on_visit( cmd:Constructor )->Cmd
-      local m_init = find_procedure( cmd.type_context, "init", cmd.args )
-      if (m_init)
-        cast_args_to_parameter_types( cmd.args, m_init )
-        #return validate(
-      endIf
-      return cmd
-
     method on_visit( cmd:Local )
       if (not cmd.is_parameter)
         if (cmd.type)
@@ -167,12 +159,13 @@ class Resolver : Visitor
           local type = this_module.find_type( access.name, &extended_search )
           if (type)
             local args = access.args
-            return validate( CreateObject(args.t, type, validate(Constructor(args.t,type,args))) )
+            return validate( cmd_create_object(access.t,type,args) )
           endIf
         else
           local v = this_procedure.find_local( access.name )
           if (v) return validate( GetLocal(access.t,v) )
         endIf
+
       endIf
 
       local call_context = which{ context:context.require_type || this_type }
@@ -249,6 +242,35 @@ class Resolver : Visitor
 
       return validate( match.cmd_call(null,access.args) )
 
+    method cmd_create_object( t:Token, type_context:Type, args:Cmd )->Cmd
+      local m_init = find_procedure( type_context, "init", args )
+      if (m_init)
+        cast_args_to_parameter_types( args, m_init )
+        return CreateObject( t, type_context, m_init, args )
+      elseIf (args.count == 0)
+        # No constructor required
+        return null
+      else
+        local mesg = "No exact match for object constructor $("(type_context)
+        use Candidates
+          type_context.collect_methods( "create", Candidates.list )
+          type_context.collect_methods( "init", Candidates.list )
+          forEach (arg at i in args)
+            if (i > 0) mesg += ','
+            mesg += arg.require_type
+          endForEach
+          mesg += "). Candidates:\n\n"
+          if (Candidates.count)
+            forEach (m in Candidates)
+              mesg += "  $$" (type_context,m.signature.from_first('('))
+            endForEach
+          else
+            mesg += "  $()"(type_context)
+          endIf
+        endUse
+        throw t.error( mesg )
+      endIf
+
     method cast_args_to_parameter_types( args:Cmd, proc:Procedure )
       if (not args) return
       forEach (arg at i in args)
@@ -257,7 +279,6 @@ class Resolver : Visitor
 
     method find_procedure( type_context:Type, name:String, args:Cmd )->Procedure
       visit( args )  # resolve args to determine types
-
       use Candidates
         if (type_context)
           type_context.collect_methods( name, Candidates.list )

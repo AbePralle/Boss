@@ -54,7 +54,10 @@ augment
       return true
 
     method CreateObject.execute->Logical
-      Program.execution_result = BossObject( @type )
+      local obj = BossObject( of_type )
+      if (m_init) Program.execute( obj, m_init, args )
+      Program.execution_result = obj
+trace obj.properties
       return true
 
     method Description.execute->Logical

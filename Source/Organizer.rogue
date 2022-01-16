@@ -41,7 +41,7 @@ class Organizer : Visitor
 
     method on_visit( cmd:Local )
       if (cmd.fp_offset == -1)
-        cmd.fp_offset = this_procedure.locals.count
+        cmd.fp_offset = this_procedure.locals.count + which{ this_procedure.is_global:0 || 1 }
         cmd.is_parameter = cmd.fp_offset < this_procedure.parameters.count
         this_procedure.locals.add( cmd )
       endIf

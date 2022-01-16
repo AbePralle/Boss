@@ -147,7 +147,7 @@ augment
       }#
 
     method CreateObject.type->Type
-      return @type
+      return of_type
 
       #{
     method DefineModule.organize_element
