@@ -6,6 +6,8 @@ class Organizer : Visitor
     this_type      : Type
     this_procedure : Procedure
 
+    current_statements_rewriter : ListRewriter<<Cmd>>
+
   METHODS
     method init( this_module )
 
@@ -33,6 +35,81 @@ class Organizer : Visitor
           endForEach
         endIf
       endIf
+
+    method visit( this_type, this_procedure )
+      visit( this_procedure )
+
+    method on_enter( cmd:Local )
+      if (cmd.fp_offset == -1)
+        cmd.fp_offset = this_procedure.locals.count
+        cmd.is_parameter = cmd.fp_offset < this_procedure.parameters.count
+        this_procedure.locals.add( cmd )
+      endIf
+
+    method on( cmd:LocalDeclarations )->Cmd
+      if (cmd.type_ref)
+        local var_type = cmd.type_ref->Type
+        forEach (v in cmd.declarations)
+          block v = v->(as LocalDef)->Local
+            v.type = var_type
+            block v = visit( v )
+              if (v) current_statements_rewriter.write( v )
+            endBlock
+          endBlock
+        endForEach
+      else
+        forEach (v in cmd.declarations)
+          v = visit( v->(as LocalDef)->Local )
+          if (v) current_statements_rewriter.write( v )
+        endForEach
+      endIf
+      return null
+
+    method on_visit( cmd:Method )
+      if (cmd.is_organized) return
+      cmd.is_organized = true
+
+      on_visit( cmd->(as Procedure) )
+      visit_children( cmd )
+
+      local sig = cmd.signature
+      if (cmd.type_context.methods_by_signature.contains(sig))
+        throw cmd.t.error( "Type $ already defines method $."(cmd.type_context.name,sig) )
+      endIf
+      cmd.type_context.methods_by_signature[ sig ] = cmd
+
+    method on_visit( cmd:Procedure )
+      use builder = StringBuilder.pool
+        builder.print cmd.name
+        builder.print '('
+        forEach (param at i in cmd.parameters)
+          if (i > 0) builder.print ','
+          builder.print param.type.name
+        endForEach
+        builder.print ')'
+        cmd.signature = builder->String
+      endUse
+
+    method on_visit( cmd:Routine )
+      if (cmd.is_organized) return
+      cmd.is_organized = true
+
+      on_visit( cmd->(as Procedure) )
+      visit_children( cmd )
+
+      local sig = cmd.signature
+      if (this_module.routines_by_signature.contains(sig))
+        throw cmd.t.error( "Module $ already defines routine $."(this_module.name,sig) )
+      endIf
+      this_module.routines_by_signature[ sig ] = cmd
+
+    method on_visit( cmd:Statements )
+      temporarily current_statements_rewriter = cmd.list.rewriter
+        forEach (element in current_statements_rewriter)
+          local visited_element = visit( element )
+          if (visited_element) current_statements_rewriter.write( visited_element )
+        endForEach
+      endTemporarily
 endClass
 
 augment

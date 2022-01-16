@@ -13,7 +13,9 @@ class Resolver : Visitor
     method init( this_module )
 
     method visit( this_type )
-      visit( forEach in this_type.methods )
+      if (this_type.is_resolved) return
+      this_type.is_resolved = true
+      visit( this_type, forEach in this_type.methods )
 
     method visit( this_type, this_procedure )
       if (not this_procedure.is_resolved)
@@ -79,8 +81,7 @@ trace m_init
 
     method on_visit( cmd:Local )
       if (not cmd.is_parameter)
-        if (cmd.type_ref)
-          cmd.type = cmd.type_ref->Type
+        if (cmd.type)
           if (not cmd.initial_value) cmd.initial_value = cmd.type.cmd_default_value( cmd.t )
           cmd.initial_value = visit( visit(cmd.initial_value).cmd_cast_to( cmd.@type ) )
         elseIf (not cmd.@type)

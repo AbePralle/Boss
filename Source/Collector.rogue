@@ -41,8 +41,9 @@ class Collector : Visitor
       return null
 
     method on( cmd:RoutineDef )->Cmd
-      ensure Program.current_module.routines_by_name[ cmd.name ]
-      Program.current_module.routines_by_name[ cmd.name ].add( cmd->Routine )
+      local m = Program.current_module
+      ensure m.routines_by_name[ cmd.name ]
+      m.routines_by_name[ cmd.name ].add( cmd->Routine.[module_context=m] )
       return null
 
     method on( cmd:Statements )->Cmd

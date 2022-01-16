@@ -8,7 +8,6 @@ $include "Candidates.rogue"
 $include "Collector.rogue"
 $include "CmdExecution.rogue"
 $include "CmdTypes.rogue"
-$include "MethodOrganizer.rogue"
 $include "Module.rogue"
 $include "Organizer.rogue"
 $include "Parser.rogue"
@@ -16,7 +15,6 @@ $include "Program.rogue"
 $include "Resolver.rogue"
 $include "Scanner.rogue"
 $include "Type.rogue"
-$include "TypeOrganizer.rogue"
 uses Boss
 uses Utility/CommandLineParser
 

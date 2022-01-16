@@ -961,14 +961,14 @@ parser
   create LiteralNull(type:Type):Literal
   create LiteralValueUndefined:Literal
   create Local(name:String,initial_value)
-  create Method(name:String,statements):Procedure
+  create Method(type_context:Type,name:String,statements):Procedure
   create MethodDef(name:String,parameters,return_type_ref,attribute_names,statements):ProcedureDef
-  create Procedure(name:String,statements)
+  create Procedure(module_context:Module,name:String,statements)
   create ProcedureDef(name:String,parameters,return_type_ref,attribute_names,statements)
   create Property( type_context:Type, name:String, initial_value, type:Type )
   create PushResult(operand):Unary
   create ReturnResult(result)
-  create Routine(name:String,statements):Procedure
+  create Routine(module_context:Module,name:String,statements):Procedure
   create SubtractInt32(left,right):Binary
   create SubtractObject(left,right):Binary
   create SubtractReal64(left,right):Binary
@@ -976,5 +976,8 @@ parser
   create SubtractValue(left,right):Binary
   create TypeReference(name:String)
 
+--------------------------------------------------------------------------------
 nativeTypes
-  Type
+--------------------------------------------------------------------------------
+Module
+Type

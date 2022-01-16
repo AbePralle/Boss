@@ -559,6 +559,7 @@ class Procedure : Cmd
   BOSS_ATTRIBUTE( is_resolved,  2 )
 
   PROPERTIES
+    module_context   : Module
     type_context     : Type
     name             : String
     signature        : String
@@ -570,10 +571,7 @@ class Procedure : Cmd
     locals           = Local[]
 
   METHODS
-    method init( t, name, statements )
-      init( t, null, name, statements )
-
-    method init( t, type_context, name, statements=null )
+    method init( t, module_context, name, statements=null )
       parameters = Local[]
       locals     = Local[]
       if (not statements) statements = Statements( t )
@@ -599,6 +597,15 @@ class Procedure : Cmd
     method context_signature->String
       if (not type_context) return signature
       return "$.$" (type_context,signature)
+
+    method organize
+      if (is_organized) return
+      Organizer( module_context ).visit( type_context, this )
+
+    method resolve
+      if (is_resolved) return
+      organize
+      Resolver( module_context ).visit( type_context, this )
 
 endClass
 
@@ -635,12 +642,17 @@ endClass
 
 class Routine : Procedure
   METHODS
+    method init( t:Token, module_context:Module, name:String, statements=null:Cmd )
+      prior.init( t, module_context, name, statements )
+
+    method init( existing:Procedure )
+      prior.init( existing )
 endClass
 
 class RoutineDef : ProcedureDef
   METHODS
     method to->Routine
-      local result = Routine( t, name, statements )
+      local result = Routine( t, Program.current_module, name, statements )
       result.parameters.add( (forEach in parameters)->(as Local) )
       if (return_type_ref) result.return_type = return_type_ref->Type
       if (attribute_names)
@@ -856,7 +868,9 @@ class LocalDef : Cmd
       return "LocalDef($,$,$)" (%name,%initial_value,%type_ref)
 
     method to->Local
-      return Local( t, name, initial_value, type_ref->Type )
+      local type : Type
+      if (type_ref) type = type_ref->Type
+      return Local( t, name, initial_value, type )
 endClass
 
 class PushNumber : Unary
@@ -1140,6 +1154,15 @@ endClass
 
 class Method : Procedure
   METHODS
+    method init( t, type_context, name, statements=null )
+      module_context = type_context.module_context
+      parameters = Local[]
+      locals     = Local[]
+      if (not statements) statements = Statements( t )
+
+    method init( existing:Procedure )
+      prior.init( existing )
+
     method description->String
       return which{ signature || name }
 
@@ -1147,8 +1170,8 @@ endClass
 
 class MethodDef : ProcedureDef
   METHODS
-    method to->Method
-      local result = Method( t, name, statements )
+    method to->Method( type_context:Type )
+      local result = Method( t, type_context, name, statements )
       result.parameters.add( (forEach in parameters)->(as Local) )
       if (return_type_ref) result.return_type = return_type_ref->Type
       if (attribute_names)

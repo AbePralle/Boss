@@ -142,26 +142,19 @@ class Program [singleton]
 
     method launch
       resolve
-      #{
       (forEach in all_modules).execute
       if (execution_status == EXE_ERROR)
+        if (not execution_error) execution_error = t.error( "[INTERNAL] Unknown error." )
         throw execution_error
       endIf
       require stack.is_empty
       require fp == 0
-      }#
-
 
     method preprocess( tokens:Token[] )
       noAction
 
     method resolve
       (forEach in all_modules).resolve
-      #{
-      (forEach in all_modules).organize_types
-      (forEach in all_modules).organize_methods
-      (forEach in all_modules).resolve
-      }#
 
     method set_current_module( @current_module )
 
