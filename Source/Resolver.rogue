@@ -15,9 +15,11 @@ class Resolver : Visitor
     method visit( this_type )
       if (this_type.is_resolved) return
       this_type.is_resolved = true
+      this_type.organize
       visit( this_type, forEach in this_type.methods )
 
     method visit( this_type, this_procedure )
+      this_procedure.organize
       if (not this_procedure.is_resolved)
         this_procedure.is_resolved = true
         visit( this_procedure )
@@ -91,10 +93,11 @@ class Resolver : Visitor
       endIf
 
     method on_visit( cmd:Method )
-      forEach (p in cmd.parameters step -1)
-        block p = p->(as Local)
-          if (p.is_auto_store)
-            # TODO
+      forEach (v in cmd.parameters step -1)
+        block v = v->(as Local)
+          if (v.is_auto_store)
+            local p = this_type.must_find_property( cmd.t, v.name )
+            cmd.statements.insert( visit( SetThisProperty(cmd.t, p, GetLocal(cmd.t,v)) ) )
           endIf
         endBlock
       endForEach
@@ -119,9 +122,9 @@ class Resolver : Visitor
     method on_visit( cmd:Procedure )
       visit_children( cmd )
 
-      forEach (v at i in cmd.locals)
-        v.fp_offset = i
-      endForEach
+      #forEach (v at i in cmd.locals)
+      #  v.fp_offset = i
+      #endForEach
 
       cmd.local_stack_slots = cmd.locals.count
       if (cmd.parameters) cmd.local_stack_slots -= cmd.parameters.count
@@ -247,14 +250,18 @@ class Resolver : Visitor
       if (m_init)
         cast_args_to_parameter_types( args, m_init )
         return CreateObject( t, type_context, m_init, args )
-      elseIf (args.count == 0)
-        # No constructor required
-        return null
       else
-        local mesg = "No exact match for object constructor $("(type_context)
+        local mesg : String
         use Candidates
           type_context.collect_methods( "create", Candidates.list )
           type_context.collect_methods( "init", Candidates.list )
+
+          if (args.count == 0 and Candidates.count == 0)
+            # No constructors available and no constructor required.
+            return CreateObject( t, type_context, null, null )
+          endIf
+
+          mesg = "No exact match for object constructor $("(type_context)
           forEach (arg at i in args)
             if (i > 0) mesg += ','
             mesg += arg.require_type

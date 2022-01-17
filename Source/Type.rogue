@@ -48,8 +48,16 @@ class Type
     method description->String
       return name
 
+    method find_property( name:String )->Property
+      return properties[name]
+
     method is_reference->Logical
       return (not is_primitive)
+
+    method must_find_property( t:Token, name:String )->Property
+      local result = properties[name]
+      if (result) return result
+      throw t.error( "No such property $.$"(this.name,name) )
 endClass
 
 class TypePrimitive : Type

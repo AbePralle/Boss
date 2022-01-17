@@ -1139,6 +1139,7 @@ class Property : Cmd
     name          : String
     initial_value : Cmd
     type          : Type
+    index         : Int32
 
   METHODS
     method init( t, type_context, name, initial_value, type )
@@ -1213,5 +1214,23 @@ class CallMethod : CallProcedure
   METHODS
     method description->String
       return "CallMethod($)" (%args)
+
+endClass
+
+class SetThisProperty : Cmd
+  PROPERTIES
+    index     : Int32
+    new_value : Cmd
+
+  METHODS
+    method init( t, index, new_value )
+
+    method init( existing:SetThisProperty )
+      prior.init( existing )
+      index = existing.index
+      if (existing.new_value) new_value = existing.new_value.cloned
+
+    method description->String
+      return "SetThisProperty($,$)" (%index,%new_value)
 
 endClass

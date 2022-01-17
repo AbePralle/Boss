@@ -969,6 +969,7 @@ parser
   create PushResult(operand):Unary
   create ReturnResult(result)
   create Routine(module_context:Module,name:String,statements):Procedure
+  create SetThisProperty(index:Integer,new_value)
   create SubtractInt32(left,right):Binary
   create SubtractObject(left,right):Binary
   create SubtractReal64(left,right):Binary

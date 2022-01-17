@@ -886,6 +886,7 @@ class ParserCore [abstract]
             _push( PushResult(_cur_t,_node_arg(-1)), 1 )
             _push( ReturnResult(_cur_t,_node_arg(-1)), 1 )
             _push( Routine(_cur_t,_node_arg(-3)->(as Module),_string_arg(-2),_node_arg(-1)), 3 )
+            _push( SetThisProperty(_cur_t,_integer_arg(-2),_node_arg(-1)), 2 )
             _push( SubtractInt32(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( SubtractObject(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( SubtractReal64(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )

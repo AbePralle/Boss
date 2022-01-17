@@ -36,6 +36,11 @@ class Organizer : Visitor
         endIf
       endIf
 
+      # Assign property indices
+      forEach (p at i in this_type.properties)
+        p.index = i
+      endForEach
+
     method visit( this_type, this_procedure )
       visit( this_procedure )
 
@@ -121,6 +126,6 @@ augment
 
     method Type.resolve
       if (is_resolved) return
-      # TODO
+      Resolver( module_context ).visit( this )
 endAugment
 
