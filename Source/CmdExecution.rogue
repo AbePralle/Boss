@@ -68,6 +68,15 @@ augment
       Program.execution_result = Program.stack[ Program.fp + fp_offset ]
       return true
 
+    method GetProperty.execute->Logical
+      if (not context.execute) return false
+      Program.execution_result = Program.execution_result.object->(as BossObject).properties[index]
+      return true
+
+    method GetThisProperty.execute->Logical
+      Program.execution_result = Program.stack[Program.fp].object->(as BossObject).properties[index]
+      return true
+
     method ImportModule.execute->Logical
       return Program.import( t, filepath )
 

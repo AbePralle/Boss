@@ -69,13 +69,6 @@ augment
       return CastToValue(cmd.t,cmd)
 endAugment
 
-# cmd_create_object()
-#augment
-#  METHODS
-#    method Type.cmd_create_object( args:Cmd )->Cmd
-#      return CreateObject( args.t, this, Constructor(args.t,this,args) )
-#endAugment
-
 # cmd_default_value()
 augment
   METHODS
@@ -129,37 +122,8 @@ augment
     method CastToValue.type->Type
       return Program.type_Value
 
-      #{
-    method ClassDef.organize_element
-      local existing = Program.current_module.types[ name ]
-      if (existing)
-        local qualified_name : String
-        if (Program.current_module is Program.default_module)
-          qualified_name = name
-        else
-          qualified_name = "$::$"(Program.current_module.name,name)
-        endIf
-        throw t.error( "Class $ is already defined."(qualified_name) )
-      endIf
-
-      local type = Type( t, name, &!is_primitive )
-      type.definition = this
-      }#
-
     method CreateObject.type->Type
       return of_type
-
-      #{
-    method DefineModule.organize_element
-      if (Program.current_module.is_dynamic)
-        local cur_name = Program.current_module.name
-        if (cur_name != name)
-          throw t.error( "Code from imported module '$' cannot switch module contexts."(cur_name) )
-        endIf
-      else
-        Program.set_current_module( t, name )
-      endIf
-      }#
 
     method DescriptionInt32.type->Type
       return Program.type_String
@@ -176,13 +140,11 @@ augment
     method GetLocal.type->Type
       return info.@type
 
+    method GetProperty.type->Type
+      return info.@type
+
     method ImportModule.type->Type
       return Program.type_Value
-
-      #{
-    method Include.organize_element
-      Program.include( t, filepath )
-      }#
 
     method LiteralCharacter.type->Type
       return Program.type_Character
@@ -208,32 +170,10 @@ augment
     method LiteralValueUndefined.type->Type
       return Program.type_Value
 
-      #{
-    method RoutineDef.organize_element
-      ensure Program.current_module.routines_by_name[ name ]
-      Program.current_module.routines_by_name[ name ].add( this->Routine )
-      }#
-
-      #{
-    method Statements.organize_element
-      Program.current_module.global_statements.add( this )
-      }#
+    method Property.type->Type
+      return @type
 
     method TypeReference.to->Type
       return Type( t, name )
-
-      #{
-    method UsesModule.organize_element
-      use builder = StringBuilder.pool
-        forEach (segment at i in path)
-          if (i > 0) builder.print '/'
-          builder.print segment->String
-        endForEach
-        local filepath = builder->String
-        local m = Program.find_module( t, path.last->String )
-        Program.current_module.uses_module( m, &=is_exported )
-        Program.include( filepath, m )
-      endUse
-      }#
 
 endAugment

@@ -900,9 +900,19 @@ parser
 - post_unary [postUnary]
   on "++" -> PostIncrement
   on "--" -> PostDecrement
+}#
 
 - access [binary]
-}#
+  term
+  access_inner
+
+- access_inner
+  on '.'
+    identifier
+    access_args
+    create ContextAccess(context,name:String,args)
+    access_inner
+  endOn
 
 - term
   on STRING      -> LiteralString(value=content):Literal
@@ -957,6 +967,8 @@ parser
   create CreateObject(of_type:Type,m_init:Procedure,args)
   create Description(operand):Unary
   create GetLocal(info:Local)
+  create GetProperty(context,info:Property)
+  create GetThisProperty(info:Property)
   create Literal
   create LiteralNull(type:Type):Literal
   create LiteralValueUndefined:Literal

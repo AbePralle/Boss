@@ -27,7 +27,7 @@ class Resolver : Visitor
 
     method on( cmd:Access )->Cmd
       cmd.args = visit( cmd.args )
-      return resolve_access( null, cmd )
+      return resolve_access( cmd.t, null, cmd.name, cmd.args )
 
     method on_validate( cmd:Add )->Cmd
       return validate( cmd.left.type.cmd_add(cmd.t, cmd.left, cmd.right) )
@@ -75,6 +75,10 @@ class Resolver : Visitor
         others: throw
       endWhichIs
       }#
+
+    method on( cmd:ContextAccess )->Cmd
+      visit( cmd.args )
+      return resolve_access( cmd.t, cmd.context, cmd.name, cmd.args )
 
     method on_visit( cmd:Local )
       if (not cmd.is_parameter)
@@ -152,98 +156,101 @@ class Resolver : Visitor
     method on_visit( cmd:Unary )
       cmd.operand = visit( cmd.operand ).require_value
 
-    method resolve_access( context:Cmd, access:Access, &suppress_error )->Cmd
+    method resolve_access( t:Token, context:Cmd, name:String, args:Cmd, &suppress_error )->Cmd
       if (context)
         context  = visit( context ).require_value
+      else
+        if (args)
+          # Call or constructor
+          local type = this_module.find_type( name, &extended_search )
+          if (type)
+            return validate( cmd_create_object(t,type,args) )
+          endIf
+        else
+          local v = this_procedure.find_local( name )
+          if (v) return validate( GetLocal(t,v) )
+        endIf
+      endIf
+
+      local type_context = which{ context:context.require_type || this_type }
+      local match = find_procedure( type_context, name, args )
+
+      if (match)
+        # TODO: fill in default values
+        cast_args_to_parameter_types( args, match )
+        return validate( match.cmd_call(null,args) )
+      endIf
+
+      if (not args)
+        local p = type_context.find_property( name )
+        if (p)
+          if (context) return validate( GetProperty(t,context,p) )
+          else         return validate( GetThisProperty(t,p) )
+        endIf
+      endIf
+
+      if (suppress_error) return null
+
+      local sig = name
+      if (args)
+        sig += '('
+        forEach (arg at i in args)
+          if (i > 0) sig += ','
+          sig += arg.require_type
+        endForEach
+        sig += ')'
+      endIf
+
+      local mesg : String
+      if (args)
+        which (Candidates.count)
+          case 0
+            mesg = "No such "
+            if (context)       mesg += "method "
+            elseIf (this_type) mesg += "method or routine "
+            else               mesg += "routine "
+
+            if (context)       mesg += context.type + "."
+            elseIf (this_type) mesg += this_type + "."
+
+            mesg += sig + '.'
+
+          case 1
+            mesg = "Call to "
+            if (context)       mesg += context.type + "."
+            elseIf (this_type) mesg += this_type + "."
+
+            mesg += sig
+            mesg += " has arguments that are incompatible with the best candidate:\n\n"
+            mesg += "  " + Candidates[0].context_signature
+
+          others
+            mesg = "Ambiguous call to "
+            if (context)       mesg += context.type + "."
+            elseIf (this_type) mesg += this_type + "."
+
+            mesg += sig
+            mesg += ". Candidates:\n\n"
+            forEach (m in Candidates)
+              mesg += "  " + m.context_signature
+            endForEach
+
+        endWhich
 
       else
-        if (access.args)
-          # Call or constructor
-          local type = this_module.find_type( access.name, &extended_search )
-          if (type)
-            local args = access.args
-            return validate( cmd_create_object(access.t,type,args) )
-          endIf
+        if (context)
+          if (args) mesg = "No such method '$' exists in type '$'." (sig,context.type)
+          else      mesg = "No such property or method '$' exists in type '$'." (sig,context.type)
+        elseIf (this_type)
+          if (args) mesg = "No such method or routine '$'."(sig)
+          else      mesg = "No such variable, method, or routine '$'."(sig)
         else
-          local v = this_procedure.find_local( access.name )
-          if (v) return validate( GetLocal(access.t,v) )
+          if (args) mesg = "No such routine '$'."(sig)
+          else      mesg = "No such variable or routine '$'."(sig)
         endIf
-
       endIf
 
-      local call_context = which{ context:context.require_type || this_type }
-      local match = find_procedure( call_context, access.name, access.args )
-
-      if (not match)
-        if (suppress_error) return null
-
-        local sig = access.name
-        if (access.args)
-          sig += '('
-          forEach (arg at i in access.args)
-            if (i > 0) sig += ','
-            sig += arg.require_type
-          endForEach
-          sig += ')'
-        endIf
-
-        local mesg : String
-        if (access.args)
-          which (Candidates.count)
-            case 0
-              mesg = "No such "
-              if (context)       mesg += "method "
-              elseIf (this_type) mesg += "method or routine "
-              else               mesg += "routine "
-
-              if (context)       mesg += context.type + "."
-              elseIf (this_type) mesg += this_type + "."
-
-              mesg += sig + '.'
-
-            case 1
-              mesg = "Call to "
-              if (context)       mesg += context.type + "."
-              elseIf (this_type) mesg += this_type + "."
-
-              mesg += sig
-              mesg += " has arguments that are incompatible with the best candidate:\n\n"
-              mesg += "  " + Candidates[0].context_signature
-
-            others
-              mesg = "Ambiguous call to "
-              if (context)       mesg += context.type + "."
-              elseIf (this_type) mesg += this_type + "."
-
-              mesg += sig
-              mesg += ". Candidates:\n\n"
-              forEach (m in Candidates)
-                mesg += "  " + m.context_signature
-              endForEach
-
-          endWhich
-
-        else
-          if (context)
-            if (access.args) mesg = "No such method '$' exists in type '$'." (sig,context.type)
-            else             mesg = "No such property or method '$' exists in type '$'." (sig,context.type)
-          elseIf (this_type)
-            if (access.args) mesg = "No such method or routine '$'."(sig)
-            else             mesg = "No such variable, method, or routine '$'."(sig)
-          else
-            if (access.args) mesg = "No such routine '$'."(sig)
-            else             mesg = "No such variable or routine '$'."(sig)
-          endIf
-        endIf
-
-        throw access.t.error( mesg )
-      endIf
-
-      # TODO: fill in default values
-
-      cast_args_to_parameter_types( access.args, match )
-
-      return validate( match.cmd_call(null,access.args) )
+      throw t.error( mesg )
 
     method cmd_create_object( t:Token, type_context:Type, args:Cmd )->Cmd
       local m_init = find_procedure( type_context, "init", args )
