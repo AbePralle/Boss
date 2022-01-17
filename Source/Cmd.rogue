@@ -1219,14 +1219,17 @@ endClass
 
 class SetThisProperty : Cmd
   PROPERTIES
-    index     : Int32
+    info      : Property
     new_value : Cmd
+    index     : Int32
 
   METHODS
-    method init( t, index, new_value )
+    method init( t, info, new_value )
+      index = info.index
 
     method init( existing:SetThisProperty )
       prior.init( existing )
+      info = existing.info
       index = existing.index
       if (existing.new_value) new_value = existing.new_value.cloned
 
