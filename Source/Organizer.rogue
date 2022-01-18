@@ -34,6 +34,8 @@ class Organizer : Visitor
             endBlock
           endForEach
         endIf
+
+        visit( type.definition )
       endIf
 
       # Assign property indices
@@ -83,6 +85,9 @@ class Organizer : Visitor
         throw cmd.t.error( "Type $ already defines method $."(cmd.type_context.name,sig) )
       endIf
       cmd.type_context.methods_by_signature[ sig ] = cmd
+
+    method on( cmd:MethodDef )->Cmd
+      return visit( cmd->Method(this_type) )
 
     method on_visit( cmd:Procedure )
       use builder = StringBuilder.pool

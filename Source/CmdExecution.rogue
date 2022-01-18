@@ -36,6 +36,15 @@ augment
       Program.execution_result = a + Program.execution_result
       return true
 
+    method CallMethod.execute->Logical
+      assert context
+      if (not context.execute) return false
+      return Program.execute( Program.execution_result.object->(as BossObject), procedure, args )
+
+    method CallThisMethod.execute->Logical
+      assert Program.stack[Program.fp].object
+      return Program.execute( Program.stack[Program.fp].object->(as BossObject), procedure, args )
+
     method CallRoutine.execute->Logical
       return Program.execute( procedure, args )
 
@@ -79,6 +88,17 @@ augment
 
     method ImportModule.execute->Logical
       return Program.import( t, filepath )
+
+    method IncrementLocalInt32.execute->Logical
+      local index = Program.fp + info.fp_offset
+      Program.stack[index].x = Program.stack[index].x->Int32 + 1
+      return true
+
+    method IncrementThisPropertyInt32.execute->Logical
+      local properties = Program.stack[ Program.fp ].object->(as BossObject).properties
+      local index = info.index
+      properties[index].x = properties[index].x->Int32 + 1
+      return true
 
     method LiteralString.execute->Logical
       Program.execution_result = value

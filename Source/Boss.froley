@@ -506,8 +506,15 @@ parser
 
 - class_section
   consume_eols
+  on "METHODS"
+    consume_eols
+    while (nextIs("method"))
+      method
+      consume_eols
+    endWhile
+    return
 #{
-  on "GLOBAL PROPERTIES"
+  elseOn "GLOBAL PROPERTIES"
     consume_eols
     while (not nextHasAttribute(structural))
       global_properties
@@ -526,15 +533,8 @@ parser
       properties
     endWhile
     return
-  elseOn "METHODS"
-    consume_eols
-    while (nextIs("method"))
-      method
-      consume_eols
-    endWhile
-    return
-  endOn
 }#
+  endOn
   if (not nextIs("endClass")) syntaxError
 
 
@@ -680,12 +680,16 @@ parser
   else
     produceNull
   endOn
-
+}#
 
 - method
-  on "method", name, procedure_parameters, procedure_return_type, procedure_body ->
-    MethodDef(name,parameters,return_type_name:String,statements)
+  on "method" identifier procedure_parameters procedure_return_type method_attributes procedure_body ->
+    MethodDef(name:String,parameters,return_type_ref,attribute_names,statements):ProcedureDef
 
+- method_attributes
+  produceNull
+
+#{
 - module_name [binary]
   on "::" -> Scope
 
@@ -891,16 +895,16 @@ parser
 - multiply_divide [binary]
   on "*" -> Multiply
   on "/" -> Divide
+}#
 
 - pre_unary [preUnary]
   on "-"  -> Negate
-  on "++" -> PreIncrement
-  on "--" -> PreDecrement
+  on "++" -> Increment
+  on "--" -> Decrement
 
 - post_unary [postUnary]
-  on "++" -> PostIncrement
-  on "--" -> PostDecrement
-}#
+  on "++" -> Increment
+  on "--" -> Decrement
 
 - access [binary]
   term
@@ -961,7 +965,8 @@ parser
   create CastToReal64(operand):Unary
   create CastToString(operand):Unary
   create CastToValue(operand):Unary
-  create CallMethod(args):CallProcedure
+  create CallMethod(context,procedure:Procedure,args):CallProcedure
+  create CallThisMethod(procedure:Procedure,args):CallProcedure
   create CallProcedure(args)
   create CallRoutine(args):CallProcedure
   create CreateObject(of_type:Type,m_init:Procedure,args)
@@ -969,12 +974,15 @@ parser
   create GetLocal(info:Local)
   create GetProperty(context,info:Property)
   create GetThisProperty(info:Property)
+  create IncrementLocal(info:Local)
+  create IncrementLocalInt32(info:Local)
+  create IncrementThisProperty(info:Property)
+  create IncrementThisPropertyInt32(info:Property)
   create Literal
   create LiteralNull(type:Type):Literal
   create LiteralValueUndefined:Literal
   create Local(name:String,initial_value)
   create Method(type_context:Type,name:String,statements):Procedure
-  create MethodDef(name:String,parameters,return_type_ref,attribute_names,statements):ProcedureDef
   create Procedure(module_context:Module,name:String,statements)
   create ProcedureDef(name:String,parameters,return_type_ref,attribute_names,statements)
   create Property( type_context:Type, name:String, initial_value, type:Type )

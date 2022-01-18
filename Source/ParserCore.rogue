@@ -31,27 +31,32 @@ class ParserCore [abstract]
     ip_class_attributes = 18
     ip_class_sections = 19
     ip_class_section = 20
-    ip_multi_line_statements = 21
-    ip_single_line_statements = 22
-    ip_control_structure = 23
-    ip_args = 24
-    ip_arg = 25
-    ip_statement = 26
-    ip_local_declarations = 27
-    ip_local_declaration = 28
-    ip_module_path = 29
-    ip_uses_attributes = 30
-    ip_uses_attribute = 31
-    ip_access_args = 32
-    ip_optional_expression = 33
-    ip_expression = 34
-    ip_add_subtract = 35
-    ip_add_subtract__inner = 36
-    ip_access = 37
-    ip_access__inner = 38
-    ip_access_inner = 39
-    ip_term = 40
-    ip_additional_node_types = 41
+    ip_method = 21
+    ip_method_attributes = 22
+    ip_multi_line_statements = 23
+    ip_single_line_statements = 24
+    ip_control_structure = 25
+    ip_args = 26
+    ip_arg = 27
+    ip_statement = 28
+    ip_local_declarations = 29
+    ip_local_declaration = 30
+    ip_module_path = 31
+    ip_uses_attributes = 32
+    ip_uses_attribute = 33
+    ip_access_args = 34
+    ip_optional_expression = 35
+    ip_expression = 36
+    ip_add_subtract = 37
+    ip_add_subtract__inner = 38
+    ip_pre_unary = 39
+    ip_post_unary = 40
+    ip_post_unary__inner = 41
+    ip_access = 42
+    ip_access__inner = 43
+    ip_access_inner = 44
+    ip_term = 45
+    ip_additional_node_types = 46
 
   PROPERTIES
     _tokens          : Token[]
@@ -541,9 +546,43 @@ class ParserCore [abstract]
           case ip_class_section
             _execute(ip_consume_eols)
             _pop_frame
+            if (_next_t.type == TokenType.KEYWORD_METHODS)
+              temporarily _cur_t = _on_t
+                _execute(ip_consume_eols)
+                _pop_frame
+                while ((_next_t.type == TokenType.KEYWORD_METHOD))
+                  _execute(ip_method)
+                  _pop_frame
+                  _execute(ip_consume_eols)
+                  _pop_frame
+                endWhile
+                return
+              endTemporarily
+            endIf
             if ((not (_next_t.type == TokenType.KEYWORD_END_CLASS)))
               _throw_syntax_error
             endIf
+            return
+          case ip_method
+            if (_next_t.type == TokenType.KEYWORD_METHOD)
+              temporarily _cur_t = _on_t
+                _execute(ip_identifier)
+                _pop_frame
+                _execute(ip_procedure_parameters)
+                _pop_frame
+                _execute(ip_procedure_return_type)
+                _pop_frame
+                _execute(ip_method_attributes)
+                _pop_frame
+                _execute(ip_procedure_body)
+                _pop_frame
+                _push( MethodDef(_cur_t,_string_arg(-5),_node_arg(-4),_node_arg(-3),_node_arg(-2),_node_arg(-1)), 5 )
+                return
+              endTemporarily
+            endIf
+            return
+          case ip_method_attributes
+            _push( null, 0 )
             return
           case ip_multi_line_statements
             _execute(ip_consume_eols_and_semicolons)
@@ -743,7 +782,7 @@ class ParserCore [abstract]
             _pop_frame
             return
           case ip_add_subtract
-            _execute(ip_access)
+            _execute(ip_pre_unary)
             _pop_frame
             _execute(ip_add_subtract__inner)
             _pop_frame
@@ -752,7 +791,7 @@ class ParserCore [abstract]
             if (_next_t.type == TokenType.SYMBOL_PLUS)
               temporarily _cur_t = _on_t
                 _consume_eols
-                _execute(ip_access)
+                _execute(ip_pre_unary)
                 _pop_frame
                 _push( Add(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
                 _execute(ip_add_subtract__inner)
@@ -763,10 +802,65 @@ class ParserCore [abstract]
             if (_next_t.type == TokenType.SYMBOL_MINUS)
               temporarily _cur_t = _on_t
                 _consume_eols
-                _execute(ip_access)
+                _execute(ip_pre_unary)
                 _pop_frame
                 _push( Subtract(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
                 _execute(ip_add_subtract__inner)
+                _pop_frame
+                return
+              endTemporarily
+            endIf
+            return
+          case ip_pre_unary
+            if (_next_t.type == TokenType.SYMBOL_MINUS)
+              temporarily _cur_t = _on_t
+                _consume_eols
+                _execute(ip_pre_unary)
+                _pop_frame
+                _push( Negate(_cur_t,_node_arg(-1)), 1 )
+                return
+              endTemporarily
+            endIf
+            if (_next_t.type == TokenType.SYMBOL_PLUS_PLUS)
+              temporarily _cur_t = _on_t
+                _consume_eols
+                _execute(ip_pre_unary)
+                _pop_frame
+                _push( Increment(_cur_t,_node_arg(-1)), 1 )
+                return
+              endTemporarily
+            endIf
+            if (_next_t.type == TokenType.SYMBOL_MINUS_MINUS)
+              temporarily _cur_t = _on_t
+                _consume_eols
+                _execute(ip_pre_unary)
+                _pop_frame
+                _push( Decrement(_cur_t,_node_arg(-1)), 1 )
+                return
+              endTemporarily
+            endIf
+            _execute(ip_post_unary)
+            _pop_frame
+            return
+          case ip_post_unary
+            _execute(ip_access)
+            _pop_frame
+            _execute(ip_post_unary__inner)
+            _pop_frame
+            return
+          case ip_post_unary__inner
+            if (_next_t.type == TokenType.SYMBOL_PLUS_PLUS)
+              temporarily _cur_t = _on_t
+                _push( Increment(_cur_t,_node_arg(-1)), 1 )
+                _execute(ip_post_unary__inner)
+                _pop_frame
+                return
+              endTemporarily
+            endIf
+            if (_next_t.type == TokenType.SYMBOL_MINUS_MINUS)
+              temporarily _cur_t = _on_t
+                _push( Decrement(_cur_t,_node_arg(-1)), 1 )
+                _execute(ip_post_unary__inner)
                 _pop_frame
                 return
               endTemporarily
@@ -896,7 +990,8 @@ class ParserCore [abstract]
             _push( CastToReal64(_cur_t,_node_arg(-1)), 1 )
             _push( CastToString(_cur_t,_node_arg(-1)), 1 )
             _push( CastToValue(_cur_t,_node_arg(-1)), 1 )
-            _push( CallMethod(_cur_t,_node_arg(-1)), 1 )
+            _push( CallMethod(_cur_t,_node_arg(-3),_node_arg(-2)->(as Procedure),_node_arg(-1)), 3 )
+            _push( CallThisMethod(_cur_t,_node_arg(-2)->(as Procedure),_node_arg(-1)), 2 )
             _push( CallProcedure(_cur_t,_node_arg(-1)), 1 )
             _push( CallRoutine(_cur_t,_node_arg(-1)), 1 )
             _push( CreateObject(_cur_t,_node_arg(-3)->(as Type),_node_arg(-2)->(as Procedure),_node_arg(-1)), 3 )
@@ -904,12 +999,15 @@ class ParserCore [abstract]
             _push( GetLocal(_cur_t,_node_arg(-1)->(as Local)), 1 )
             _push( GetProperty(_cur_t,_node_arg(-2),_node_arg(-1)->(as Property)), 2 )
             _push( GetThisProperty(_cur_t,_node_arg(-1)->(as Property)), 1 )
+            _push( IncrementLocal(_cur_t,_node_arg(-1)->(as Local)), 1 )
+            _push( IncrementLocalInt32(_cur_t,_node_arg(-1)->(as Local)), 1 )
+            _push( IncrementThisProperty(_cur_t,_node_arg(-1)->(as Property)), 1 )
+            _push( IncrementThisPropertyInt32(_cur_t,_node_arg(-1)->(as Property)), 1 )
             _push( Literal(_cur_t), 0 )
             _push( LiteralNull(_cur_t,_node_arg(-1)->(as Type)), 1 )
             _push( LiteralValueUndefined(_cur_t), 0 )
             _push( Local(_cur_t,_string_arg(-2),_node_arg(-1)), 2 )
             _push( Method(_cur_t,_node_arg(-3)->(as Type),_string_arg(-2),_node_arg(-1)), 3 )
-            _push( MethodDef(_cur_t,_string_arg(-5),_node_arg(-4),_node_arg(-3),_node_arg(-2),_node_arg(-1)), 5 )
             _push( Procedure(_cur_t,_node_arg(-3)->(as Module),_string_arg(-2),_node_arg(-1)), 3 )
             _push( ProcedureDef(_cur_t,_string_arg(-5),_node_arg(-4),_node_arg(-3),_node_arg(-2),_node_arg(-1)), 5 )
             _push( Property(_cur_t,_node_arg(-4)->(as Type),_string_arg(-3),_node_arg(-2),_node_arg(-1)->(as Type)), 4 )

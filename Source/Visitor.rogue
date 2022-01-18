@@ -292,4 +292,52 @@ class Visitor<<$ReturnType>>
         visit( cmd.info )
       endIf
 
+    method on_visit_children( cmd:IncrementLocal )
+      if ($ReturnType instanceOf Cmd)
+        cmd.info = visit(cmd.info)->(as Local)
+      else
+        visit( cmd.info )
+      endIf
+
+    method on_visit_children( cmd:IncrementLocalInt32 )
+      if ($ReturnType instanceOf Cmd)
+        cmd.info = visit(cmd.info)->(as Local)
+      else
+        visit( cmd.info )
+      endIf
+
+    method on_visit_children( cmd:IncrementThisProperty )
+      if ($ReturnType instanceOf Cmd)
+        cmd.info = visit(cmd.info)->(as Property)
+      else
+        visit( cmd.info )
+      endIf
+
+    method on_visit_children( cmd:CallMethod )
+      if ($ReturnType instanceOf Cmd)
+        cmd.context = visit(cmd.context)
+        cmd.procedure = visit(cmd.procedure)->(as Procedure)
+        cmd.args = visit(cmd.args)
+      else
+        visit( cmd.context )
+        visit( cmd.procedure )
+        visit( cmd.args )
+      endIf
+
+    method on_visit_children( cmd:CallThisMethod )
+      if ($ReturnType instanceOf Cmd)
+        cmd.procedure = visit(cmd.procedure)->(as Procedure)
+        cmd.args = visit(cmd.args)
+      else
+        visit( cmd.procedure )
+        visit( cmd.args )
+      endIf
+
+    method on_visit_children( cmd:IncrementThisPropertyInt32 )
+      if ($ReturnType instanceOf Cmd)
+        cmd.info = visit(cmd.info)->(as Property)
+      else
+        visit( cmd.info )
+      endIf
+
 endClass
