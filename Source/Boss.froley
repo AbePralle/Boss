@@ -769,10 +769,17 @@ parser
   on "println"   args -> Println(args)
   on "return"    optional_expression -> Return(result)
 
+  on "++" expression -> Increment(operand):Unary
+  on "--" expression -> Decrement(operand):Unary
+
   expression
 
+  on "++" -> Increment(operand):Unary
+  on "--" -> Decrement(operand):Unary
+
+  on "=" expression -> Assign(target,new_value)
+
 #{
-  on "=" , expression -> Assign(target,expression)
   on "+=", expression -> AddAndAssign(target,expression)
   on "-=", expression -> SubtractAndAssign(target,expression)
   on "*=", expression -> MultiplyAndAssign(target,expression)
@@ -899,12 +906,6 @@ parser
 
 - pre_unary [preUnary]
   on "-"  -> Negate
-  on "++" -> Increment
-  on "--" -> Decrement
-
-- post_unary [postUnary]
-  on "++" -> Increment
-  on "--" -> Decrement
 
 - access [binary]
   term
@@ -989,6 +990,7 @@ parser
   create PushResult(operand):Unary
   create ReturnResult(result)
   create Routine(module_context:Module,name:String,statements):Procedure
+  create SetLocal(info:Local,new_value)
   create SetThisProperty(info:Property,new_value)
   create SubtractInt32(left,right):Binary
   create SubtractObject(left,right):Binary

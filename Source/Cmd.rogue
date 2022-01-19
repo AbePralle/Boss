@@ -1414,3 +1414,39 @@ class IncrementThisPropertyInt32 : Cmd
       return "IncrementThisPropertyInt32($)" (%info)
 
 endClass
+
+class Assign : Cmd
+  PROPERTIES
+    target    : Cmd
+    new_value : Cmd
+
+  METHODS
+    method init( t, target, new_value )
+
+    method init( existing:Assign )
+      prior.init( existing )
+      if (existing.target) target = existing.target.cloned
+      if (existing.new_value) new_value = existing.new_value.cloned
+
+    method description->String
+      return "Assign($,$)" (%target,%new_value)
+
+endClass
+
+class SetLocal : Cmd
+  PROPERTIES
+    info      : Local
+    new_value : Cmd
+
+  METHODS
+    method init( t, info, new_value )
+
+    method init( existing:SetLocal )
+      prior.init( existing )
+      if (existing.info) info = existing.info.cloned
+      if (existing.new_value) new_value = existing.new_value.cloned
+
+    method description->String
+      return "SetLocal($,$)" (%info,%new_value)
+
+endClass

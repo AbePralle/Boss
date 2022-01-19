@@ -143,6 +143,9 @@ augment
     method GetProperty.type->Type
       return info.@type
 
+    method GetThisProperty.type->Type
+      return info.@type
+
     method ImportModule.type->Type
       return Program.type_Value
 
