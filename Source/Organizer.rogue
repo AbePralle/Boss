@@ -77,19 +77,32 @@ class Organizer : Visitor
       if (cmd.is_organized) return
       cmd.is_organized = true
 
-      on_visit( cmd->(as Procedure) )
-      visit_children( cmd )
+      temporarily this_procedure = cmd
+        on_visit( cmd->(as Procedure) )
+        visit_children( cmd )
 
-      local sig = cmd.signature
-      if (cmd.type_context.methods_by_signature.contains(sig))
-        throw cmd.t.error( "Type $ already defines method $."(cmd.type_context.name,sig) )
-      endIf
-      cmd.type_context.methods_by_signature[ sig ] = cmd
+        local sig = cmd.signature
+        if (cmd.type_context.methods_by_signature.contains(sig))
+          throw cmd.t.error( "Type $ already defines method $."(cmd.type_context.name,sig) )
+        endIf
+        cmd.type_context.methods_by_signature[ sig ] = cmd
+      endTemporarily
 
     method on( cmd:MethodDef )->Cmd
       return visit( cmd->Method(this_type) )
 
     method on_visit( cmd:Procedure )
+      cmd.max_args = cmd.parameters.count
+      cmd.min_args = cmd.max_args
+      forEach (p in cmd.parameters step -1)
+        if (p.initial_value)
+          # default arg value given
+          --cmd.min_args
+        else
+          escapeForEach
+        endIf
+      endForEach
+
       use builder = StringBuilder.pool
         builder.print cmd.name
         builder.print '('
@@ -105,14 +118,16 @@ class Organizer : Visitor
       if (cmd.is_organized) return
       cmd.is_organized = true
 
-      on_visit( cmd->(as Procedure) )
-      visit_children( cmd )
+      temporarily this_procedure = cmd
+        on_visit( cmd->(as Procedure) )
+        visit_children( cmd )
 
-      local sig = cmd.signature
-      if (this_module.routines_by_signature.contains(sig))
-        throw cmd.t.error( "Module $ already defines routine $."(this_module.name,sig) )
-      endIf
-      this_module.routines_by_signature[ sig ] = cmd
+        local sig = cmd.signature
+        if (this_module.routines_by_signature.contains(sig))
+          throw cmd.t.error( "Module $ already defines routine $."(this_module.name,sig) )
+        endIf
+        this_module.routines_by_signature[ sig ] = cmd
+      endTemporarily
 
     method on_visit( cmd:Statements )
       temporarily current_statements_rewriter = cmd.list.rewriter

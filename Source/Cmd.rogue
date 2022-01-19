@@ -571,6 +571,9 @@ class Procedure : Cmd
 
     locals           = Local[]
 
+    min_args         : Int32
+    max_args         : Int32
+
   METHODS
     method init( t, module_context, name, statements=null )
       parameters = Local[]
@@ -586,11 +589,11 @@ class Procedure : Cmd
       attributes = existing.attributes
       statements = existing.statements.cloned
       locals = existing.locals.cloned
+      min_args = existing.min_args
+      max_args = existing.max_args
 
     method accepts_arg_count( n:Int32 )->Logical
-      local min = which{ parameters:parameters.count || 0 }
-      local max = min
-      return (n >= min and n <= max)
+      return (n >= min_args and n <= max_args)
 
     method description->String
       return which{ signature || name }
@@ -1176,7 +1179,7 @@ class MethodDef : ProcedureDef
   METHODS
     method to->Method( type_context:Type )
       local m = Method( t, type_context, name, statements )
-      m.parameters.add( (forEach in parameters)->(as Local) )
+      m.parameters.add( (forEach in parameters)->(as LocalDef)->Local )
       if (return_type_ref) m.return_type = return_type_ref->Type
       if (attribute_names)
         forEach (attribute in attribute_names)

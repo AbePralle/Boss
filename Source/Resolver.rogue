@@ -195,7 +195,7 @@ class Resolver : Visitor
       local match = find_procedure( type_context, name, args )
 
       if (match)
-        # TODO: fill in default values
+        if (not args and match.min_args == 0) args = CmdList(t)
         cast_args_to_parameter_types( args, match )
         return validate( match.cmd_call(context,args) )
       endIf
@@ -274,6 +274,7 @@ class Resolver : Visitor
     method cmd_create_object( t:Token, type_context:Type, args:Cmd )->Cmd
       local m_init = find_procedure( type_context, "init", args )
       if (m_init)
+        if (not args and m_init.min_args == 0) args = CmdList(t)
         cast_args_to_parameter_types( args, m_init )
         return CreateObject( t, type_context, m_init, args )
       else
@@ -305,7 +306,13 @@ class Resolver : Visitor
       endIf
 
     method cast_args_to_parameter_types( args:Cmd, proc:Procedure )
+      # And fill in default values
       if (not args) return
+
+      while (args.count < proc.parameters.count)
+        args.add( proc.parameters[args.count].initial_value.cloned )
+      endWhile
+
       forEach (arg at i in args)
         args[i] = validate( arg.cmd_cast_to(proc.parameters[i].type) )
       endForEach
