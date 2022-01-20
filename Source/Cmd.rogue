@@ -1450,3 +1450,92 @@ class SetLocal : Cmd
       return "SetLocal($,$)" (%info,%new_value)
 
 endClass
+
+class AddAndAssign : OpAndAssign
+  METHODS
+    method description->String
+      return "AddAndAssign($,$)" (%target,%operand)
+
+endClass
+
+class OpAndAssign : Cmd
+  PROPERTIES
+    target  : Cmd
+    operand : Cmd
+
+  METHODS
+    method init( t, target, operand )
+
+    method init( existing:OpAndAssign )
+      prior.init( existing )
+      if (existing.target) target = existing.target.cloned
+      if (existing.operand) operand = existing.operand.cloned
+
+    method description->String
+      return "OpAndAssign($,$)" (%target,%operand)
+
+endClass
+
+class AddAndAssignLocal : OpAndAssign
+  PROPERTIES
+    info : Local
+
+  METHODS
+    method init( t, info, operand )
+
+    method init( existing:AddAndAssignLocal )
+      prior.init( existing )
+      if (existing.info) info = existing.info.cloned
+
+    method description->String
+      return "AddAndAssignLocal($,$)" (%info,%operand)
+
+endClass
+
+class AddAndAssignThisProperty : OpAndAssign
+  PROPERTIES
+    info : Property
+
+  METHODS
+    method init( t, info, operand )
+
+    method init( existing:AddAndAssignThisProperty )
+      prior.init( existing )
+      if (existing.info) info = existing.info.cloned
+
+    method description->String
+      return "AddAndAssignThisProperty($,$)" (%info,%operand)
+
+endClass
+
+class AddAndAssignThisPropertyInt32 : OpAndAssign
+  PROPERTIES
+    info : Property
+
+  METHODS
+    method init( t, info, operand )
+
+    method init( existing:AddAndAssignThisPropertyInt32 )
+      prior.init( existing )
+      if (existing.info) info = existing.info.cloned
+
+    method description->String
+      return "AddAndAssignThisPropertyInt32($,$)" (%info,%operand)
+
+endClass
+
+class AddAndAssignLocalInt32 : OpAndAssign
+  PROPERTIES
+    info : Local
+
+  METHODS
+    method init( t, info, operand )
+
+    method init( existing:AddAndAssignLocalInt32 )
+      prior.init( existing )
+      if (existing.info) info = existing.info.cloned
+
+    method description->String
+      return "AddAndAssignLocalInt32($,$)" (%info,%operand)
+
+endClass

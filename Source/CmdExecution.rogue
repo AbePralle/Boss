@@ -12,6 +12,19 @@ augment
       endForEach
       return true
 
+    method AddAndAssignLocalInt32.execute->Logical
+      if (not operand.execute) return false
+      local index = Program.fp + info.fp_offset
+      Program.stack[index].x = Program.stack[index].x->Int32 + Program.execution_result.x->Int32
+      return true
+
+    method AddAndAssignThisPropertyInt32.execute->Logical
+      if (not operand.execute) return false
+      local properties = Program.stack[ Program.fp ].object->(as BossObject).properties
+      local index = info.index
+      properties[index].x = properties[index].x->Int32 + Program.execution_result.x->Int32
+      return true
+
     method AddInt32.execute->Logical
       if (not left.execute) return false
       local a = Program.execution_result.x->Int32

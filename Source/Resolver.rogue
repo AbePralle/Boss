@@ -32,6 +32,26 @@ class Resolver : Visitor
     method on_validate( cmd:Add )->Cmd
       return validate( cmd.left.type.cmd_add(cmd.t, cmd.left, cmd.right) )
 
+    method on( cmd:AddAndAssign )->Cmd
+      local operand = visit( cmd.operand ).require_value
+      return validate( cmd.target.resolve_add_and_assign(cmd.t,operand,this) )
+
+    method on_validate( cmd:AddAndAssignLocal )->Cmd
+      local type = cmd.info.type
+      if (type is Program.type_Int32)
+        local operand = validate( (cmd.operand.cmd_cast_to(type)) )
+        return validate( AddAndAssignLocalInt32(cmd.t,cmd.info,operand) )
+      endIf
+      throw cmd.t.error( "[INTERNAL] AddAndAssignLocal doesn't handle $."(type) )
+
+    method on_validate( cmd:AddAndAssignThisProperty )->Cmd
+      local type = cmd.info.type
+      if (type is Program.type_Int32)
+        local operand = validate( (cmd.operand.cmd_cast_to(type)) )
+        return validate( AddAndAssignThisPropertyInt32(cmd.t,cmd.info,operand) )
+      endIf
+      throw cmd.t.error( "[INTERNAL] AddAndAssignThisProperty doesn't handle $."(type) )
+
     method on( cmd:Assign )->Cmd
       local new_value = visit( cmd.new_value ).require_value
       return cmd.target.resolve_assignment( cmd.t, new_value, this )
@@ -372,6 +392,24 @@ augment
 
     method TypeValue.cmd_add( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
       return AddValue( t, lhs, rhs )
+
+endAugment
+
+# AddAndAssign
+augment
+  METHODS
+    method Cmd.resolve_add_and_assign( t:Token, operand:Cmd, resolver:Resolver )->Cmd
+      throw t.error( "Illegal target for '+='." )
+
+    method Access.resolve_add_and_assign( t:Token, operand:Cmd, resolver:Resolver )->Cmd
+      if (not args)
+        local v = resolver.this_procedure.find_local( name )
+        if (v) return resolver.validate( AddAndAssignLocal(t,v,operand) )
+
+        local p = resolver.this_type.find_property( name )
+        if (p) return resolver.validate( AddAndAssignThisProperty(t,p,operand) )
+      endIf
+      throw t.error( "Illegal target for '+='." )
 
 endAugment
 
