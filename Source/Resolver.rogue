@@ -44,6 +44,14 @@ class Resolver : Visitor
       endIf
       throw cmd.t.error( "[INTERNAL] AddAndAssignLocal doesn't handle $."(type) )
 
+    method on_validate( cmd:AddAndAssignProperty )->Cmd
+      local type = cmd.info.type
+      if (type is Program.type_Int32)
+        local operand = validate( (cmd.operand.cmd_cast_to(type)) )
+        return validate( AddAndAssignPropertyInt32(cmd.t,cmd.context,cmd.info,operand) )
+      endIf
+      throw cmd.t.error( "[INTERNAL] AddAndAssignThisProperty doesn't handle $."(type) )
+
     method on_validate( cmd:AddAndAssignThisProperty )->Cmd
       local type = cmd.info.type
       if (type is Program.type_Int32)
@@ -408,6 +416,14 @@ augment
 
         local p = resolver.this_type.find_property( name )
         if (p) return resolver.validate( AddAndAssignThisProperty(t,p,operand) )
+      endIf
+      throw t.error( "Illegal target for '+='." )
+
+    method ContextAccess.resolve_add_and_assign( t:Token, operand:Cmd, resolver:Resolver )->Cmd
+      if (not args)
+        context = resolver.visit( context )
+        local p = context.require_type.find_property( name )
+        if (p) return resolver.validate( AddAndAssignProperty(t,context,p,operand) )
       endIf
       throw t.error( "Illegal target for '+='." )
 

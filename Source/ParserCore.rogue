@@ -969,6 +969,8 @@ class ParserCore [abstract]
           case ip_additional_node_types
             _push( AddAndAssignLocal(_cur_t,_node_arg(-2)->(as Local),_node_arg(-1)), 2 )
             _push( AddAndAssignLocalInt32(_cur_t,_node_arg(-2)->(as Local),_node_arg(-1)), 2 )
+            _push( AddAndAssignProperty(_cur_t,_node_arg(-3),_node_arg(-2)->(as Property),_node_arg(-1)), 3 )
+            _push( AddAndAssignPropertyInt32(_cur_t,_node_arg(-3),_node_arg(-2)->(as Property),_node_arg(-1)), 3 )
             _push( AddAndAssignThisProperty(_cur_t,_node_arg(-2)->(as Property),_node_arg(-1)), 2 )
             _push( AddAndAssignThisPropertyInt32(_cur_t,_node_arg(-2)->(as Property),_node_arg(-1)), 2 )
             _push( AddInt32(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )

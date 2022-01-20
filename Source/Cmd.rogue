@@ -1539,3 +1539,39 @@ class AddAndAssignLocalInt32 : OpAndAssign
       return "AddAndAssignLocalInt32($,$)" (%info,%operand)
 
 endClass
+
+class AddAndAssignProperty : OpAndAssign
+  PROPERTIES
+    context : Cmd
+    info    : Property
+
+  METHODS
+    method init( t, context, info, operand )
+
+    method init( existing:AddAndAssignProperty )
+      prior.init( existing )
+      if (existing.context) context = existing.context.cloned
+      if (existing.info) info = existing.info.cloned
+
+    method description->String
+      return "AddAndAssignProperty($,$,$)" (%context,%info,%operand)
+
+endClass
+
+class AddAndAssignPropertyInt32 : OpAndAssign
+  PROPERTIES
+    context : Cmd
+    info    : Property
+
+  METHODS
+    method init( t, context, info, operand )
+
+    method init( existing:AddAndAssignPropertyInt32 )
+      prior.init( existing )
+      if (existing.context) context = existing.context.cloned
+      if (existing.info) info = existing.info.cloned
+
+    method description->String
+      return "AddAndAssignPropertyInt32($,$,$)" (%context,%info,%operand)
+
+endClass

@@ -18,6 +18,14 @@ augment
       Program.stack[index].x = Program.stack[index].x->Int32 + Program.execution_result.x->Int32
       return true
 
+    method AddAndAssignPropertyInt32.execute->Logical
+      if (not context.execute) return false
+      local properties = Program.execution_result.object->(as BossObject).properties
+      if (not operand.execute) return false
+      local index = info.index
+      properties[index].x = properties[index].x->Int32 + Program.execution_result.x->Int32
+      return true
+
     method AddAndAssignThisPropertyInt32.execute->Logical
       if (not operand.execute) return false
       local properties = Program.stack[ Program.fp ].object->(as BossObject).properties

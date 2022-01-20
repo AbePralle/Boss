@@ -945,6 +945,8 @@ parser
 - additional_node_types
   create AddAndAssignLocal(info:Local,operand):OpAndAssign
   create AddAndAssignLocalInt32(info:Local,operand):OpAndAssign
+  create AddAndAssignProperty(context,info:Property,operand):OpAndAssign
+  create AddAndAssignPropertyInt32(context,info:Property,operand):OpAndAssign
   create AddAndAssignThisProperty(info:Property,operand):OpAndAssign
   create AddAndAssignThisPropertyInt32(info:Property,operand):OpAndAssign
   create AddInt32(left,right):Binary
