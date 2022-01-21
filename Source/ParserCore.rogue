@@ -41,22 +41,23 @@ class ParserCore [abstract]
     ip_statement = 28
     ip_local_declarations = 29
     ip_local_declaration = 30
-    ip_module_path = 31
-    ip_uses_attributes = 32
-    ip_uses_attribute = 33
-    ip_access_args = 34
-    ip_optional_expression = 35
-    ip_expression = 36
-    ip_comparison = 37
-    ip_comparison__inner = 38
-    ip_add_subtract = 39
-    ip_add_subtract__inner = 40
-    ip_pre_unary = 41
-    ip_access = 42
-    ip_access__inner = 43
-    ip_access_inner = 44
-    ip_term = 45
-    ip_additional_node_types = 46
+    ip_while_loop = 31
+    ip_module_path = 32
+    ip_uses_attributes = 33
+    ip_uses_attribute = 34
+    ip_access_args = 35
+    ip_optional_expression = 36
+    ip_expression = 37
+    ip_comparison = 38
+    ip_comparison__inner = 39
+    ip_add_subtract = 40
+    ip_add_subtract__inner = 41
+    ip_pre_unary = 42
+    ip_access = 43
+    ip_access__inner = 44
+    ip_access_inner = 45
+    ip_term = 46
+    ip_additional_node_types = 47
 
   PROPERTIES
     _tokens          : Token[]
@@ -623,6 +624,11 @@ class ParserCore [abstract]
                 return
               endTemporarily
             endIf
+            if ((_next_t.type == TokenType.KEYWORD_WHILE))
+              _execute(ip_while_loop)
+              _pop_frame
+              return
+            endIf
             _execute(ip_statement)
             _pop_frame
             return
@@ -768,6 +774,24 @@ class ParserCore [abstract]
               endTemporarily
             endIf
             if (not _consume(TokenType.IDENTIFIER)) _throw_syntax_error( &expected=TokenType.IDENTIFIER )
+            return
+          case ip_while_loop
+            if (_next_t.type == TokenType.KEYWORD_WHILE)
+              temporarily _cur_t = _on_t
+                _execute(ip_expression)
+                _pop_frame
+                if (_consume(TokenType.EOL))
+                  _execute(ip_multi_line_statements)
+                  _pop_frame
+                  if (not _consume(TokenType.KEYWORD_END_WHILE)) _throw_syntax_error( &expected=TokenType.KEYWORD_END_WHILE )
+                else
+                  _execute(ip_single_line_statements)
+                  _pop_frame
+                endIf
+                _push( While(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
+                return
+              endTemporarily
+            endIf
             return
           case ip_module_path
             _begin_list

@@ -227,6 +227,10 @@ class Resolver : Visitor
     method on_visit( cmd:Unary )
       cmd.operand = visit( cmd.operand ).require_value
 
+    method on_visit( cmd:While )
+      visit_children( cmd )
+      cmd.condition.require_value
+
     method resolve_access( t:Token, context:Cmd, name:String, args:Cmd, &suppress_error )->Cmd
       if (context)
         context  = visit( context ).require_value

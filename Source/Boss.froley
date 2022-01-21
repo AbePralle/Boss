@@ -729,10 +729,13 @@ parser
 
 - control_structure
   on "local"  local_declarations: return
+  if (nextIs("while"))
+    while_loop
+    return
+  endIf
 #{
   onPeek "forEach", forEach_loop: return
   onPeek "if",      if_statement: return
-  onPeek "while",   while_loop:   return
   on "global", local_declarations -> GlobalDeclarations( declarations, type )
 }#
   statement
@@ -810,7 +813,6 @@ parser
   endOn
   mustConsume IDENTIFIER  # throws error
 
-#{
 - while_loop
   on "while"
     expression
@@ -818,7 +820,6 @@ parser
     else              single_line_statements
     produce While(condition,statements)
   endOn
-}#
 
 - module_path
   beginList

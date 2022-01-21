@@ -246,4 +246,15 @@ augment
       if (not right.execute) return false
       Program.execution_result = a - Program.execution_result.x
       return true
+
+    method While.execute->Logical
+      if (not condition.execute) return false
+      while (Program.execution_result.x)
+        if (not statements.execute)
+          # TODO: check for escape / continue
+          return false
+        endIf
+        if (not condition.execute) return false
+      endWhile
+      return true
 endAugment
