@@ -1575,3 +1575,94 @@ class AddAndAssignPropertyInt32 : OpAndAssign
       return "AddAndAssignPropertyInt32($,$,$)" (%context,%info,%operand)
 
 endClass
+
+class CompareEQ : Compare
+  METHODS
+    method description->String
+      return "CompareEQ($,$)" (%left,%right)
+
+endClass
+
+class CompareGE : Compare
+  METHODS
+    method description->String
+      return "CompareGE($,$)" (%left,%right)
+
+endClass
+
+class CompareGT : Compare
+  METHODS
+    method description->String
+      return "CompareGT($,$)" (%left,%right)
+
+endClass
+
+class CompareLE : Compare
+  METHODS
+    method description->String
+      return "CompareLE($,$)" (%left,%right)
+
+endClass
+
+class CompareLT : Compare
+  METHODS
+    method description->String
+      return "CompareLT($,$)" (%left,%right)
+
+endClass
+
+class CompareNE : Compare
+  METHODS
+    method description->String
+      return "CompareNE($,$)" (%left,%right)
+
+endClass
+
+class Compare : Binary
+  METHODS
+    method description->String
+      return "Compare($,$)" (%left,%right)
+
+endClass
+
+class CompareEQReal64 : Compare
+  METHODS
+    method description->String
+      return "CompareEQReal64($,$)" (%left,%right)
+
+endClass
+
+class CompareGEReal64 : Compare
+  METHODS
+    method description->String
+      return "CompareGEReal64($,$)" (%left,%right)
+
+endClass
+
+class CompareGTReal64 : Compare
+  METHODS
+    method description->String
+      return "CompareGTReal64($,$)" (%left,%right)
+
+endClass
+
+class CompareLEReal64 : Compare
+  METHODS
+    method description->String
+      return "CompareLEReal64($,$)" (%left,%right)
+
+endClass
+
+class CompareLTReal64 : Compare
+  METHODS
+    method description->String
+      return "CompareLTReal64($,$)" (%left,%right)
+
+endClass
+
+class CompareNEReal64 : Compare
+  METHODS
+    method description->String
+      return "CompareNEReal64($,$)" (%left,%right)
+
+endClass

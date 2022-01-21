@@ -122,6 +122,9 @@ augment
     method CastToValue.type->Type
       return Program.type_Value
 
+    method Compare.type->Type
+      return Program.type_Logical
+
     method CreateObject.type->Type
       return of_type
 

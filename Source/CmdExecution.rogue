@@ -83,6 +83,48 @@ augment
       Program.execution_result = Program.execution_result.object->(as String)->Real64
       return true
 
+    method CompareEQReal64.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result.x
+      if (not right.execute) return false
+      Program.execution_result.x = (a == Program.execution_result.x)
+      return true
+
+    method CompareNEReal64.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result.x
+      if (not right.execute) return false
+      Program.execution_result.x = (a != Program.execution_result.x)
+      return true
+
+    method CompareLTReal64.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result.x
+      if (not right.execute) return false
+      Program.execution_result.x = (a < Program.execution_result.x)
+      return true
+
+    method CompareGTReal64.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result.x
+      if (not right.execute) return false
+      Program.execution_result.x = (a > Program.execution_result.x)
+      return true
+
+    method CompareLEReal64.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result.x
+      if (not right.execute) return false
+      Program.execution_result.x = (a <= Program.execution_result.x)
+      return true
+
+    method CompareGEReal64.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result.x
+      if (not right.execute) return false
+      Program.execution_result.x = (a >= Program.execution_result.x)
+      return true
+
     method CreateObject.execute->Logical
       local obj = BossObject( of_type )
       if (m_init) Program.execute( obj, m_init, args )

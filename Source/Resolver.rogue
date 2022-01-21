@@ -73,6 +73,7 @@ class Resolver : Visitor
       local result_type = Cmd.common_type( left_type, right_type )
       if (left_type is not result_type) cmd.left = validate( result_type.cmd_cast(left) )
       if (right_type is not result_type) cmd.right = validate( result_type.cmd_cast(right) )
+      # on_validate() will be called after this method returns
 
       #method on_visit( cmd:CallProcedure )
       #  if (cmd.args)
@@ -107,6 +108,25 @@ class Resolver : Visitor
         others: throw
       endWhichIs
       }#
+
+    method on_validate( cmd:CompareEQ )->Cmd
+      #local type = cmd.left.type
+      return validate( CompareEQReal64(cmd.t,cmd.left,cmd.right) )
+
+    method on_validate( cmd:CompareNE )->Cmd
+      return validate( CompareNEReal64(cmd.t,cmd.left,cmd.right) )
+
+    method on_validate( cmd:CompareLT )->Cmd
+      return validate( CompareLTReal64(cmd.t,cmd.left,cmd.right) )
+
+    method on_validate( cmd:CompareGT )->Cmd
+      return validate( CompareGTReal64(cmd.t,cmd.left,cmd.right) )
+
+    method on_validate( cmd:CompareLE )->Cmd
+      return validate( CompareLEReal64(cmd.t,cmd.left,cmd.right) )
+
+    method on_validate( cmd:CompareGE )->Cmd
+      return validate( CompareGEReal64(cmd.t,cmd.left,cmd.right) )
 
     method on( cmd:ContextAccess )->Cmd
       visit( cmd.args )
