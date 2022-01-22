@@ -46,7 +46,7 @@ class Boss
       parse_files
 
     method parse_files
-      Program.register( "add(Int32,Int32)->Int32", (a,b) => a+b )
+      Program.register( "random_logical()->Int32", () => Random.logical )
       Program.include( forEach in command//args )
       Program.launch
 

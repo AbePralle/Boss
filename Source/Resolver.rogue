@@ -134,7 +134,7 @@ class Resolver : Visitor
 
     method on_visit( cmd:If )
       visit_children( cmd )
-      cmd.condition.require_value
+      if (cmd.condition) cmd.condition.require_value
 
     method on( cmd:Increment )->Cmd
       return cmd.operand.resolve_increment( cmd.t, this )
