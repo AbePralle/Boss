@@ -38,6 +38,10 @@ class Organizer : Visitor
         visit( type.definition )
       endIf
 
+      if (type.augments)
+        visit( type.augments )
+      endIf
+
       # Assign property indices
       forEach (p at i in this_type.properties)
         p.index = i

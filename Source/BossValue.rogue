@@ -13,7 +13,7 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
     TYPE_LAST_INTEGER = TYPE_INT32
 
     TYPE_REAL64
-    TYPE_LAST_REAL    = TYPE_REAL64
+    TYPE_LAST_NUMBER  = TYPE_REAL64
 
     TYPE_STRING
     TYPE_OBJECT
@@ -89,7 +89,7 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
 
     method operator?( value:BossValue )->Logical
       local type = value.type
-      if (type <= TYPE_LAST_REAL) return value.x?
+      if (type <= TYPE_LAST_NUMBER) return value.x?
       if (type <= TYPE_XY)        return true  # includes objects and XY
       which (value.type)
         case TYPE_BOX: return (value.a == 0 and value.b == 0) # width and height are zero
@@ -110,7 +110,7 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
           case TYPE_INT32:     return x->Int32->String
         endWhich
 
-      elseIf (type <= TYPE_LAST_REAL)
+      elseIf (type <= TYPE_LAST_NUMBER)
         return x->String
 
       elseIf (type <= TYPE_LAST_OBJECT)
@@ -217,6 +217,10 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
       endWhich
 
       return BossValue()
+
+    method to->Int32
+      if (type > TYPE_LAST_NUMBER) return 0
+      return x->Int32
 
     method to->XY
       return XY(x,y)

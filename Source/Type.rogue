@@ -24,6 +24,7 @@ class Type
     attributes     : Int32
 
     definition     : ClassDef
+    augments       : CmdList
 
     properties           = StringTable<<Property>>()
     methods              = Method[]
@@ -34,6 +35,7 @@ class Type
     method init( t, name, is_primitive:Logical )
       this.is_primitive = is_primitive
       module_context = Program.current_module
+      augments = CmdList(t)
       Program.current_module.types[ name ] = this
 
     method add( m:Method )

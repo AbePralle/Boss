@@ -28,17 +28,19 @@ class Program [singleton]
 
     parsed_files   = StringTable<<AST>>()
 
-    default_module    : Module
-    global_module     : Module
-    current_module    : Module
-    all_modules       = Module[]
-    modules_by_name   = StringTable<<Module>>()
+    default_module  : Module
+    global_module   : Module
+    current_module  : Module
+    all_modules     = Module[]
+    modules_by_name = StringTable<<Module>>()
 
-    stack             = BossValue[]
-    fp                : Int32
+    stack           = BossValue[]
+    fp              : Int32
 
   METHODS
     method init
+      Program = this # update singleton reference
+
       t = Token( TokenType.EOI, "Boss" )
 
       default_module = Module( t, "Default" )
@@ -54,6 +56,11 @@ class Program [singleton]
       type_Value     = TypeValue(t)
       type_Object    = Type( t, "Object" )
       type_Global    = Type( t, "Global" )
+
+      current_module = default_module
+
+    method arg( index:Int32 )->BossValue
+      return stack[ fp + index ]
 
     method create_dynamic_module( t:Token, name:String )->Module
       name = File.filename(name).before_last(".boss")
@@ -118,6 +125,11 @@ class Program [singleton]
         return global_module.find_type( name )
       endIf
 
+    method get_module( name:String )->Module
+      local result = find_module( name )
+      if (result) return result
+      return Module( t, name )
+
     method import( t:Token, filepath:String )->Logical
       try
         local m = create_dynamic_module( t, filepath )
@@ -171,6 +183,59 @@ class Program [singleton]
 
     method preprocess( tokens:Token[] )
       noAction
+
+    method register( signature:String, handler:Function->BossValue )
+      # signature
+      #   routine_name(param1:Type1,param2=default_value:Type2,...)->ReturnType
+      #   Module::routine_name(...)->ReturnType
+      #   Type.method_name(...)->ReturnType
+      #   Module::Type.method_name(...)->ReturnType
+      #   Type:global_method_name(...)->ReturnType
+      #   Module::Type:global_method_name(...)->ReturnType
+      #
+      # handler
+      #   Can pull args with Program.arg(0), etc. arg(0) is the context object
+      #   for methods or the first parameter for routines and global methods.
+      #   If a procedure does not return a value (AKA "returns nil") then the
+      #   handler should return BossValue() which is equivalent to 'undefined'.
+      #
+      #   The handler can throw an error or exception like this:
+      #     Program.execution_status = EXE_ERROR
+      #     Program.execution_error = Error(...)
+      #     return BossValue()
+      #
+      # Examples
+      #   Program.register(
+      #     "Math:atan2(y:Real64,x:Real64)->Real64",
+      #     () => Math.atan2( Program.arg(0), Program.arg(1) )
+      #   )
+      local mod : Module
+      if (signature.contains("::"))
+        mod = get_module( signature.before_first("::") )
+        signature .= after_first("::")
+      else
+        mod = default_module
+      endIf
+
+      local name = signature.before_first( '(' )
+      signature .= from_first('(')
+      if (name.contains(':'))
+        # Global method
+        throw Error( "TODO: allow registration of global methods" )
+      elseIf (name.contains('.'))
+        # Method
+        local type = mod.type( name.before_first('.') )
+        name .= after_first('.')
+        local parser = Parser( "[$.$]"(type,name),"$$" (name,signature) )
+        local m_def = parser.parse( Parser.ip_native_method )->(as MethodDef)
+        local m = m_def->Method( type )
+        m.statements.add( CallNative(m.t,handler) )
+        type.augments.add( m )
+      else
+        # Routine
+        throw Error( "TODO: allow registration of routine" )
+      endIf
+
 
     method resolve
       (forEach in all_modules).resolve

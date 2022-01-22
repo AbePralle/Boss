@@ -683,11 +683,41 @@ parser
   endOn
 
 - method
-  on "method" identifier procedure_parameters procedure_return_type method_attributes procedure_body ->
+  on "method" signature procedure_body ->
     MethodDef(name:String,parameters,return_type_ref,attribute_names,statements):ProcedureDef
+
+- signature
+  identifier
+  procedure_parameters
+  procedure_return_type
+  method_attributes
 
 - method_attributes
   produceNull
+
+- native_method
+  identifier
+  native_parameter_types
+  procedure_return_type
+  method_attributes
+  beginList
+  createList Statements
+  produce MethodDef(name:String,parameters,return_type_ref,attribute_names,statements):ProcedureDef
+
+- native_parameter_types
+  beginList
+    if (not consume('(')) produceList
+    if (consume(')')) produceList
+    native_parameter_type
+    while (consume(',')) native_parameter_type
+    mustConsume ')'
+  produceList
+
+- native_parameter_type
+  createNull
+  createNull
+  type
+  produce LocalDef(name:String,initial_value,type_ref)
 
 #{
 - module_name [binary]
@@ -978,6 +1008,7 @@ parser
   create CastToString(operand):Unary
   create CastToValue(operand):Unary
   create CallMethod(context,procedure:Procedure,args):CallProcedure
+  create CallNative
   create CallThisMethod(procedure:Procedure,args):CallProcedure
   create CallProcedure(args)
   create CallRoutine(args):CallProcedure

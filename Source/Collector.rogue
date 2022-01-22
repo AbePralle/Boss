@@ -12,6 +12,12 @@ class Collector : Visitor
     method on( cmd:ClassDef )->Cmd
       local existing = Program.current_module.types[ cmd.name ]
       if (existing)
+        if (not existing.definition)
+          # Type was created via a register() call
+          existing.definition = cmd
+          return null
+        endIf
+
         local qualified_name : String
         if (Program.current_module is Program.default_module)
           qualified_name = cmd.name

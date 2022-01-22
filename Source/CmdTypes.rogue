@@ -104,7 +104,7 @@ augment
     method Binary.type->Type
       return common_type( left.type, right.type )
 
-    method CallRoutine.type->Type
+    method CallProcedure.type->Type
       return procedure.return_type
 
     method CastToInt32.type->Type

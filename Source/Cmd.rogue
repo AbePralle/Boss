@@ -1074,7 +1074,7 @@ class ClassDef : Cmd
     name                   : Cmd
     constructor_properties : Cmd
     base_types             : Cmd
-    attribute_names             : Cmd
+    attribute_names        : Cmd
     sections               : Cmd
 
   METHODS
@@ -1703,4 +1703,21 @@ class If : Cmd
     method description->String
       return "If($,$,$)" (%condition,%statements,%cmd_else)
 
+endClass
+
+class CallNative : Cmd
+  PROPERTIES
+    handler : Function->BossValue
+
+  METHODS
+    method init( t )
+
+    method init( t, handler )
+
+    method init( existing:CallNative )
+      t = existing.t
+      handler = existing.handler
+
+    method description->String
+      return "CallNative"
 endClass
