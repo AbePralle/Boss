@@ -600,6 +600,7 @@ parser
 - global_method
   on "method", name, procedure_parameters, procedure_return_type, procedure_body ->
     GlobalMethod(name,parameters,return_type_name:ReturnTypeReference,statements):ProcedureDef
+}#
 
 - if_statement
   on "if"
@@ -614,7 +615,7 @@ parser
       single_line_statements
       if_statement_single_line_elseIf_else
     endIf
-    produce If(condition,statements:NodeList,else_node:If)
+    produce If(condition,statements,cmd_else:If)
   endOn
 
 - if_statement_multi_line_elseIf_else
@@ -626,7 +627,7 @@ parser
       discardPosition
       multi_line_statements
       if_statement_multi_line_elseIf_else
-      produce If(condition,statements:NodeList,else_node:If)
+      produce If(condition,statements,cmd_else:If)
     else
       # This single-line elseIf is outside the scope of the 'if' we're currently parsing.
       restorePosition
@@ -639,13 +640,13 @@ parser
       createNull
       multi_line_statements
       createNull
-      produce If(condition,statements:NodeList,else_node:If)
+      produce If(condition,statements,cmd_else:If)
     else
       # This single-line else is outside the scope of the 'if' we're currently parsing.
       restorePosition
       produceNull
     endIf
-  else
+  elseOnOthers
     produceNull
   endOn
 
@@ -662,7 +663,7 @@ parser
       discardPosition
       single_line_statements
       if_statement_single_line_elseIf_else
-      produce If(condition,statements:NodeList,else_node:If)
+      produce If(condition,statements,cmd_else:If)
     endIf
   elseOn 'else'
     if (consume(EOL))
@@ -675,12 +676,11 @@ parser
       createNull
       single_line_statements
       createNull
-      produce If(condition,statements:NodeList,else_node:If)
+      produce If(condition,statements,cmd_else:If)
     endIf
-  else
+  elseOnOthers
     produceNull
   endOn
-}#
 
 - method
   on "method" identifier procedure_parameters procedure_return_type method_attributes procedure_body ->
@@ -729,13 +729,15 @@ parser
 
 - control_structure
   on "local"  local_declarations: return
-  if (nextIs("while"))
+  if (nextIs("if"))
+    if_statement
+    return
+  elseIf (nextIs("while"))
     while_loop
     return
   endIf
 #{
   onPeek "forEach", forEach_loop: return
-  onPeek "if",      if_statement: return
   on "global", local_declarations -> GlobalDeclarations( declarations, type )
 }#
   statement

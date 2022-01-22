@@ -31,33 +31,36 @@ class ParserCore [abstract]
     ip_class_attributes = 18
     ip_class_sections = 19
     ip_class_section = 20
-    ip_method = 21
-    ip_method_attributes = 22
-    ip_multi_line_statements = 23
-    ip_single_line_statements = 24
-    ip_control_structure = 25
-    ip_args = 26
-    ip_arg = 27
-    ip_statement = 28
-    ip_local_declarations = 29
-    ip_local_declaration = 30
-    ip_while_loop = 31
-    ip_module_path = 32
-    ip_uses_attributes = 33
-    ip_uses_attribute = 34
-    ip_access_args = 35
-    ip_optional_expression = 36
-    ip_expression = 37
-    ip_comparison = 38
-    ip_comparison__inner = 39
-    ip_add_subtract = 40
-    ip_add_subtract__inner = 41
-    ip_pre_unary = 42
-    ip_access = 43
-    ip_access__inner = 44
-    ip_access_inner = 45
-    ip_term = 46
-    ip_additional_node_types = 47
+    ip_if_statement = 21
+    ip_if_statement_multi_line_elseIf_else = 22
+    ip_if_statement_single_line_elseIf_else = 23
+    ip_method = 24
+    ip_method_attributes = 25
+    ip_multi_line_statements = 26
+    ip_single_line_statements = 27
+    ip_control_structure = 28
+    ip_args = 29
+    ip_arg = 30
+    ip_statement = 31
+    ip_local_declarations = 32
+    ip_local_declaration = 33
+    ip_while_loop = 34
+    ip_module_path = 35
+    ip_uses_attributes = 36
+    ip_uses_attribute = 37
+    ip_access_args = 38
+    ip_optional_expression = 39
+    ip_expression = 40
+    ip_comparison = 41
+    ip_comparison__inner = 42
+    ip_add_subtract = 43
+    ip_add_subtract__inner = 44
+    ip_pre_unary = 45
+    ip_access = 46
+    ip_access__inner = 47
+    ip_access_inner = 48
+    ip_term = 49
+    ip_additional_node_types = 50
 
   PROPERTIES
     _tokens          : Token[]
@@ -564,6 +567,110 @@ class ParserCore [abstract]
               _throw_syntax_error
             endIf
             return
+          case ip_if_statement
+            if (_next_t.type == TokenType.KEYWORD_IF)
+              temporarily _cur_t = _on_t
+                _execute(ip_expression)
+                _pop_frame
+                if (_consume(TokenType.EOL))
+                  _execute(ip_multi_line_statements)
+                  _pop_frame
+                  _execute(ip_if_statement_multi_line_elseIf_else)
+                  _pop_frame
+                  if (not _consume(TokenType.KEYWORD_END_IF)) _throw_syntax_error( &expected=TokenType.KEYWORD_END_IF )
+                else
+                  _execute(ip_single_line_statements)
+                  _pop_frame
+                  _execute(ip_if_statement_single_line_elseIf_else)
+                  _pop_frame
+                endIf
+                _push( If(_cur_t,_node_arg(-3),_node_arg(-2),_node_arg(-1)->(as If)), 3 )
+                return
+              endTemporarily
+            endIf
+            return
+          case ip_if_statement_multi_line_elseIf_else
+            _save_position
+            if (_next_t.type == TokenType.KEYWORD_ELSE_IF)
+              temporarily _cur_t = _on_t
+                _execute(ip_expression)
+                _pop_frame
+                if (_consume(TokenType.EOL))
+                  _discard_position
+                  _execute(ip_multi_line_statements)
+                  _pop_frame
+                  _execute(ip_if_statement_multi_line_elseIf_else)
+                  _pop_frame
+                  _push( If(_cur_t,_node_arg(-3),_node_arg(-2),_node_arg(-1)->(as If)), 3 )
+                  return
+                else
+                  _restore_position
+                  _push( null, 0 )
+                  return
+                endIf
+              endTemporarily
+            elseIf (_next_t.type == TokenType.KEYWORD_ELSE)
+              temporarily _cur_t = _on_t
+                if (_consume(TokenType.EOL))
+                  _discard_position
+                  _push( null, 0 )
+                  _execute(ip_multi_line_statements)
+                  _pop_frame
+                  _push( null, 0 )
+                  _push( If(_cur_t,_node_arg(-3),_node_arg(-2),_node_arg(-1)->(as If)), 3 )
+                  return
+                else
+                  _restore_position
+                  _push( null, 0 )
+                  return
+                endIf
+              endTemporarily
+            else
+              _push( null, 0 )
+              return
+            endIf
+            return
+          case ip_if_statement_single_line_elseIf_else
+            _save_position
+            if (_next_t.type == TokenType.KEYWORD_ELSE_IF)
+              temporarily _cur_t = _on_t
+                _execute(ip_expression)
+                _pop_frame
+                if (_consume(TokenType.EOL))
+                  _restore_position
+                  _push( null, 0 )
+                  return
+                else
+                  _discard_position
+                  _execute(ip_single_line_statements)
+                  _pop_frame
+                  _execute(ip_if_statement_single_line_elseIf_else)
+                  _pop_frame
+                  _push( If(_cur_t,_node_arg(-3),_node_arg(-2),_node_arg(-1)->(as If)), 3 )
+                  return
+                endIf
+              endTemporarily
+            elseIf (_next_t.type == TokenType.KEYWORD_ELSE)
+              temporarily _cur_t = _on_t
+                if (_consume(TokenType.EOL))
+                  _restore_position
+                  _push( null, 0 )
+                  return
+                else
+                  _discard_position
+                  _push( null, 0 )
+                  _execute(ip_single_line_statements)
+                  _pop_frame
+                  _push( null, 0 )
+                  _push( If(_cur_t,_node_arg(-3),_node_arg(-2),_node_arg(-1)->(as If)), 3 )
+                  return
+                endIf
+              endTemporarily
+            else
+              _push( null, 0 )
+              return
+            endIf
+            return
           case ip_method
             if (_next_t.type == TokenType.KEYWORD_METHOD)
               temporarily _cur_t = _on_t
@@ -624,7 +731,11 @@ class ParserCore [abstract]
                 return
               endTemporarily
             endIf
-            if ((_next_t.type == TokenType.KEYWORD_WHILE))
+            if ((_next_t.type == TokenType.KEYWORD_IF))
+              _execute(ip_if_statement)
+              _pop_frame
+              return
+            elseIf ((_next_t.type == TokenType.KEYWORD_WHILE))
               _execute(ip_while_loop)
               _pop_frame
               return

@@ -132,6 +132,10 @@ class Resolver : Visitor
       visit( cmd.args )
       return resolve_access( cmd.t, cmd.context, cmd.name, cmd.args )
 
+    method on_visit( cmd:If )
+      visit_children( cmd )
+      cmd.condition.require_value
+
     method on( cmd:Increment )->Cmd
       return cmd.operand.resolve_increment( cmd.t, this )
 

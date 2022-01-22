@@ -149,6 +149,20 @@ augment
       Program.execution_result = Program.stack[Program.fp].object->(as BossObject).properties[index]
       return true
 
+    method If.execute->Logical
+      if (condition)
+        # 'If' is also used for 'else'; elses have no condition.
+        if (not condition.execute) return false
+        if (Program.execution_result)
+          return statements.execute
+        else
+          if (cmd_else) return cmd_else.execute
+          return true
+        endIf
+      else
+        return statements.execute
+      endIf
+
     method ImportModule.execute->Logical
       return Program.import( t, filepath )
 

@@ -1684,3 +1684,23 @@ class While : Cmd
       return "While($,$)" (%condition,%statements)
 
 endClass
+
+class If : Cmd
+  PROPERTIES
+    condition  : Cmd # is null for 'else' block
+    statements : Cmd
+    cmd_else   : If  # dual purpose elseIf/else
+
+  METHODS
+    method init( t, condition, statements, cmd_else )
+
+    method init( existing:If )
+      prior.init( existing )
+      if (existing.condition) condition = existing.condition.cloned
+      if (existing.statements) statements = existing.statements.cloned
+      if (existing.cmd_else) cmd_else = existing.cmd_else.cloned
+
+    method description->String
+      return "If($,$,$)" (%condition,%statements,%cmd_else)
+
+endClass

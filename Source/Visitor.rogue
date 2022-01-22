@@ -434,4 +434,15 @@ class Visitor<<$ReturnType>>
         visit( cmd.statements )
       endIf
 
+    method on_visit_children( cmd:If )
+      if ($ReturnType instanceOf Cmd)
+        cmd.condition = visit(cmd.condition)
+        cmd.statements = visit(cmd.statements)
+        cmd.cmd_else = visit(cmd.cmd_else)->(as If)
+      else
+        visit( cmd.condition )
+        visit( cmd.statements )
+        visit( cmd.cmd_else )
+      endIf
+
 endClass
