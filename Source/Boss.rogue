@@ -46,7 +46,7 @@ class Boss
       parse_files
 
     method parse_files
-      Program.register( "Number.add(Int32,Int32)->Int32", ()=>Program.arg(1)->Int32 + Program.arg(2)->Int32 )
+      Program.register( "add(Int32,Int32)->Int32", (a,b) => a+b )
       Program.include( forEach in command//args )
       Program.launch
 

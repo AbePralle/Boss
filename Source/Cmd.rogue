@@ -659,7 +659,7 @@ class RoutineDef : ProcedureDef
   METHODS
     method to->Routine
       local result = Routine( t, Program.current_module, name, statements )
-      result.parameters.add( (forEach in parameters)->(as Local) )
+      result.parameters.add( (forEach in parameters)->(as LocalDef)->Local )
       if (return_type_ref) result.return_type = return_type_ref->Type
       if (attribute_names)
         forEach (attribute in attribute_names)
@@ -836,7 +836,7 @@ class Local : Cmd
 
   METHODS
     method init( t, name, initial_value )
-      init( t, name, initial_value, type )
+      init( t, name, initial_value, null )
 
     method init( t, name, initial_value, type )
 

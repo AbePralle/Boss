@@ -401,7 +401,7 @@ parser
     identifier
     procedure_parameters
     procedure_return_type
-    createNull  # attribute_names
+    routine_attributes
     if (consume(':'))
       single_line_statements
     else
@@ -418,6 +418,9 @@ parser
   endIf
 
   procedure_body
+
+- routine_attributes
+  createNull
 
 - procedure_parameters
   beginList
@@ -703,6 +706,15 @@ parser
   beginList
   createList Statements
   produce MethodDef(name:String,parameters,return_type_ref,attribute_names,statements):ProcedureDef
+
+- native_routine
+  identifier
+  native_parameter_types
+  procedure_return_type
+  routine_attributes
+  beginList
+  createList Statements
+  produce RoutineDef(name:String,parameters,return_type_ref,attribute_names,statements):ProcedureDef
 
 - native_parameter_types
   beginList

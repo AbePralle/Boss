@@ -206,9 +206,11 @@ class Program [singleton]
       #
       # Examples
       #   Program.register(
-      #     "Math:atan2(y:Real64,x:Real64)->Real64",
+      #     "Math:atan2(Real64,Real64)->Real64",
       #     () => Math.atan2( Program.arg(0), Program.arg(1) )
       #   )
+      #
+      #   Program.register( "Math:atan2(Real64,Real64)->Real64", (y,x) => Math:atan2(y,x) )
       local mod : Module
       if (signature.contains("::"))
         mod = get_module( signature.before_first("::") )
@@ -233,9 +235,26 @@ class Program [singleton]
         type.augments.add( m )
       else
         # Routine
-        throw Error( "TODO: allow registration of routine" )
+        local parser = Parser( "[$]"(name),"$$" (name,signature) )
+        local r_def = parser.parse( Parser.ip_native_routine )->(as RoutineDef)
+        local r = r_def->Routine
+        r.module_context = mod
+        r.statements.add( CallNative(r.t,handler) )
+        ensure mod.routines_by_name[ r.name ]
+        mod.routines_by_name[ r.name ].add( r )
       endIf
 
+    method register( signature:String, handler:Function(BossValue)->BossValue )
+      register( signature, () with (handler) => handler(Program.arg(0)) )
+
+    method register( signature:String, handler:Function(BossValue,BossValue)->BossValue )
+      register( signature, () with (handler) => handler(Program.arg(0),Program.arg(1)) )
+
+    method register( signature:String, handler:Function(BossValue,BossValue,BossValue)->BossValue )
+      register( signature, () with (handler) => handler(Program.arg(0),Program.arg(1),Program.arg(2)) )
+
+    method register( signature:String, handler:Function(BossValue,BossValue,BossValue,BossValue)->BossValue )
+      register( signature, () with (handler) => handler(Program.arg(0),Program.arg(1),Program.arg(2),Program.arg(3)) )
 
     method resolve
       (forEach in all_modules).resolve

@@ -16,55 +16,57 @@ class ParserCore [abstract]
     ip_must_consume_eols = 3
     ip_consume_eols_and_semicolons = 4
     ip_element = 5
-    ip_procedure_parameters = 6
-    ip_procedure_parameter = 7
-    ip_optional_initial_value = 8
-    ip_procedure_return_type = 9
-    ip_type = 10
-    ip_optional_type = 11
-    ip_procedure_body = 12
-    ip_identifier = 13
-    ip_string = 14
-    ip_class = 15
-    ip_constructor_properties = 16
-    ip_base_types = 17
-    ip_class_attributes = 18
-    ip_class_sections = 19
-    ip_class_section = 20
-    ip_if_statement = 21
-    ip_if_statement_multi_line_elseIf_else = 22
-    ip_if_statement_single_line_elseIf_else = 23
-    ip_method = 24
-    ip_signature = 25
-    ip_method_attributes = 26
-    ip_native_method = 27
-    ip_native_parameter_types = 28
-    ip_native_parameter_type = 29
-    ip_multi_line_statements = 30
-    ip_single_line_statements = 31
-    ip_control_structure = 32
-    ip_args = 33
-    ip_arg = 34
-    ip_statement = 35
-    ip_local_declarations = 36
-    ip_local_declaration = 37
-    ip_while_loop = 38
-    ip_module_path = 39
-    ip_uses_attributes = 40
-    ip_uses_attribute = 41
-    ip_access_args = 42
-    ip_optional_expression = 43
-    ip_expression = 44
-    ip_comparison = 45
-    ip_comparison__inner = 46
-    ip_add_subtract = 47
-    ip_add_subtract__inner = 48
-    ip_pre_unary = 49
-    ip_access = 50
-    ip_access__inner = 51
-    ip_access_inner = 52
-    ip_term = 53
-    ip_additional_node_types = 54
+    ip_routine_attributes = 6
+    ip_procedure_parameters = 7
+    ip_procedure_parameter = 8
+    ip_optional_initial_value = 9
+    ip_procedure_return_type = 10
+    ip_type = 11
+    ip_optional_type = 12
+    ip_procedure_body = 13
+    ip_identifier = 14
+    ip_string = 15
+    ip_class = 16
+    ip_constructor_properties = 17
+    ip_base_types = 18
+    ip_class_attributes = 19
+    ip_class_sections = 20
+    ip_class_section = 21
+    ip_if_statement = 22
+    ip_if_statement_multi_line_elseIf_else = 23
+    ip_if_statement_single_line_elseIf_else = 24
+    ip_method = 25
+    ip_signature = 26
+    ip_method_attributes = 27
+    ip_native_method = 28
+    ip_native_routine = 29
+    ip_native_parameter_types = 30
+    ip_native_parameter_type = 31
+    ip_multi_line_statements = 32
+    ip_single_line_statements = 33
+    ip_control_structure = 34
+    ip_args = 35
+    ip_arg = 36
+    ip_statement = 37
+    ip_local_declarations = 38
+    ip_local_declaration = 39
+    ip_while_loop = 40
+    ip_module_path = 41
+    ip_uses_attributes = 42
+    ip_uses_attribute = 43
+    ip_access_args = 44
+    ip_optional_expression = 45
+    ip_expression = 46
+    ip_comparison = 47
+    ip_comparison__inner = 48
+    ip_add_subtract = 49
+    ip_add_subtract__inner = 50
+    ip_pre_unary = 51
+    ip_access = 52
+    ip_access__inner = 53
+    ip_access_inner = 54
+    ip_term = 55
+    ip_additional_node_types = 56
 
   PROPERTIES
     _tokens          : Token[]
@@ -358,7 +360,8 @@ class ParserCore [abstract]
                 _pop_frame
                 _execute(ip_procedure_return_type)
                 _pop_frame
-                _push( null, 0 )
+                _execute(ip_routine_attributes)
+                _pop_frame
                 if (_consume(TokenType.SYMBOL_COLON))
                   _execute(ip_single_line_statements)
                   _pop_frame
@@ -386,6 +389,9 @@ class ParserCore [abstract]
             endIf
             _execute(ip_procedure_body)
             _pop_frame
+            return
+          case ip_routine_attributes
+            _push( null, 0 )
             return
           case ip_procedure_parameters
             _begin_list
@@ -712,6 +718,19 @@ class ParserCore [abstract]
             _begin_list
             _push_list( Statements(_list_t) )
             _push( MethodDef(_cur_t,_string_arg(-5),_node_arg(-4),_node_arg(-3),_node_arg(-2),_node_arg(-1)), 5 )
+            return
+          case ip_native_routine
+            _execute(ip_identifier)
+            _pop_frame
+            _execute(ip_native_parameter_types)
+            _pop_frame
+            _execute(ip_procedure_return_type)
+            _pop_frame
+            _execute(ip_routine_attributes)
+            _pop_frame
+            _begin_list
+            _push_list( Statements(_list_t) )
+            _push( RoutineDef(_cur_t,_string_arg(-5),_node_arg(-4),_node_arg(-3),_node_arg(-2),_node_arg(-1)), 5 )
             return
           case ip_native_parameter_types
             _begin_list
