@@ -106,5 +106,13 @@ class Boss
           if (not random) return Program.null_reference_error
           return random.int32( low->Int32, high->Int32 )
         endFunction )
+      Program.register( "Random.logical->Logical",
+        function( context:BossValue )->BossValue
+          local obj = context->BossObject
+          if (not obj) return Program.null_reference_error
+          local random = obj.properties[0].object->(as Random)
+          if (not random) return Program.null_reference_error
+          return random.logical
+        endFunction )
 endClass
 
