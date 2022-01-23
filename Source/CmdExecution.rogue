@@ -133,7 +133,7 @@ augment
       return true
 
     method CreateObject.execute->Logical
-      local obj = BossObject( of_type )
+      local obj = of_type.create_object
       if (m_init)
         if (not Program.execute( obj, m_init, args )) return false
       endIf

@@ -28,9 +28,11 @@ class Type
     augments       : CmdList
 
     properties           = StringTable<<Property>>()
+
     methods              = Method[]
     methods_by_name      = StringTable<<Method[]>>()
     methods_by_signature = StringTable<<Method>>()
+    m_init_object        : Method
 
     singleton_object     : BossObject
 
@@ -54,6 +56,13 @@ class Type
         endForEach
       endIf
 
+    method create_object->BossObject
+      local obj = BossObject( this )
+      if (m_init_object)
+        if (not Program.execute(obj, m_init_object, null)) return null
+      endIf
+      return obj
+
     method description->String
       return name
 
@@ -71,7 +80,7 @@ class Type
     method singleton_object->BossObject
       local obj = @singleton_object
       if (obj) return obj
-      obj = BossObject( this )
+      obj = create_object
       local m_init = methods_by_signature[ "init()" ]
       if (m_init)
         if (not Program.execute(obj, m_init, null)) return null

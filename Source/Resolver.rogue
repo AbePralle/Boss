@@ -18,6 +18,22 @@ class Resolver : Visitor
       this_type.organize
       visit( this_type, forEach in this_type.methods )
 
+      if (this_type.properties.count)
+        local m_init_object = this_type.methods_by_signature[ "init_object()" ]
+        if (not m_init_object)
+          m_init_object = Method( this_type.t, this_type, "init_object" )
+          forEach (p in this_type.properties step -1)
+            if (p.initial_value)
+              m_init_object.statements.insert( Assign(p.t,Access(p.t,p.name),p.initial_value) )
+            endIf
+          endForEach
+
+          this_type.add( m_init_object )
+          visit( this_type, m_init_object )
+          this_type.m_init_object = m_init_object
+        endIf
+      endIf
+
     method visit( this_type, this_procedure )
       this_procedure.organize
       if (not this_procedure.is_resolved)

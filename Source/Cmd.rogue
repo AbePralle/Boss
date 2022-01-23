@@ -200,7 +200,7 @@ class Access : Cmd
     args : Cmd
 
   METHODS
-    method init( t, name, args )
+    method init( t, name, args=null )
 
     method init( existing:Access )
       prior.init( existing )
@@ -799,13 +799,6 @@ class AddValue : Binary
   METHODS
     method description->String
       return "AddValue($,$)" (%left,%right)
-
-endClass
-
-class DescriptionValue : Unary
-  METHODS
-    method description->String
-      return "DescriptionValue($)" (%operand)
 
 endClass
 
@@ -1815,5 +1808,48 @@ class GetSingleton : Cmd
 
     method type->Type
       return @type
+
+endClass
+
+class PropertyDeclarations : Cmd
+  PROPERTIES
+    declarations : Cmd
+    type_ref     : Cmd
+
+  METHODS
+    method init( t, declarations, type_ref )
+
+    method init( existing:PropertyDeclarations )
+      prior.init( existing )
+      if (existing.declarations) declarations = existing.declarations.cloned
+      if (existing.type_ref) type_ref = existing.type_ref.cloned
+
+    method description->String
+      return "PropertyDeclarations($,$)" (%declarations,%type_ref)
+
+endClass
+
+class PropertyDef : Cmd
+  PROPERTIES
+    name          : String
+    initial_value : Cmd
+    type_ref      : Cmd
+
+  METHODS
+    method init( t, name, initial_value, type_ref )
+
+    method init( existing:PropertyDef )
+      prior.init( existing )
+      name = existing.name
+      if (existing.initial_value) initial_value = existing.initial_value.cloned
+      if (existing.type_ref) type_ref = existing.type_ref.cloned
+
+    method description->String
+      return "PropertyDef($,$,$)" (%name,%initial_value,%type_ref)
+
+    method to->Property( type_context:Type )
+      local type : Type
+      if (type_ref) type = type_ref->Type
+      return Property( t, type_context, name, initial_value, type )
 
 endClass

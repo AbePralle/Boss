@@ -118,6 +118,29 @@ class Organizer : Visitor
         cmd.signature = builder->String
       endUse
 
+    method on( cmd:PropertyDeclarations )->Cmd
+      if (cmd.type_ref)
+        local var_type = cmd.type_ref->Type
+        forEach (decl in cmd.declarations)
+          local p = decl->(as PropertyDef)->Property(this_type)
+          p.type = var_type
+          collect( decl.t, p )
+        endForEach
+      else
+        forEach (p in cmd.declarations)
+          collect( p.t, p->(as PropertyDef)->Property(this_type) )
+        endForEach
+      endIf
+      return null
+
+    method collect( t:Token, p:Property )
+      assert this_type
+      visit( p )
+      if (this_type.properties.contains(p.name))
+        throw t.error( ''Type $ already defines a property named "$".''(this_type,p.name) )
+      endIf
+      this_type.properties[ p.name ] = p
+
     method on_visit( cmd:Routine )
       if (cmd.is_organized) return
       cmd.is_organized = true

@@ -33,7 +33,7 @@ augment Cmd
     method require_type->Type
       local result = type
       if (result) return result
-      throw t.error( "Value expected." )
+      throw t.error( "Value expected ($)."(this) )
 
     method require_value->Cmd
       require_type
@@ -130,16 +130,7 @@ augment
     method CreateObject.type->Type
       return of_type
 
-    method DescriptionInt32.type->Type
-      return Program.type_String
-
-    method DescriptionLogical.type->Type
-      return Program.type_String
-
-    method DescriptionObject.type->Type
-      return Program.type_String
-
-    method DescriptionReal64.type->Type
+    method Description.type->Type
       return Program.type_String
 
     method GetLocal.type->Type

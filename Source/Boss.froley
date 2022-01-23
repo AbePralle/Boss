@@ -528,13 +528,14 @@ parser
       global_properties
     endWhile
     return
+}#
   elseOn "PROPERTIES"
     consume_eols
     while (not nextHasAttribute(structural))
       properties
+      consume_eols
     endWhile
     return
-}#
   endOn
   if (not nextIs("endClass")) syntaxError
 
@@ -745,11 +746,27 @@ parser
 - global_properties
   consume_eols
   onPeek IDENTIFIER, local_declarations, mustConsume(EOL) -> GlobalProperties( declarations, type )
+}#
 
 - properties
-  consume_eols
-  onPeek IDENTIFIER, local_declarations, mustConsume(EOL) -> Properties( declarations, type )
-}#
+  beginList
+    consume_eols
+    property_declaration
+    while (consume(','))
+      consume_eols
+      property_declaration
+    endWhile
+  createList
+  optional_type
+  produce PropertyDeclarations( declarations, type_ref )
+
+- property_declaration
+  on IDENTIFIER
+    optional_initial_value
+    createNull
+    produce PropertyDef( name=content, initial_value, type_ref )
+  endOn
+  mustConsume IDENTIFIER  # throws error
 
 - multi_line_statements
   consume_eols_and_semicolons
