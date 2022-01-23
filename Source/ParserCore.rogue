@@ -1322,6 +1322,7 @@ class ParserCore [abstract]
             _push( Description(_cur_t,_node_arg(-1)), 1 )
             _push( GetLocal(_cur_t,_node_arg(-1)->(as Local)), 1 )
             _push( GetProperty(_cur_t,_node_arg(-2),_node_arg(-1)->(as Property)), 2 )
+            _push( GetSingleton(_cur_t,_node_arg(-1)->(as Type)), 1 )
             _push( GetThisProperty(_cur_t,_node_arg(-1)->(as Property)), 1 )
             _push( IncrementLocal(_cur_t,_node_arg(-1)->(as Local)), 1 )
             _push( IncrementLocalInt32(_cur_t,_node_arg(-1)->(as Local)), 1 )

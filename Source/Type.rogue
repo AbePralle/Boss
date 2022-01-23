@@ -32,6 +32,8 @@ class Type
     methods_by_name      = StringTable<<Method[]>>()
     methods_by_signature = StringTable<<Method>>()
 
+    singleton_object     : BossObject
+
   METHODS
     method init( t, name, is_primitive:Logical )
       this.is_primitive = is_primitive
@@ -65,6 +67,17 @@ class Type
       local result = properties[name]
       if (result) return result
       throw t.error( "No such property $.$"(this.name,name) )
+
+    method singleton_object->BossObject
+      local obj = @singleton_object
+      if (obj) return obj
+      obj = BossObject( this )
+      local m_init = methods_by_signature[ "init()" ]
+      if (m_init)
+        if (not Program.execute(obj, m_init, null)) return null
+      endIf
+      @singleton_object = obj
+      return obj
 endClass
 
 class TypePrimitive : Type

@@ -1041,6 +1041,7 @@ parser
   create Description(operand):Unary
   create GetLocal(info:Local)
   create GetProperty(context,info:Property)
+  create GetSingleton(type:Type)
   create GetThisProperty(info:Property)
   create IncrementLocal(info:Local)
   create IncrementLocalInt32(info:Local)

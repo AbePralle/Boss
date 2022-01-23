@@ -1094,7 +1094,21 @@ class ClassDef : Cmd
 
     method to->Type
       local type = Type( t, name, &!is_primitive )
+      return this->Type( type )
+
+    method to->Type( type:Type )
       type.definition = this
+      if (attribute_names)
+        forEach (attribute in attribute_names)
+          local name = attribute->String
+          which (name)
+            case "singleton"
+              type.is_singleton = true
+            others
+              throw attribute.t.error( "Unrecognized attribute [$]."(name) )
+          endWhich
+        endForEach
+      endIf
       return type
 
 endClass
@@ -1782,5 +1796,24 @@ class CallGlobalMethodWithContext : CallProcedure
 
     method description->String
       return "CallGlobalMethodWithContext($,$,$)" (%context,%procedure,%args)
+
+endClass
+
+class GetSingleton : Cmd
+  PROPERTIES
+    type : Type
+
+  METHODS
+    method init( t, type )
+
+    method init( existing:GetSingleton )
+      prior.init( existing )
+      type = existing.type
+
+    method description->String
+      return "GetSingleton($)" (%type)
+
+    method type->Type
+      return @type
 
 endClass

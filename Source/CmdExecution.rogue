@@ -134,7 +134,9 @@ augment
 
     method CreateObject.execute->Logical
       local obj = BossObject( of_type )
-      if (m_init) Program.execute( obj, m_init, args )
+      if (m_init)
+        if (not Program.execute( obj, m_init, args )) return false
+      endIf
       Program.execution_result = obj
       return true
 
@@ -150,6 +152,12 @@ augment
     method GetProperty.execute->Logical
       if (not context.execute) return false
       Program.execution_result = Program.execution_result.object->(as BossObject).properties[index]
+      return true
+
+    method GetSingleton.execute->Logical
+      local obj = type.singleton_object
+      if (not obj) return false
+      Program.execution_result = obj
       return true
 
     method GetThisProperty.execute->Logical

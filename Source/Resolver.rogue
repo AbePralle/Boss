@@ -246,7 +246,8 @@ class Resolver : Visitor
       else
         local type = this_module.find_type( name, &extended_search )
         if (type and not args)
-          return TypeContext(t,type)
+          if (type.is_singleton) return GetSingleton(t,type)
+          else                   return TypeContext(t,type)
         endIf
 
         type_context = this_type
@@ -297,6 +298,7 @@ class Resolver : Visitor
         which (Candidates.count)
           case 0
             mesg = "No such "
+            if (is_global)     mesg += "global "
             if (context)       mesg += "method "
             elseIf (this_type) mesg += "method or routine "
             else               mesg += "routine "
@@ -317,6 +319,7 @@ class Resolver : Visitor
 
           others
             mesg = "Ambiguous call to "
+            if (is_global)     mesg += "global "
             if (context)       mesg += context.type + "."
             elseIf (this_type) mesg += this_type + "."
 
@@ -329,15 +332,16 @@ class Resolver : Visitor
         endWhich
 
       else
+        local g = which{ is_global:"global " || "" }
         if (context)
-          if (args) mesg = "No such method '$' exists in type '$'." (sig,context.type)
-          else      mesg = "No such property or method '$' exists in type '$'." (sig,context.type)
+          if (args) mesg = "No such $method '$' exists in type '$'." (g,sig,context.type)
+          else      mesg = "No such $property or method '$' exists in type '$'." (g,sig,context.type)
         elseIf (this_type)
-          if (args) mesg = "No such method or routine '$'."(sig)
-          else      mesg = "No such variable, method, or routine '$'."(sig)
+          if (args) mesg = "No such $method or routine '$'."(g,sig)
+          else      mesg = "No such $variable, method, or routine '$'."(g,sig)
         else
-          if (args) mesg = "No such routine '$'."(sig)
-          else      mesg = "No such variable or routine '$'."(sig)
+          if (args) mesg = "No such $routine '$'."(g,sig)
+          else      mesg = "No such $variable or routine '$'."(g,sig)
         endIf
       endIf
 

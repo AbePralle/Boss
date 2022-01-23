@@ -74,6 +74,8 @@ class Boss
 
     method register_random
       #Program.register( "Random:create()->Random", () => Random() )
-      Program.register( "Random:int32->Int32", () => Random.int32 )
+      Program.register( "Random.int32->Int32",        () => Random.int32 )
+      Program.register( "Random.int32(Int32)->Int32", (context,limit) => Random.int32(limit) )
+      Program.register( "Random.int32(Int32,Int32)->Int32", (context,low,high) => Random.int32(low,high) )
 endClass
 

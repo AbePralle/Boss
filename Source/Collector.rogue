@@ -15,7 +15,7 @@ class Collector : Visitor
         if (not existing.definition)
           # Type was created via a register() call
           existing.t = cmd.t
-          existing.definition = cmd
+          cmd->Type( existing )
           return null
         endIf
 
