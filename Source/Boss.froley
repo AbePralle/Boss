@@ -183,10 +183,11 @@ scanner
     case "GLOBAL"
       # "GLOBAL PROPERTIES" / "GLOBAL METHODS"
       if (consume [ ]+)
+        collect ' '
         if (scan([_a-zA-Z][_a-zA-Z0-9]*))
           match buffer
-            case "PROPERTIES" -> KEYWORD_GLOBAL_PROPERTIES
-            case "METHODS"    -> KEYWORD_GLOBAL_METHODS
+            case "GLOBAL PROPERTIES" -> KEYWORD_GLOBAL_PROPERTIES
+            case "GLOBAL METHODS"    -> KEYWORD_GLOBAL_METHODS
             others
               syntaxError "Expected 'GLOBAL PROPERTIES' or 'GLOBAL METHODS'."
           endMatch
@@ -401,7 +402,7 @@ parser
     identifier
     procedure_parameters
     procedure_return_type
-    routine_attributes
+    attribute_names
     if (consume(':'))
       single_line_statements
     else
@@ -418,9 +419,6 @@ parser
   endIf
 
   procedure_body
-
-- routine_attributes
-  createNull
 
 - procedure_parameters
   beginList
@@ -446,7 +444,7 @@ parser
   type
 
 - type
-  on IDENTIFIER -> TypeReference(name=content)
+  on IDENTIFIER -> TypeRef(name=content)
   syntaxError "Identifier expected."
 
 - optional_type
@@ -469,7 +467,7 @@ parser
   type
   constructor_properties
   base_types
-  class_attributes
+  attribute_names
   class_sections
   mustConsume "endClass"
   produce ClassDef( name, constructor_properties, base_types, attribute_names, sections )
@@ -488,12 +486,12 @@ parser
     endWhile
   produceList
 
-- class_attributes
+- attribute_names
   beginList
     if (not consume('[')) produceList
     if (consume(']')) produceList
     while (hasAnother and not nextIs(']'))
-      type
+      identifier
       if (consume(',')) consume_eols
       else              consume_eols; consume(',')
     endWhile
@@ -516,18 +514,18 @@ parser
       consume_eols
     endWhile
     return
-#{
-  elseOn "GLOBAL PROPERTIES"
-    consume_eols
-    while (not nextHasAttribute(structural))
-      global_properties
-    endWhile
-    return
   elseOn "GLOBAL METHODS"
     consume_eols
     while (nextIs("method"))
       global_method
       consume_eols
+    endWhile
+    return
+#{
+  elseOn "GLOBAL PROPERTIES"
+    consume_eols
+    while (not nextHasAttribute(structural))
+      global_properties
     endWhile
     return
   elseOn "PROPERTIES"
@@ -599,10 +597,6 @@ parser
   else
     single_line_statements
   endIf
-
-- global_method
-  on "method", name, procedure_parameters, procedure_return_type, procedure_body ->
-    GlobalMethod(name,parameters,return_type_name:ReturnTypeReference,statements):ProcedureDef
 }#
 
 - if_statement
@@ -689,20 +683,30 @@ parser
   on "method" signature procedure_body ->
     MethodDef(name:String,parameters,return_type_ref,attribute_names,statements):ProcedureDef
 
+- global_method
+  on "method" signature procedure_body ->
+    GlobalMethodDef(name:String,parameters,return_type_ref,attribute_names,statements):MethodDef
+
 - signature
   identifier
   procedure_parameters
   procedure_return_type
-  method_attributes
+  attribute_names
 
-- method_attributes
-  produceNull
+- native_global_method
+  identifier
+  native_parameter_types
+  procedure_return_type
+  attribute_names
+  beginList
+  createList Statements
+  produce GlobalMethodDef(name:String,parameters,return_type_ref,attribute_names,statements):MethodDef
 
 - native_method
   identifier
   native_parameter_types
   procedure_return_type
-  method_attributes
+  attribute_names
   beginList
   createList Statements
   produce MethodDef(name:String,parameters,return_type_ref,attribute_names,statements):ProcedureDef
@@ -711,7 +715,7 @@ parser
   identifier
   native_parameter_types
   procedure_return_type
-  routine_attributes
+  attribute_names
   beginList
   createList Statements
   produce RoutineDef(name:String,parameters,return_type_ref,attribute_names,statements):ProcedureDef
@@ -1020,6 +1024,8 @@ parser
   create CastToString(operand):Unary
   create CastToValue(operand):Unary
   create CallMethod(context,procedure:Procedure,args):CallProcedure
+  create CallGlobalMethod(procedure:Procedure,args):CallProcedure
+  create CallGlobalMethodWithContext(context,procedure:Procedure,args):CallProcedure
   create CallNative
   create CallThisMethod(procedure:Procedure,args):CallProcedure
   create CallProcedure(args)
@@ -1059,7 +1065,8 @@ parser
   create SubtractReal64(left,right):Binary
   create SubtractString(left,right):Binary
   create SubtractValue(left,right):Binary
-  create TypeReference(name:String)
+  create TypeContext(type:Type)
+  create TypeRef(name:String)
 
 --------------------------------------------------------------------------------
 nativeTypes

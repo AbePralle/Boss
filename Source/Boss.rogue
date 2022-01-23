@@ -43,10 +43,11 @@ class Boss
         System.exit 0
       endIf
 
+      register_native_code
+
       parse_files
 
     method parse_files
-      Program.register( "random_logical()->Int32", () => Random.logical )
       Program.include( forEach in command//args )
       Program.launch
 
@@ -67,4 +68,12 @@ class Boss
                |OPTIONS
                |  --help, -h, -?
                |    Show this help text.
+
+    method register_native_code
+      register_random
+
+    method register_random
+      #Program.register( "Random:create()->Random", () => Random() )
+      Program.register( "Random:int32->Int32", () => Random.int32 )
 endClass
+

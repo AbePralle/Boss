@@ -16,7 +16,8 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
     TYPE_LAST_NUMBER  = TYPE_REAL64
 
     TYPE_STRING
-    TYPE_OBJECT
+    TYPE_BOSS_OBJECT
+    TYPE_NATIVE_OBJECT
     TYPE_LIST
     TYPE_TABLE
     TYPE_LAST_OBJECT  = TYPE_TABLE
@@ -31,19 +32,27 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
     # case TYPE_INT32
     # case TYPE_REAL64
     # case TYPE_STRING
-    # case TYPE_OBJECT
+    # case TYPE_BOSS_OBJECT
+    # case TYPE_NATIVE_OBJECT
     # case TYPE_LIST
     # case TYPE_TABLE
     # case TYPE_XY
     # case TYPE_BOX
 
-  ENUMERATE
-    FORMATTED = 1
-    OMIT_COMMAS = 2
+    #ENUMERATE
+    #FORMATTED = 1
+    #OMIT_COMMAS = 2
 
   GLOBAL METHODS
     method create->BossValue
       return BossValue(TYPE_UNDEFINED,0,0,0,0,null)
+
+    method create( object:BossObject )->BossValue
+      if (object)
+        return BossValue(TYPE_BOSS_OBJECT,0,0,0,0,object)
+      else
+        return BossValue(TYPE_NULL,0,0,0,0,null)
+      endIf
 
     method create( value:Character )->BossValue
       return BossValue(TYPE_CHARACTER,value,0,0,0,null)
@@ -63,8 +72,13 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
 
     method create( object:Object )->BossValue
       if (object)
-        if (object instanceOf String) return BossValue( object->(as String) )
-        return BossValue(TYPE_OBJECT,0,0,0,0,object)
+        block obj = object->(as String)
+          if (obj) return BossValue( obj )
+        endBlock
+        block obj = object->(as BossObject)
+          if (obj) return BossValue( TYPE_BOSS_OBJECT, 0, 0, 0, 0, obj )
+        endBlock
+        return BossValue(TYPE_NATIVE_OBJECT,0,0,0,0,object)
       else
         return BossValue(TYPE_NULL,0,0,0,0,null)
       endIf
@@ -173,7 +187,7 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
         case TYPE_STRING
           return BossValue( this->String + other->String )
 
-        case TYPE_OBJECT
+        case TYPE_BOSS_OBJECT, TYPE_NATIVE_OBJECT
           return BossValue()
 
         case TYPE_LIST
@@ -218,9 +232,15 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
 
       return BossValue()
 
+    method to->BossObject
+      return object->(as BossObject)
+
     method to->Int32
       if (type > TYPE_LAST_NUMBER) return 0
       return x->Int32
+
+    method to->Object
+      return object
 
     method to->XY
       return XY(x,y)

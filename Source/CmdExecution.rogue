@@ -57,14 +57,17 @@ augment
       Program.execution_result = a + Program.execution_result
       return true
 
-    method CallNative.execute->Logical
-      Program.execution_result = handler()
-      return Program.execution_status == Program.EXE_CONTINUE
+    method CallGlobalMethod.execute->Logical
+      return Program.execute( procedure, args )
 
     method CallMethod.execute->Logical
       assert context
       if (not context.execute) return false
       return Program.execute( Program.execution_result.object->(as BossObject), procedure, args )
+
+    method CallNative.execute->Logical
+      Program.execution_result = handler()
+      return Program.execution_status == Program.EXE_CONTINUE
 
     method CallThisMethod.execute->Logical
       assert Program.stack[Program.fp].object

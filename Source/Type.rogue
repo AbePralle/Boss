@@ -4,6 +4,7 @@ class Type
   BOSS_ATTRIBUTE( is_organized, 1 )
   BOSS_ATTRIBUTE( is_resolved,  2 )
   BOSS_ATTRIBUTE( is_primitive, 4 )
+  BOSS_ATTRIBUTE( is_singleton, 8 )
 
   GLOBAL METHODS
     method create( t:Token, name:String )->Type
@@ -43,9 +44,13 @@ class Type
       ensure methods_by_name[ m.name ]
       methods_by_name[ m.name ].add( m )
 
-    method collect_methods( m_name:String, list:Procedure[] )
+    method collect_methods( m_name:String, list:Procedure[], &require_global )
       local matching = methods_by_name[ m_name ]
-      if (matching) list.add( forEach in matching )
+      if (matching)
+        forEach (m in matching)
+          if (not require_global or m.is_global) list.add( m )
+        endForEach
+      endIf
 
     method description->String
       return name

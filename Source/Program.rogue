@@ -103,10 +103,10 @@ class Program [singleton]
         return true
       endTemporarily
 
-    method find_module( name:String )->Module
+    method get_module( name:String )->Module
       return modules_by_name[ name ]
 
-    method find_module( t:Token, name:String )->Module
+    method get_module( t:Token, name:String )->Module
       if (name is null)
         return default_module
       elseIf (modules_by_name.contains(name))
@@ -117,18 +117,13 @@ class Program [singleton]
 
     method find_type( name:String )->Type
       if (name.contains("::"))
-        local m = find_module( name.before_first("::") )
+        local m = get_module( name.before_first("::") )
         return m.find_type( name.after_first("::") )
       else
         local type = default_module.find_type( name )
         if (type) return type
         return global_module.find_type( name )
       endIf
-
-    method get_module( name:String )->Module
-      local result = find_module( name )
-      if (result) return result
-      return Module( t, name )
 
     method import( t:Token, filepath:String )->Logical
       try
@@ -223,7 +218,13 @@ class Program [singleton]
       signature .= from_first('(')
       if (name.contains(':'))
         # Global method
-        throw Error( "TODO: allow registration of global methods" )
+        local type = mod.type( name.before_first(':') )
+        name .= after_first(':')
+        local parser = Parser( "[$.$]"(type,name),"$$" (name,signature) )
+        local m_def = parser.parse( Parser.ip_native_global_method )->(as GlobalMethodDef)
+        local m = m_def->Method( type )
+        m.statements.add( CallNative(m.t,handler) )
+        type.augments.add( m )
       elseIf (name.contains('.'))
         # Method
         local type = mod.type( name.before_first('.') )
@@ -268,6 +269,14 @@ class Program [singleton]
         @current_module = modules_by_name[ name ]
       else
         @current_module = Module( t, name )
+      endIf
+
+    method type( name:String )->Type
+      if (name.contains("::"))
+        local m = get_module( name.before_first("::") )
+        return m.type( name.after_first("::") )
+      else
+        return default_module.type( name )
       endIf
 
 endClass

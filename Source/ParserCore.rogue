@@ -16,28 +16,28 @@ class ParserCore [abstract]
     ip_must_consume_eols = 3
     ip_consume_eols_and_semicolons = 4
     ip_element = 5
-    ip_routine_attributes = 6
-    ip_procedure_parameters = 7
-    ip_procedure_parameter = 8
-    ip_optional_initial_value = 9
-    ip_procedure_return_type = 10
-    ip_type = 11
-    ip_optional_type = 12
-    ip_procedure_body = 13
-    ip_identifier = 14
-    ip_string = 15
-    ip_class = 16
-    ip_constructor_properties = 17
-    ip_base_types = 18
-    ip_class_attributes = 19
-    ip_class_sections = 20
-    ip_class_section = 21
-    ip_if_statement = 22
-    ip_if_statement_multi_line_elseIf_else = 23
-    ip_if_statement_single_line_elseIf_else = 24
-    ip_method = 25
+    ip_procedure_parameters = 6
+    ip_procedure_parameter = 7
+    ip_optional_initial_value = 8
+    ip_procedure_return_type = 9
+    ip_type = 10
+    ip_optional_type = 11
+    ip_procedure_body = 12
+    ip_identifier = 13
+    ip_string = 14
+    ip_class = 15
+    ip_constructor_properties = 16
+    ip_base_types = 17
+    ip_attribute_names = 18
+    ip_class_sections = 19
+    ip_class_section = 20
+    ip_if_statement = 21
+    ip_if_statement_multi_line_elseIf_else = 22
+    ip_if_statement_single_line_elseIf_else = 23
+    ip_method = 24
+    ip_global_method = 25
     ip_signature = 26
-    ip_method_attributes = 27
+    ip_native_global_method = 27
     ip_native_method = 28
     ip_native_routine = 29
     ip_native_parameter_types = 30
@@ -360,7 +360,7 @@ class ParserCore [abstract]
                 _pop_frame
                 _execute(ip_procedure_return_type)
                 _pop_frame
-                _execute(ip_routine_attributes)
+                _execute(ip_attribute_names)
                 _pop_frame
                 if (_consume(TokenType.SYMBOL_COLON))
                   _execute(ip_single_line_statements)
@@ -389,9 +389,6 @@ class ParserCore [abstract]
             endIf
             _execute(ip_procedure_body)
             _pop_frame
-            return
-          case ip_routine_attributes
-            _push( null, 0 )
             return
           case ip_procedure_parameters
             _begin_list
@@ -448,7 +445,7 @@ class ParserCore [abstract]
           case ip_type
             if (_next_t.type == TokenType.IDENTIFIER)
               temporarily _cur_t = _on_t
-                _push( TypeReference(_cur_t,_cur_t.content), 0 )
+                _push( TypeRef(_cur_t,_cur_t.content), 0 )
                 return
               endTemporarily
             endIf
@@ -491,7 +488,7 @@ class ParserCore [abstract]
             _pop_frame
             _execute(ip_base_types)
             _pop_frame
-            _execute(ip_class_attributes)
+            _execute(ip_attribute_names)
             _pop_frame
             _execute(ip_class_sections)
             _pop_frame
@@ -522,7 +519,7 @@ class ParserCore [abstract]
             endWhile
             _push_list( CmdList(_list_t) )
             return
-          case ip_class_attributes
+          case ip_attribute_names
             _begin_list
             if ((not _consume(TokenType.SYMBOL_OPEN_BRACKET)))
               _push_list( CmdList(_list_t) )
@@ -533,7 +530,7 @@ class ParserCore [abstract]
               return
             endIf
             while (((_position < _limit) and (not (_next_t.type == TokenType.SYMBOL_CLOSE_BRACKET))))
-              _execute(ip_type)
+              _execute(ip_identifier)
               _pop_frame
               if (_consume(TokenType.SYMBOL_COMMA))
                 _execute(ip_consume_eols)
@@ -566,6 +563,18 @@ class ParserCore [abstract]
                 _pop_frame
                 while ((_next_t.type == TokenType.KEYWORD_METHOD))
                   _execute(ip_method)
+                  _pop_frame
+                  _execute(ip_consume_eols)
+                  _pop_frame
+                endWhile
+                return
+              endTemporarily
+            elseIf (_next_t.type == TokenType.KEYWORD_GLOBAL_METHODS)
+              temporarily _cur_t = _on_t
+                _execute(ip_consume_eols)
+                _pop_frame
+                while ((_next_t.type == TokenType.KEYWORD_METHOD))
+                  _execute(ip_global_method)
                   _pop_frame
                   _execute(ip_consume_eols)
                   _pop_frame
@@ -693,6 +702,18 @@ class ParserCore [abstract]
               endTemporarily
             endIf
             return
+          case ip_global_method
+            if (_next_t.type == TokenType.KEYWORD_METHOD)
+              temporarily _cur_t = _on_t
+                _execute(ip_signature)
+                _pop_frame
+                _execute(ip_procedure_body)
+                _pop_frame
+                _push( GlobalMethodDef(_cur_t,_string_arg(-5),_node_arg(-4),_node_arg(-3),_node_arg(-2),_node_arg(-1)), 5 )
+                return
+              endTemporarily
+            endIf
+            return
           case ip_signature
             _execute(ip_identifier)
             _pop_frame
@@ -700,11 +721,21 @@ class ParserCore [abstract]
             _pop_frame
             _execute(ip_procedure_return_type)
             _pop_frame
-            _execute(ip_method_attributes)
+            _execute(ip_attribute_names)
             _pop_frame
             return
-          case ip_method_attributes
-            _push( null, 0 )
+          case ip_native_global_method
+            _execute(ip_identifier)
+            _pop_frame
+            _execute(ip_native_parameter_types)
+            _pop_frame
+            _execute(ip_procedure_return_type)
+            _pop_frame
+            _execute(ip_attribute_names)
+            _pop_frame
+            _begin_list
+            _push_list( Statements(_list_t) )
+            _push( GlobalMethodDef(_cur_t,_string_arg(-5),_node_arg(-4),_node_arg(-3),_node_arg(-2),_node_arg(-1)), 5 )
             return
           case ip_native_method
             _execute(ip_identifier)
@@ -713,7 +744,7 @@ class ParserCore [abstract]
             _pop_frame
             _execute(ip_procedure_return_type)
             _pop_frame
-            _execute(ip_method_attributes)
+            _execute(ip_attribute_names)
             _pop_frame
             _begin_list
             _push_list( Statements(_list_t) )
@@ -726,7 +757,7 @@ class ParserCore [abstract]
             _pop_frame
             _execute(ip_procedure_return_type)
             _pop_frame
-            _execute(ip_routine_attributes)
+            _execute(ip_attribute_names)
             _pop_frame
             _begin_list
             _push_list( Statements(_list_t) )
@@ -1274,6 +1305,8 @@ class ParserCore [abstract]
             _push( CastToString(_cur_t,_node_arg(-1)), 1 )
             _push( CastToValue(_cur_t,_node_arg(-1)), 1 )
             _push( CallMethod(_cur_t,_node_arg(-3),_node_arg(-2)->(as Procedure),_node_arg(-1)), 3 )
+            _push( CallGlobalMethod(_cur_t,_node_arg(-2)->(as Procedure),_node_arg(-1)), 2 )
+            _push( CallGlobalMethodWithContext(_cur_t,_node_arg(-3),_node_arg(-2)->(as Procedure),_node_arg(-1)), 3 )
             _push( CallNative(_cur_t), 0 )
             _push( CallThisMethod(_cur_t,_node_arg(-2)->(as Procedure),_node_arg(-1)), 2 )
             _push( CallProcedure(_cur_t,_node_arg(-1)), 1 )
@@ -1313,7 +1346,8 @@ class ParserCore [abstract]
             _push( SubtractReal64(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( SubtractString(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( SubtractValue(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
-            _push( TypeReference(_cur_t,_string_arg(-1)), 1 )
+            _push( TypeContext(_cur_t,_node_arg(-1)->(as Type)), 1 )
+            _push( TypeRef(_cur_t,_string_arg(-1)), 1 )
             return
           others
             return

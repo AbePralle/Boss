@@ -28,8 +28,7 @@ class Collector : Visitor
         throw cmd.t.error( "Class $ is already defined."(qualified_name) )
       endIf
 
-      local type = Type( cmd.t, cmd.name, &!is_primitive )
-      type.definition = cmd
+      cmd->Type  # The new Type links itself up
       return null
 
     method on( cmd:DefineModule )->Cmd
@@ -64,7 +63,7 @@ class Collector : Visitor
           builder.print segment->String
         endForEach
         local filepath = builder->String
-        local m = Program.find_module( cmd.t, cmd.path.last->String )
+        local m = Program.get_module( cmd.t, cmd.path.last->String )
         Program.current_module.uses_module( m, &is_exported=cmd.is_exported )
         Program.include( filepath, m )
       endUse

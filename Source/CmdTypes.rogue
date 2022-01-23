@@ -27,6 +27,8 @@ augment Cmd
     method organize_element
       throw t.error( "[INTERNAL] $.organize_element() is undefined." (type_name) )
       }#
+    method is_type_context->Logical
+      return false
 
     method require_type->Type
       local result = type
@@ -179,7 +181,7 @@ augment
     method Property.type->Type
       return @type
 
-    method TypeReference.to->Type
+    method TypeRef.to->Type
       return Type( t, name )
 
 endAugment

@@ -734,19 +734,19 @@ class DefineModule : Cmd
 
 endClass
 
-class TypeReference : Cmd
+class TypeRef : Cmd
   PROPERTIES
     name : String
 
   METHODS
     method init( t, name )
 
-    method init( existing:TypeReference )
+    method init( existing:TypeRef )
       prior.init( existing )
       name = existing.name
 
     method description->String
-      return "TypeReference($)" (%name)
+      return "TypeRef($)" (%name)
 
     method to->Character
       return Cmd.to_character(name)
@@ -756,20 +756,21 @@ class TypeReference : Cmd
     method to->String: return name
 endClass
 
-#{
-class GlobalMethodDef : ProcedureDef
+class GlobalMethodDef : MethodDef
   METHODS
-    method init( t, type_context_ref, name, parameter_defs:Cmd, return_type_ref, attribute_names, statements )
-
-    method init( existing:GlobalMethodDef )
-      prior.init( existing )
-      if (existing.type_context_ref) type_context_ref = existing.type_context_ref.cloned
-
-    method description->String
-      return "GlobalMethodDef($,$,$,$,$,$)" (%type_context_ref,%name,%parameters,%return_type_ref,%attribute_names,%statements)
-
+    method to->Method( type_context:Type )
+      local m = Method( t, type_context, name, statements )
+      m.parameters.add( (forEach in parameters)->(as LocalDef)->Local )
+      m.is_global = true
+      if (return_type_ref) m.return_type = return_type_ref->Type
+      if (attribute_names)
+        forEach (attribute in attribute_names)
+          # TOOD
+        endForEach
+      endIf
+      type_context.add( m )
+      return m
 endClass
-}#
 
 class CallRoutine : CallProcedure
   METHODS
@@ -1090,6 +1091,11 @@ class ClassDef : Cmd
 
     method description->String
       return "ClassDef($,$,$,$,$)" (%name,%constructor_properties,%base_types,%attribute_names,%sections)
+
+    method to->Type
+      local type = Type( t, name, &!is_primitive )
+      type.definition = this
+      return type
 
 endClass
 
@@ -1720,4 +1726,61 @@ class CallNative : Cmd
 
     method description->String
       return "CallNative"
+endClass
+
+
+class TypeContext : Cmd
+  PROPERTIES
+    type : Type
+
+  METHODS
+    method init( t, type )
+
+    method init( existing:TypeContext )
+      prior.init( existing )
+      type = existing.type
+
+    method description->String
+      return "TypeContext($)" (%type)
+
+    method is_type_context->Logical
+      return true
+
+    method type->Type
+      return @type
+
+endClass
+
+class CallGlobalMethod : CallProcedure
+  PROPERTIES
+    procedure : Procedure
+
+  METHODS
+    method init( t, procedure, args )
+
+    method init( existing:CallGlobalMethod )
+      prior.init( existing )
+      if (existing.procedure) procedure = existing.procedure.cloned
+
+    method description->String
+      return "CallGlobalMethod($,$)" (%procedure,%args)
+
+endClass
+
+class CallGlobalMethodWithContext : CallProcedure
+  PROPERTIES
+    context   : Cmd
+    procedure : Procedure
+
+  METHODS
+    method init( t, context, procedure, args )
+
+    method init( existing:CallGlobalMethodWithContext )
+      prior.init( existing )
+      if (existing.context) context = existing.context.cloned
+      if (existing.procedure) procedure = existing.procedure.cloned
+
+    method description->String
+      return "CallGlobalMethodWithContext($,$,$)" (%context,%procedure,%args)
+
 endClass

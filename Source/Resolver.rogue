@@ -236,12 +236,22 @@ class Resolver : Visitor
       cmd.condition.require_value
 
     method resolve_access( t:Token, context:Cmd, name:String, args:Cmd, &suppress_error )->Cmd
+      local is_global = false
+      local type_context : Type
+
       if (context)
-        context  = visit( context ).require_value
+        context = visit( context )
+        is_global = context.is_type_context
+        type_context = context.require_type
       else
+        local type = this_module.find_type( name, &extended_search )
+        if (type and not args)
+          return TypeContext(t,type)
+        endIf
+
+        type_context = this_type
         if (args)
           # Call or constructor
-          local type = this_module.find_type( name, &extended_search )
           if (type)
             return validate( cmd_create_object(t,type,args) )
           endIf
@@ -251,8 +261,7 @@ class Resolver : Visitor
         endIf
       endIf
 
-      local type_context = which{ context:context.require_type || this_type }
-      local match = find_procedure( type_context, name, args )
+      local match = find_procedure( type_context, name, args, &require_global=is_global )
 
       if (match)
         if (not args and match.min_args == 0) args = CmdList(t)
@@ -260,11 +269,14 @@ class Resolver : Visitor
         return validate( match.cmd_call(context,args) )
       endIf
 
-      if (not args)
-        local p = type_context.find_property( name )
-        if (p)
-          if (context) return validate( GetProperty(t,context,p) )
-          else         return validate( GetThisProperty(t,p) )
+      if (not is_global)
+        # TODO: update to allow global properties
+        if (not args and type_context)
+          local p = type_context.find_property( name )
+          if (p)
+            if (context) return validate( GetProperty(t,context,p) )
+            else         return validate( GetThisProperty(t,p) )
+          endIf
         endIf
       endIf
 
@@ -377,11 +389,11 @@ class Resolver : Visitor
         args[i] = validate( arg.cmd_cast_to(proc.parameters[i].type) )
       endForEach
 
-    method find_procedure( type_context:Type, name:String, args:Cmd )->Procedure
+    method find_procedure( type_context:Type, name:String, args:Cmd, &require_global )->Procedure
       visit( args )  # resolve args to determine types
       use Candidates
         if (type_context)
-          type_context.collect_methods( name, Candidates.list )
+          type_context.collect_methods( name, Candidates.list, &=require_global )
         else
           this_module.collect_routines( name, Candidates.list )
         endIf
@@ -481,8 +493,13 @@ augment
       throw t.error( "[INTERNAL] $.cmd_call() is undefined."(type_name) )
 
     method Method.cmd_call( context:Cmd, args:Cmd )->Cmd
-      if (context) return CallMethod( t, context, this, args )
-      else         return CallThisMethod( t, this, args )
+      if (context and not context.is_type_context)
+        if (is_global) return CallGlobalMethodWithContext( t, context, this, args )
+        else           return CallMethod( t, context, this, args )
+      else
+        if (is_global) return CallGlobalMethod( t, this, args )
+        else           return CallThisMethod( t, this, args )
+      endIf
 
     method Routine.cmd_call( context:Cmd, args:Cmd )->Cmd
       return CallRoutine( t, this, args )
