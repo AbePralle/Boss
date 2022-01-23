@@ -33,7 +33,7 @@ augment Cmd
     method require_type->Type
       local result = type
       if (result) return result
-      throw t.error( "Value expected ($)."(this) )
+      throw t.error( "Value expected ($)."(this) )  # FIXME
 
     method require_value->Cmd
       require_type
@@ -132,6 +132,9 @@ augment
 
     method Description.type->Type
       return Program.type_String
+
+    method EmptyList.type->Type
+      return Program.type_Value
 
     method GetLocal.type->Type
       return info.@type

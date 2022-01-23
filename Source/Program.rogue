@@ -84,7 +84,7 @@ class Program [singleton]
         return true
       endTemporarily
 
-    method execute( context:BossObject, procedure:Procedure, args:Cmd )->Logical
+    method execute( context:BossValue, procedure:Procedure, args:Cmd )->Logical
       temporarily fp = stack.count
         stack.add( context )
         if (args)

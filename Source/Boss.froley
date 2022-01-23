@@ -60,56 +60,57 @@ KEYWORD_WHILE        while
 ----------------------------------------------------------------------
 tokens Symbols
 ----------------------------------------------------------------------
-SYMBOL_AMPERSAND            &
-SYMBOL_ARROW                ->
-SYMBOL_ASTERISK             *
-SYMBOL_AT                   @
-SYMBOL_BANG                 !
-SYMBOL_CARET                ^
-SYMBOL_CLOSE_BRACE          }   [structural]
-SYMBOL_CLOSE_BRACKET        ]   [structural]
-SYMBOL_CLOSE_PAREN          )   [structural]
-SYMBOL_COLON                :   [structural]
-SYMBOL_COLON_COLON          ::
-SYMBOL_COMMA                ,   [structural]
-SYMBOL_DOLLAR               $
-SYMBOL_DOUBLE_VERTICAL_BAR  ||  [structural]
-SYMBOL_EQ                   ==
-SYMBOL_EQUALS               =
-SYMBOL_GE                   >=
-SYMBOL_GT                   >
-SYMBOL_GT_GT                >>
-SYMBOL_LE                   <=
-SYMBOL_LEFT_SHIFT           :<<:
-SYMBOL_LITERAL_OPEN_BRACKET @[
-SYMBOL_LT                   <
-SYMBOL_LT_LT                <<
-SYMBOL_MINUS                -
-SYMBOL_MINUS_MINUS          --
-SYMBOL_NE                   !=
-SYMBOL_OPEN_BRACE           {
-SYMBOL_OPEN_BRACKET         [
-SYMBOL_OPEN_PAREN           (
-SYMBOL_PERCENT              %
-SYMBOL_PERIOD               .
-SYMBOL_PLUS                 +
-SYMBOL_PLUS_PLUS            ++
-SYMBOL_QUESTION             ?
-SYMBOL_QUESTION_COLON       ?:
-SYMBOL_RIGHT_SHIFT          :>>:
-SYMBOL_RIGHT_SHIFT_X        :>>>:
-SYMBOL_SEMICOLON            ;
-SYMBOL_SLASH                /
-SYMBOL_TILDE                ~
-SYMBOL_VERTICAL_BAR         |
+SYMBOL_AMPERSAND             &
+SYMBOL_ARROW                 ->
+SYMBOL_ASTERISK              *
+SYMBOL_AT                    @
+SYMBOL_BANG                  !
+SYMBOL_CARET                 ^
+SYMBOL_CLOSE_CURLY           }   [structural]
+SYMBOL_CLOSE_SQUARE          ]   [structural]
+SYMBOL_CLOSE_PAREN           )   [structural]
+SYMBOL_COLON                 :   [structural]
+SYMBOL_COLON_COLON           ::
+SYMBOL_COMMA                 ,   [structural]
+SYMBOL_DOLLAR                $
+SYMBOL_DOUBLE_VERTICAL_BAR   ||  [structural]
+SYMBOL_EMPTY_SQUARE_BRACKETS []
+SYMBOL_EQ                    ==
+SYMBOL_EQUALS                =
+SYMBOL_GE                    >=
+SYMBOL_GT                    >
+SYMBOL_GT_GT                 >>
+SYMBOL_LE                    <=
+SYMBOL_LEFT_SHIFT            :<<:
+SYMBOL_LITERAL_OPEN_SQUARE   @[
+SYMBOL_LT                    <
+SYMBOL_LT_LT                 <<
+SYMBOL_MINUS                 -
+SYMBOL_MINUS_MINUS           --
+SYMBOL_NE                    !=
+SYMBOL_OPEN_CURLY            {
+SYMBOL_OPEN_SQUARE           [
+SYMBOL_OPEN_PAREN            (
+SYMBOL_PERCENT               %
+SYMBOL_PERIOD                .
+SYMBOL_PLUS                  +
+SYMBOL_PLUS_PLUS             ++
+SYMBOL_QUESTION              ?
+SYMBOL_QUESTION_COLON        ?:
+SYMBOL_RIGHT_SHIFT           :>>:
+SYMBOL_RIGHT_SHIFT_X         :>>>:
+SYMBOL_SEMICOLON             ;
+SYMBOL_SLASH                 /
+SYMBOL_TILDE                 ~
+SYMBOL_VERTICAL_BAR          |
 
-SYMBOL_PLUS_EQUALS          +=
-SYMBOL_MINUS_EQUALS         -=
-SYMBOL_TIMES_EQUALS         *=
-SYMBOL_DIVIDE_EQUALS        /=
-SYMBOL_MOD_EQUALS           %=
-SYMBOL_AND_EQUALS           &=
-SYMBOL_OR_EQUALS            |=
+SYMBOL_PLUS_EQUALS           +=
+SYMBOL_MINUS_EQUALS          -=
+SYMBOL_TIMES_EQUALS          *=
+SYMBOL_DIVIDE_EQUALS         /=
+SYMBOL_MOD_EQUALS            %=
+SYMBOL_AND_EQUALS            &=
+SYMBOL_OR_EQUALS             |=
 
 ----------------------------------------------------------------------
 scanner
@@ -995,8 +996,9 @@ parser
   on IDENTIFIER, access_args -> Access( name=content, args )
   on "true"      -> LiteralLogical(value="true":Logical)
   on "false"     -> LiteralLogical(value="false":Logical)
-  on '(', expression, ')': return
   on "pi"        -> LiteralPi
+  on '(', expression, ')': return
+  on "[]"        -> EmptyList
 
   on "import"
     if (consume('('))

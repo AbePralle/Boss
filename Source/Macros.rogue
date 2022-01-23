@@ -8,8 +8,13 @@ $macro BOSS_ATTRIBUTE( name, value )
       else         attributes &= !(value)
 $endMacro
 
-$macro BOSS_CONTEXT( name )
+$macro BOSS_CONTEXT_OBJECT( name )
   local name = Program.arg(0).object->(as BossObject)
+  if (not name) return Program.null_reference_error
+$endMacro
+
+$macro BOSS_CONTEXT_VALUE( name )
+  local name = Program.arg(0)
   if (not name) return Program.null_reference_error
 $endMacro
 
@@ -42,6 +47,10 @@ $endMacro
 
 $macro BOSS_ARG_REAL64( name, index )
   local name = Program.arg(index).x
+$endMacro
+
+$macro BOSS_ARG_VALUE( name, index )
+  local name = Program.arg(index)
 $endMacro
 
 $macro BOSS_PROPERTY_CHARACTER(name, obj, index)

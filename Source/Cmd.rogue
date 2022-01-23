@@ -1853,3 +1853,9 @@ class PropertyDef : Cmd
       return Property( t, type_context, name, initial_value, type )
 
 endClass
+
+class EmptyList : Cmd
+  METHODS
+    method description->String
+      return "EmptyList"
+endClass

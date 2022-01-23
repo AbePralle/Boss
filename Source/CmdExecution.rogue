@@ -63,7 +63,7 @@ augment
     method CallMethod.execute->Logical
       assert context
       if (not context.execute) return false
-      return Program.execute( Program.execution_result.object->(as BossObject), procedure, args )
+      return Program.execute( Program.execution_result, procedure, args )
 
     method CallNative.execute->Logical
       Program.execution_result = handler()
@@ -143,6 +143,10 @@ augment
     method Description.execute->Logical
       if (not operand.execute) return false
       Program.execution_result = Program.execution_result.description
+      return true
+
+    method EmptyList.execute->Logical
+      Program.execution_result = BossValue.list
       return true
 
     method GetLocal.execute->Logical

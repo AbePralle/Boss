@@ -70,33 +70,40 @@ class Boss
                |    Show this help text.
 
     method register_native_code
+      register_console
       register_random
+      register_value
+
+    method register_console
+      Program.type("Console")
+      Program.register( "Console:height->Int32", () => Console.height )
+      Program.register( "Console:width->Int32",  () => Console.width )
 
     method register_random
       Program.type("Random").is_singleton = true
       Program.type("Random").add_property( "native_random", "NativeObject" )
       Program.register( "Random.init",
         function->BossValue
-          BOSS_CONTEXT( context )
+          BOSS_CONTEXT_OBJECT( context )
           context.properties[0] = BossValue( Random() )
           return true
         endFunction )
       Program.register( "Random.int32->Int32",
         function->BossValue
-          BOSS_CONTEXT( context )
+          BOSS_CONTEXT_OBJECT( context )
           BOSS_PROPERTY_NATIVE_OBJECT( random, context, 0, Random )
           return random.int32
         endFunction )
       Program.register( "Random.int32(Int32)->Int32",
         function->BossValue
-          BOSS_CONTEXT( context )
+          BOSS_CONTEXT_OBJECT( context )
           BOSS_ARG_INT32( limit, 1 )
           BOSS_PROPERTY_NATIVE_OBJECT( random, context, 0, Random )
           return random.int32(limit->Int32)
         endFunction )
       Program.register( "Random.int32(Int32,Int32)->Int32",
         function->BossValue
-          BOSS_CONTEXT( context )
+          BOSS_CONTEXT_OBJECT( context )
           BOSS_ARG_INT32( low, 1 )
           BOSS_ARG_INT32( high, 2 )
           BOSS_PROPERTY_NATIVE_OBJECT( random, context, 0, Random )
@@ -104,9 +111,18 @@ class Boss
         endFunction )
       Program.register( "Random.logical->Logical",
         function->BossValue
-          BOSS_CONTEXT( context )
+          BOSS_CONTEXT_OBJECT( context )
           BOSS_PROPERTY_NATIVE_OBJECT( random, context, 0, Random )
           return random.logical
+        endFunction )
+
+    method register_value
+      Program.register( "Value.add(Value)",
+        function->BossValue
+          BOSS_CONTEXT_VALUE( value )
+          BOSS_ARG_VALUE( arg, 1 )
+          value.add( arg )
+          return true
         endFunction )
 endClass
 

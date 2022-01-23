@@ -114,31 +114,23 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
       return BossValue(TYPE_TABLE,0,0,0,0,data)
 
   METHODS
+    method add( value:BossValue )
+      which (type)
+        case TYPE_LIST:  object->(as BossValue[]).add( value )
+      endWhich
+
     method description->String
-      if (type <= TYPE_LAST_INTEGER)
-        which (type)
-          case TYPE_UNDEFINED: return "undefined"
-          case TYPE_NULL:      return "null"
-          case TYPE_LOGICAL:   return which{ x:"true" || "false" }
-          case TYPE_CHARACTER: return x->Int32->Character->String
-          case TYPE_INT32:     return x->Int32->String
-        endWhich
-
-      elseIf (type <= TYPE_LAST_NUMBER)
-        return x->String
-
-      elseIf (type <= TYPE_LAST_OBJECT)
-        return object.description
-
-      else
-        which (type)
-          case TYPE_XY:  return this->XY.description
-          case TYPE_BOX: return this->Box.description
-        endWhich
-
-      endIf
-
-      throw UnsupportedOperationError()
+      which (type)
+        case TYPE_UNDEFINED: return "undefined"
+        case TYPE_NULL:      return "null"
+        case TYPE_LOGICAL:   return which{ x:"true" || "false"}
+        case TYPE_CHARACTER: return %x->Int32->Character->String
+        case TYPE_INT32:     return %x->Int32
+        case TYPE_REAL64:    return %x
+        case TYPE_XY:        return %this->XY
+        case TYPE_BOX:       return %this->Box
+        others:              return %object
+      endWhich
 
     method operator+( other:BossValue )->BossValue
       which (type)
@@ -193,7 +185,10 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
         case TYPE_LIST
           which (other.type)
             case TYPE_LIST
-              return BossValue.list( object->(as BossValue[]).cloned.[add(other.object->(as BossValue[]))] )
+              local result_list  = object->(as BossValue[]).cloned
+              local other_list = other.object->(as BossValue[])
+              result_list.add( other_list )
+              return BossValue.list( result_list )
             others
               return BossValue()
           endWhich
