@@ -73,10 +73,38 @@ class Boss
       register_random
 
     method register_random
-      #Program.register( "Random:create()->Random", () => Random() )
-      Program.register( "Random.init", (context) => println "TODO: Random.init"; return true )
-      Program.register( "Random.int32->Int32",        () => Random.int32 )
-      Program.register( "Random.int32(Int32)->Int32", (context,limit) => Random.int32(limit) )
-      Program.register( "Random.int32(Int32,Int32)->Int32", (context,low,high) => Random.int32(low,high) )
+      Program.type("Random").is_singleton = true
+      Program.type("Random").add_property( "native_random", "NativeObject" )
+      Program.register( "Random.init",
+        function( context:BossValue )->BossValue
+          local obj = context->BossObject
+          if (not obj) return Program.null_reference_error
+          if (obj.properties.count) obj.properties[0] = BossValue( Random() )
+          return true
+        endFunction )
+      Program.register( "Random.int32->Int32",
+        function( context:BossValue )->BossValue
+          local obj = context->BossObject
+          if (not obj) return Program.null_reference_error
+          local random = obj.properties[0].object->(as Random)
+          if (not random) return Program.null_reference_error
+          return random.int32
+        endFunction )
+      Program.register( "Random.int32(Int32)->Int32",
+        function( context:BossValue, limit:BossValue )->BossValue
+          local obj = context->BossObject
+          if (not obj) return Program.null_reference_error
+          local random = obj.properties[0].object->(as Random)
+          if (not random) return Program.null_reference_error
+          return random.int32(limit->Int32)
+        endFunction )
+      Program.register( "Random.int32(Int32,Int32)->Int32",
+        function( context:BossValue, low:BossValue, high:BossValue )->BossValue
+          local obj = context->BossObject
+          if (not obj) return Program.null_reference_error
+          local random = obj.properties[0].object->(as Random)
+          if (not random) return Program.null_reference_error
+          return random.int32( low->Int32, high->Int32 )
+        endFunction )
 endClass
 

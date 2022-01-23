@@ -48,6 +48,14 @@ class Type
       ensure methods_by_name[ m.name ]
       methods_by_name[ m.name ].add( m )
 
+    method add_property( t:Token, name:String, type:Type )->Property
+      local p = Property( t, this, name, null, type )
+      properties[ name ] = p
+      return p
+
+    method add_property( name:String, type:String )->Property
+      return add_property( t, name, Program.type(type) )
+
     method collect_methods( m_name:String, list:Procedure[], &require_global )
       local matching = methods_by_name[ m_name ]
       if (matching)
@@ -76,6 +84,9 @@ class Type
       local result = properties[name]
       if (result) return result
       throw t.error( "No such property $.$"(this.name,name) )
+
+      #method set_property( obj:BossObject, name:String, value:BossValue )
+
 
     method singleton_object->BossObject
       local obj = @singleton_object

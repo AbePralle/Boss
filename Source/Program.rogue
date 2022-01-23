@@ -176,6 +176,11 @@ class Program [singleton]
       require stack.is_empty
       require fp == 0
 
+    method null_reference_error->Logical
+      execution_error = Error( "Null reference." )
+      execution_status = EXE_ERROR
+      return false
+
     method preprocess( tokens:Token[] )
       noAction
 
