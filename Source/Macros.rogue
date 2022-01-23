@@ -8,3 +8,70 @@ $macro BOSS_ATTRIBUTE( name, value )
       else         attributes &= !(value)
 $endMacro
 
+$macro BOSS_CONTEXT( name )
+  local name = Program.arg(0).object->(as BossObject)
+  if (not name) return Program.null_reference_error
+$endMacro
+
+$macro BOSS_ARG_CHARACTER(name, index)
+  local name = Program.arg(index).x->Int32->Character
+$endMacro
+
+$macro BOSS_ARG_INT32(name, index)
+  local name = Program.arg(index).x->Int32
+$endMacro
+
+$macro BOSS_ARG_LOGICAL(name, index)
+  local name = Program.arg(index).x?
+$endMacro
+
+$macro BOSS_ARG_NATIVE_OBJECT( name, index, Type )
+  local name = Program.arg(index).object->(as Type)
+  if (not name) return Program.null_reference_error
+$endMacro
+
+$macro BOSS_ARG_OBJECT( name, index )
+  local name = Program.arg(index).object->(as BossObject)
+  if (not name) return Program.null_reference_error
+$endMacro
+
+$macro BOSS_ARG_STRING( name, index )
+  local name = Program.arg(index).object->(as String)
+  if (not name) return Program.null_reference_error
+$endMacro
+
+$macro BOSS_ARG_REAL64( name, index )
+  local name = Program.arg(index).x
+$endMacro
+
+$macro BOSS_PROPERTY_CHARACTER(name, obj, index)
+  local name = obj.properties[index].x->Int32->Character
+$endMacro
+
+$macro BOSS_PROPERTY_INT32(name, obj, index)
+  local name = obj.properties[index].x->Int32
+$endMacro
+
+$macro BOSS_PROPERTY_LOGICAL(name, obj, index)
+  local name = obj.properties[index].x?
+$endMacro
+
+$macro BOSS_PROPERTY_NATIVE_OBJECT(name, obj, index, Type)
+  local name = obj.properties[index].object->(as Type)
+  if (not name) return Program.null_reference_error
+$endMacro
+
+$macro BOSS_PROPERTY_OBJECT(name, obj, index)
+  local name = obj.properties[index].object->(as BossObject)
+  if (not name) return Program.null_reference_error
+$endMacro
+
+$macro BOSS_PROPERTY_REAL64(name, obj, index)
+  local name = obj.properties[index].x
+$endMacro
+
+$macro BOSS_PROPERTY_STRING(name, obj, index)
+  local name = obj.properties[index].object->(as String)
+  if (not name) return Program.null_reference_error
+$endMacro
+

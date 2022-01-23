@@ -76,42 +76,36 @@ class Boss
       Program.type("Random").is_singleton = true
       Program.type("Random").add_property( "native_random", "NativeObject" )
       Program.register( "Random.init",
-        function( context:BossValue )->BossValue
-          local obj = context->BossObject
-          if (not obj) return Program.null_reference_error
-          if (obj.properties.count) obj.properties[0] = BossValue( Random() )
+        function->BossValue
+          BOSS_CONTEXT( context )
+          context.properties[0] = BossValue( Random() )
           return true
         endFunction )
       Program.register( "Random.int32->Int32",
-        function( context:BossValue )->BossValue
-          local obj = context->BossObject
-          if (not obj) return Program.null_reference_error
-          local random = obj.properties[0].object->(as Random)
-          if (not random) return Program.null_reference_error
+        function->BossValue
+          BOSS_CONTEXT( context )
+          BOSS_PROPERTY_NATIVE_OBJECT( random, context, 0, Random )
           return random.int32
         endFunction )
       Program.register( "Random.int32(Int32)->Int32",
-        function( context:BossValue, limit:BossValue )->BossValue
-          local obj = context->BossObject
-          if (not obj) return Program.null_reference_error
-          local random = obj.properties[0].object->(as Random)
-          if (not random) return Program.null_reference_error
+        function->BossValue
+          BOSS_CONTEXT( context )
+          BOSS_ARG_INT32( limit, 1 )
+          BOSS_PROPERTY_NATIVE_OBJECT( random, context, 0, Random )
           return random.int32(limit->Int32)
         endFunction )
       Program.register( "Random.int32(Int32,Int32)->Int32",
-        function( context:BossValue, low:BossValue, high:BossValue )->BossValue
-          local obj = context->BossObject
-          if (not obj) return Program.null_reference_error
-          local random = obj.properties[0].object->(as Random)
-          if (not random) return Program.null_reference_error
-          return random.int32( low->Int32, high->Int32 )
+        function->BossValue
+          BOSS_CONTEXT( context )
+          BOSS_ARG_INT32( low, 1 )
+          BOSS_ARG_INT32( high, 2 )
+          BOSS_PROPERTY_NATIVE_OBJECT( random, context, 0, Random )
+          return random.int32( low, high )
         endFunction )
       Program.register( "Random.logical->Logical",
-        function( context:BossValue )->BossValue
-          local obj = context->BossObject
-          if (not obj) return Program.null_reference_error
-          local random = obj.properties[0].object->(as Random)
-          if (not random) return Program.null_reference_error
+        function->BossValue
+          BOSS_CONTEXT( context )
+          BOSS_PROPERTY_NATIVE_OBJECT( random, context, 0, Random )
           return random.logical
         endFunction )
 endClass

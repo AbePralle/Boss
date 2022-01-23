@@ -250,18 +250,6 @@ class Program [singleton]
         mod.routines_by_name[ r.name ].add( r )
       endIf
 
-    method register( signature:String, handler:Function(BossValue)->BossValue )
-      register( signature, () with (handler) => handler(Program.arg(0)) )
-
-    method register( signature:String, handler:Function(BossValue,BossValue)->BossValue )
-      register( signature, () with (handler) => handler(Program.arg(0),Program.arg(1)) )
-
-    method register( signature:String, handler:Function(BossValue,BossValue,BossValue)->BossValue )
-      register( signature, () with (handler) => handler(Program.arg(0),Program.arg(1),Program.arg(2)) )
-
-    method register( signature:String, handler:Function(BossValue,BossValue,BossValue,BossValue)->BossValue )
-      register( signature, () with (handler) => handler(Program.arg(0),Program.arg(1),Program.arg(2),Program.arg(3)) )
-
     method resolve
       (forEach in all_modules).resolve
 
