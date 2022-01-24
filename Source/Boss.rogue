@@ -81,7 +81,28 @@ class Boss
       Program.register( "Console:width->Int32",  () => Console.width )
 
     method register_lists
+      register_list_int32
+
+    method register_list_int32
       register_list<<Int32>>
+      Program.register( "Int32[].add(Int32)",
+        function->BossValue
+          BOSS_CONTEXT_OBJECT( context )
+          BOSS_PROPERTY_NATIVE_OBJECT( list, context, 0, Int32[] )
+          local value = Program.arg(1).x->Int32
+          list.add( value )
+          return true
+        endFunction )
+      Program.register( "Int32[].set(Int32,Int32)",
+        function->BossValue
+          BOSS_CONTEXT_OBJECT( context )
+          BOSS_PROPERTY_NATIVE_OBJECT( list, context, 0, Int32[] )
+          BOSS_ARG_INT32( index, 1 )
+          BOSS_ARG_INT32( new_value, 2 )
+          if (index < 0 or index >= list.count) return Program.error_oob(index,list.count)
+          list[index] = new_value
+          return true
+        endFunction )
 
     method register_list<<$Type>>
       local element_name = $string($Type)
@@ -100,14 +121,6 @@ class Boss
           BOSS_PROPERTY_NATIVE_OBJECT( list, context, 0, $Type[] )
           local result = %list
           return result
-        endFunction )
-      Program.register( "$.add($)"(name,element_name),
-        function->BossValue
-          BOSS_CONTEXT_OBJECT( context )
-          BOSS_PROPERTY_NATIVE_OBJECT( list, context, 0, $Type[] )
-          local value = Program.arg(1).x->$Type
-          list.add( value )
-          return true
         endFunction )
       Program.register( "$.get(Int32)->$"(name,element_name),
         function->BossValue

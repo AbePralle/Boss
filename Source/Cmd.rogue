@@ -1880,3 +1880,21 @@ class Join : Cmd
       return a + b
 
 endClass
+
+class IndexAccess : Cmd
+  PROPERTIES
+    context : Cmd
+    index   : Cmd
+
+  METHODS
+    method init( t, context, index )
+
+    method init( existing:IndexAccess )
+      prior.init( existing )
+      if (existing.context) context = existing.context.cloned
+      if (existing.index) index = existing.index.cloned
+
+    method description->String
+      return "IndexAccess($,$)" (%context,%index)
+
+endClass

@@ -158,6 +158,9 @@ class Resolver : Visitor
       visit_children( cmd )
       if (cmd.condition) cmd.condition.require_value
 
+    method on( cmd:IndexAccess )->Cmd
+      return visit( ContextAccess(cmd.t, cmd.context, "get", CmdList(cmd.t,cmd.index)) )
+
     method on( cmd:Increment )->Cmd
       return cmd.operand.resolve_increment( cmd.t, this )
 
@@ -520,6 +523,9 @@ augment
         if (p) return resolver.validate( SetThisProperty(t,p,new_value) )
       endIf
       throw t.error( "Illegal target for assignment." )
+
+    method IndexAccess.resolve_assignment( t:Token, new_value:Cmd, resolver:Resolver )->Cmd
+      return resolver.visit( ContextAccess(t, context, "set", CmdList(t,index,new_value)) )
 endAugment
 
 # Call

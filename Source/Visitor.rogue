@@ -483,4 +483,13 @@ class Visitor<<$ReturnType>>
         visit( cmd.type_ref )
       endIf
 
+    method on_visit_children( cmd:IndexAccess )
+      if ($ReturnType instanceOf Cmd)
+        cmd.context = visit(cmd.context)
+        cmd.index = visit(cmd.index)
+      else
+        visit( cmd.context )
+        visit( cmd.index )
+      endIf
+
 endClass

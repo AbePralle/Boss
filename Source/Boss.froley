@@ -990,6 +990,11 @@ parser
     access_args
     create ContextAccess(context,name:String,args)
     access_inner
+  elseOn '['
+    expression
+    mustConsume(']')
+    create IndexAccess(context,index)
+    access_inner
   endOn
 
 - term
