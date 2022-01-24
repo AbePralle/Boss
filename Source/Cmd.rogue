@@ -936,7 +936,7 @@ class GetLocal : Cmd
       fp_offset = existing.fp_offset
 
     method description->String
-      return "GetLocal"
+      return "GetLocal($,$)"(info.name,fp_offset)
 endClass
 
 class Return : Cmd

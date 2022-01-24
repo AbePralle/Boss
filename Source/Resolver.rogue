@@ -6,6 +6,7 @@ class Resolver : Visitor
     this_module    : Module
     this_type      : Type
     this_procedure : Procedure
+    locals         = Local[]
 
     current_statements_rewriter : ListRewriter<<Cmd>>
 
@@ -40,6 +41,12 @@ class Resolver : Visitor
         this_procedure.is_resolved = true
         visit( this_procedure )
       endIf
+
+    method find_local( name:String )->Local
+      forEach (v in locals step -1)
+        if (v.name == name) return v
+      endForEach
+      return null
 
     method on( cmd:Access )->Cmd
       cmd.args = visit( cmd.args )
@@ -207,6 +214,11 @@ class Resolver : Visitor
       endForEach
       visit_children( cmd )
 
+    method on_visit_children( cmd:Procedure )
+      locals.add( (forEach in cmd.parameters)->(as Local) )
+      prior.on_visit_children( cmd )
+      loop (cmd.parameters.count) locals.remove_last
+
     method on_visit( cmd:Print )
       forEach (arg in rewriter=cmd.args.list.rewriter)
         arg = validate( Description(arg.t,arg) ).require_value
@@ -292,7 +304,7 @@ class Resolver : Visitor
             return validate( cmd_create_object(t,type,args) )
           endIf
         else
-          local v = this_procedure.find_local( name )
+          local v = find_local( name )
           if (v) return validate( GetLocal(t,v) )
         endIf
       endIf
@@ -490,7 +502,7 @@ augment
 
     method Access.resolve_add_and_assign( t:Token, operand:Cmd, resolver:Resolver )->Cmd
       if (not args)
-        local v = resolver.this_procedure.find_local( name )
+        local v = resolver.find_local( name )
         if (v) return resolver.validate( AddAndAssignLocal(t,v,operand) )
 
         local p = resolver.this_type.find_property( name )
@@ -516,7 +528,7 @@ augment
 
     method Access.resolve_assignment( t:Token, new_value:Cmd, resolver:Resolver )->Cmd
       if (not args)
-        local v = resolver.this_procedure.find_local( name )
+        local v = resolver.find_local( name )
         if (v) return resolver.validate( SetLocal(t,v,new_value) )
 
         local p = resolver.this_type.find_property( name )
@@ -555,7 +567,7 @@ augment
 
     method Access.resolve_increment( t:Token, resolver:Resolver )->Cmd
       if (not args)
-        local v = resolver.this_procedure.find_local( name )
+        local v = resolver.find_local( name )
         if (v) return resolver.validate( IncrementLocal(t,v) )
 
         local p = resolver.this_type.find_property( name )

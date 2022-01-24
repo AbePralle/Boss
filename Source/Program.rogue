@@ -67,41 +67,47 @@ class Program [singleton]
       return Module( t, name, &dynamic )
 
     method execute( procedure:Procedure, args:Cmd )->Logical
-      temporarily fp = stack.count
-        if (args)
-          forEach (arg in args)
-            if (not arg.execute) return false
-            stack.add( execution_result )
-          endForEach
-        endIf
-        stack.expand( procedure.local_stack_slots )
+      local next_fp = stack.count
+      if (args)
+        forEach (arg in args)
+          if (not arg.execute) return false
+          stack.add( execution_result )
+        endForEach
+      endIf
 
-        local status = procedure.statements.execute
-        stack.count = fp
-        if (status) return true
-        if (execution_status != EXE_RETURN) return false
-        execution_status = EXE_CONTINUE
-        return true
+      temporarily fp = next_fp
+        stack.expand( procedure.local_stack_slots )
+        procedure.statements.execute
+        stack.discard_from( next_fp )
       endTemporarily
+
+      which (execution_status)
+        case EXE_CONTINUE: return true
+        case EXE_RETURN:   execution_status = EXE_CONTINUE; return true
+        others:            return false
+      endWhich
 
     method execute( context:BossValue, procedure:Procedure, args:Cmd )->Logical
-      temporarily fp = stack.count
-        stack.add( context )
-        if (args)
-          forEach (arg in args)
-            if (not arg.execute) return false
-            stack.add( execution_result )
-          endForEach
-        endIf
-        stack.expand( procedure.local_stack_slots )
+      local next_fp = stack.count
+      stack.add( context )
+      if (args)
+        forEach (arg in args)
+          if (not arg.execute) return false
+          stack.add( execution_result )
+        endForEach
+      endIf
 
-        local status = procedure.statements.execute
-        stack.count = fp
-        if (status) return true
-        if (execution_status != EXE_RETURN) return false
-        execution_status = EXE_CONTINUE
-        return true
+      temporarily fp = next_fp
+        stack.expand( procedure.local_stack_slots )
+        procedure.statements.execute
+        stack.discard_from( next_fp )
       endTemporarily
+
+      which (execution_status)
+        case EXE_CONTINUE: return true
+        case EXE_RETURN:   execution_status = EXE_CONTINUE; return true
+        others:            return false
+      endWhich
 
     method get_module( name:String )->Module
       return modules_by_name[ name ]
