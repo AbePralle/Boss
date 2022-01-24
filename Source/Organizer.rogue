@@ -98,12 +98,29 @@ class Organizer : Visitor
     method on_visit( cmd:Procedure )
       cmd.max_args = cmd.parameters.count
       cmd.min_args = cmd.max_args
-      forEach (p in cmd.parameters step -1)
-        if (p.initial_value)
+      forEach (param in cmd.parameters step -1)
+        if (param.initial_value)
           # default arg value given
           --cmd.min_args
         else
           escapeForEach
+        endIf
+      endForEach
+
+      forEach (param in cmd.parameters)
+        if (not param.type)
+          if (this_type)
+            local p = this_type.find_property( param.name )
+            if (not p)
+              throw param.t.error(
+                ''No property named "$" for auto-store parameter; add proprty or parameter ':Type'.''(param.name)
+              )
+            endIf
+            param.type = p.type
+            param.is_auto_store = true
+          else
+            throw param.t.error( "Missing parameter ':Type'." )
+          endIf
         endIf
       endForEach
 

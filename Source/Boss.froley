@@ -39,7 +39,7 @@ KEYWORD_IN           in
 KEYWORD_IMPORT       import
 KEYWORD_INCLUDE      include
 KEYWORD_LOCAL        local
-KEYWORD_METHOD       method
+KEYWORD_METHOD       method      [structural]
 KEYWORD_METHODS      METHODS     [structural]
 KEYWORD_NO_ACTION    noAction
 KEYWORD_NULL         null
