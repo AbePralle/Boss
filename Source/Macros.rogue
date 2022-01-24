@@ -10,12 +10,12 @@ $endMacro
 
 $macro BOSS_CONTEXT_OBJECT( name )
   local name = Program.arg(0).object->(as BossObject)
-  if (not name) return Program.null_reference_error
+  if (not name) return Program.error_null_reference
 $endMacro
 
 $macro BOSS_CONTEXT_VALUE( name )
   local name = Program.arg(0)
-  if (not name) return Program.null_reference_error
+  if (not name) return Program.error_null_reference
 $endMacro
 
 $macro BOSS_ARG_CHARACTER(name, index)
@@ -32,17 +32,17 @@ $endMacro
 
 $macro BOSS_ARG_NATIVE_OBJECT( name, index, Type )
   local name = Program.arg(index).object->(as Type)
-  if (not name) return Program.null_reference_error
+  if (not name) return Program.error_null_reference
 $endMacro
 
 $macro BOSS_ARG_OBJECT( name, index )
   local name = Program.arg(index).object->(as BossObject)
-  if (not name) return Program.null_reference_error
+  if (not name) return Program.error_null_reference
 $endMacro
 
 $macro BOSS_ARG_STRING( name, index )
   local name = Program.arg(index).object->(as String)
-  if (not name) return Program.null_reference_error
+  if (not name) return Program.error_null_reference
 $endMacro
 
 $macro BOSS_ARG_REAL64( name, index )
@@ -67,12 +67,12 @@ $endMacro
 
 $macro BOSS_PROPERTY_NATIVE_OBJECT(name, obj, index, Type)
   local name = obj.properties[index].object->(as Type)
-  if (not name) return Program.null_reference_error
+  if (not name) return Program.error_null_reference
 $endMacro
 
 $macro BOSS_PROPERTY_OBJECT(name, obj, index)
   local name = obj.properties[index].object->(as BossObject)
-  if (not name) return Program.null_reference_error
+  if (not name) return Program.error_null_reference
 $endMacro
 
 $macro BOSS_PROPERTY_REAL64(name, obj, index)
@@ -81,6 +81,6 @@ $endMacro
 
 $macro BOSS_PROPERTY_STRING(name, obj, index)
   local name = obj.properties[index].object->(as String)
-  if (not name) return Program.null_reference_error
+  if (not name) return Program.error_null_reference
 $endMacro
 

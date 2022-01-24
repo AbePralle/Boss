@@ -1211,7 +1211,7 @@ class CreateObject : Cmd
     args    : Cmd
 
   METHODS
-    method init( t, of_type, m_init, args )
+    method init( t, of_type, m_init=null, args=null )
 
     method init( existing:CreateObject )
       prior.init( existing )
@@ -1858,4 +1858,25 @@ class EmptyList : Cmd
   METHODS
     method description->String
       return "EmptyList"
+endClass
+
+class Join : Cmd
+  PROPERTIES
+    a : String
+    b : String
+
+  METHODS
+    method init( t, a, b )
+
+    method init( existing:Join )
+      prior.init( existing )
+      a = existing.a
+      b = existing.b
+
+    method description->String
+      return "Join($,$)" (%a,%b)
+
+    method to->String
+      return a + b
+
 endClass

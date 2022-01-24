@@ -168,16 +168,23 @@ class Program [singleton]
 
     method launch
       resolve
-      (forEach in all_modules).execute
-      if (execution_status == EXE_ERROR)
-        if (not execution_error) execution_error = t.error( "[INTERNAL] Unknown error." )
-        throw execution_error
-      endIf
+      forEach (m in all_modules)
+        m.execute
+        if (execution_status == EXE_ERROR)
+          if (not execution_error) execution_error = t.error( "[INTERNAL] Unknown error." )
+          throw execution_error
+        endIf
+      endForEach
       require stack.is_empty
       require fp == 0
 
-    method null_reference_error->Logical
-      execution_error = Error( "Null reference." )
+    method error_null_reference->Logical
+      execution_error = Error( "Null reference access." )
+      execution_status = EXE_ERROR
+      return false
+
+    method error_oob( index:Int32, limit:Int32 )->Logical
+      execution_error = Error( "Out of bounds error accessing index $. Valid range is 0..$."(index,limit-1) )
       execution_status = EXE_ERROR
       return false
 

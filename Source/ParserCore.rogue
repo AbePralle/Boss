@@ -21,54 +21,55 @@ class ParserCore [abstract]
     ip_optional_initial_value = 8
     ip_procedure_return_type = 9
     ip_type = 10
-    ip_optional_type = 11
-    ip_procedure_body = 12
-    ip_identifier = 13
-    ip_string = 14
-    ip_class = 15
-    ip_constructor_properties = 16
-    ip_base_types = 17
-    ip_attribute_names = 18
-    ip_class_sections = 19
-    ip_class_section = 20
-    ip_if_statement = 21
-    ip_if_statement_multi_line_elseIf_else = 22
-    ip_if_statement_single_line_elseIf_else = 23
-    ip_method = 24
-    ip_global_method = 25
-    ip_signature = 26
-    ip_native_global_method = 27
-    ip_native_method = 28
-    ip_native_routine = 29
-    ip_native_parameter_types = 30
-    ip_native_parameter_type = 31
-    ip_properties = 32
-    ip_property_declaration = 33
-    ip_multi_line_statements = 34
-    ip_single_line_statements = 35
-    ip_control_structure = 36
-    ip_args = 37
-    ip_arg = 38
-    ip_statement = 39
-    ip_local_declarations = 40
-    ip_local_declaration = 41
-    ip_while_loop = 42
-    ip_module_path = 43
-    ip_uses_attributes = 44
-    ip_uses_attribute = 45
-    ip_access_args = 46
-    ip_optional_expression = 47
-    ip_expression = 48
-    ip_comparison = 49
-    ip_comparison__inner = 50
-    ip_add_subtract = 51
-    ip_add_subtract__inner = 52
-    ip_pre_unary = 53
-    ip_access = 54
-    ip_access__inner = 55
-    ip_access_inner = 56
-    ip_term = 57
-    ip_additional_node_types = 58
+    ip_type_name = 11
+    ip_optional_type = 12
+    ip_procedure_body = 13
+    ip_identifier = 14
+    ip_string = 15
+    ip_class = 16
+    ip_constructor_properties = 17
+    ip_base_types = 18
+    ip_attribute_names = 19
+    ip_class_sections = 20
+    ip_class_section = 21
+    ip_if_statement = 22
+    ip_if_statement_multi_line_elseIf_else = 23
+    ip_if_statement_single_line_elseIf_else = 24
+    ip_method = 25
+    ip_global_method = 26
+    ip_signature = 27
+    ip_native_global_method = 28
+    ip_native_method = 29
+    ip_native_routine = 30
+    ip_native_parameter_types = 31
+    ip_native_parameter_type = 32
+    ip_properties = 33
+    ip_property_declaration = 34
+    ip_multi_line_statements = 35
+    ip_single_line_statements = 36
+    ip_control_structure = 37
+    ip_args = 38
+    ip_arg = 39
+    ip_statement = 40
+    ip_local_declarations = 41
+    ip_local_declaration = 42
+    ip_while_loop = 43
+    ip_module_path = 44
+    ip_uses_attributes = 45
+    ip_uses_attribute = 46
+    ip_access_args = 47
+    ip_optional_expression = 48
+    ip_expression = 49
+    ip_comparison = 50
+    ip_comparison__inner = 51
+    ip_add_subtract = 52
+    ip_add_subtract__inner = 53
+    ip_pre_unary = 54
+    ip_access = 55
+    ip_access__inner = 56
+    ip_access_inner = 57
+    ip_term = 58
+    ip_additional_node_types = 59
 
   PROPERTIES
     _tokens          : Token[]
@@ -445,13 +446,18 @@ class ParserCore [abstract]
             _pop_frame
             return
           case ip_type
-            if (_next_t.type == TokenType.IDENTIFIER)
+            _execute(ip_type_name)
+            _pop_frame
+            _push( TypeRef(_cur_t,_string_arg(-1)), 1 )
+            return
+          case ip_type_name
+            _execute(ip_identifier)
+            _pop_frame
+            if (_next_t.type == TokenType.SYMBOL_EMPTY_SQUARE_BRACKETS)
               temporarily _cur_t = _on_t
-                _push( TypeRef(_cur_t,_cur_t.content), 0 )
-                return
+                _push( Join(_cur_t,_string_arg(-1),"[]"), 1 )
               endTemporarily
             endIf
-            _throw_syntax_error("Identifier expected.")
             return
           case ip_optional_type
             if (_consume(TokenType.SYMBOL_COLON))
@@ -1267,13 +1273,13 @@ class ParserCore [abstract]
                 return
               endTemporarily
             endIf
-            if (_next_t.type == TokenType.IDENTIFIER)
-              temporarily _cur_t = _on_t
-                _execute(ip_access_args)
-                _pop_frame
-                _push( Access(_cur_t,_cur_t.content,_node_arg(-1)), 1 )
-                return
-              endTemporarily
+            if ((_next_t.type == TokenType.IDENTIFIER))
+              _execute(ip_type_name)
+              _pop_frame
+              _execute(ip_access_args)
+              _pop_frame
+              _push( Access(_cur_t,_string_arg(-2),_node_arg(-1)), 2 )
+              return
             endIf
             if (_next_t.type == TokenType.KEYWORD_TRUE)
               temporarily _cur_t = _on_t
@@ -1377,6 +1383,7 @@ class ParserCore [abstract]
             _push( IncrementLocalInt32(_cur_t,_node_arg(-1)->(as Local)), 1 )
             _push( IncrementThisProperty(_cur_t,_node_arg(-1)->(as Property)), 1 )
             _push( IncrementThisPropertyInt32(_cur_t,_node_arg(-1)->(as Property)), 1 )
+            _push( Join(_cur_t,_string_arg(-2),_string_arg(-1)), 2 )
             _push( Literal(_cur_t), 0 )
             _push( LiteralNull(_cur_t,_node_arg(-1)->(as Type)), 1 )
             _push( LiteralValueUndefined(_cur_t), 0 )

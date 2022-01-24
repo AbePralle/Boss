@@ -445,8 +445,12 @@ parser
   type
 
 - type
-  on IDENTIFIER -> TypeRef(name=content)
-  syntaxError "Identifier expected."
+  type_name
+  produce TypeRef(name:String)
+
+- type_name
+  identifier
+  on "[]": create Join(a:String,b="[]")
 
 - optional_type
   if (consume(':')) type
@@ -993,7 +997,11 @@ parser
   on INTEGER     -> LiteralInt32(value=content:Integer)
   on REAL_NUMBER -> LiteralReal64(value=content:Real)
   on CHARACTER   -> LiteralCharacter(value=content:Character)
-  on IDENTIFIER, access_args -> Access( name=content, args )
+  if (nextIs(IDENTIFIER))
+    type_name
+    access_args
+    produce Access( name:String, args )
+  endIf
   on "true"      -> LiteralLogical(value="true":Logical)
   on "false"     -> LiteralLogical(value="false":Logical)
   on "pi"        -> LiteralPi
@@ -1066,6 +1074,7 @@ parser
   create IncrementLocalInt32(info:Local)
   create IncrementThisProperty(info:Property)
   create IncrementThisPropertyInt32(info:Property)
+  create Join(a:String,b:String)
   create Literal
   create LiteralNull(type:Type):Literal
   create LiteralValueUndefined:Literal

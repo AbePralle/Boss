@@ -148,6 +148,12 @@ class Resolver : Visitor
       visit( cmd.args )
       return resolve_access( cmd.t, cmd.context, cmd.name, cmd.args )
 
+    method on_validate( cmd:Description )->Cmd
+      local type = cmd.operand.require_type
+      local call_description = resolve_access( cmd.t, cmd.operand, "description", null, &suppress_error )
+      if (call_description) return call_description
+      return cmd
+
     method on_visit( cmd:If )
       visit_children( cmd )
       if (cmd.condition) cmd.condition.require_value
@@ -262,8 +268,18 @@ class Resolver : Visitor
       else
         local type = this_module.find_type( name, &extended_search )
         if (type and not args)
-          if (type.is_singleton) return GetSingleton(t,type)
-          else                   return TypeContext(t,type)
+          if (type.is_singleton)
+            return GetSingleton(t,type)
+          else
+            if (type.name.ends_with(']'))
+              which (type.name)
+                others
+                  return resolve_access( t, null, type.name, CmdList(t) )
+              endWhich
+            else
+              return TypeContext(t,type)
+            endIf
+          endIf
         endIf
 
         type_context = this_type
@@ -543,13 +559,6 @@ augment
 
       #method Access.resolve_increment( t:Token, resolver:Resolver )->Cmd
       #return CallRoutine( t, this, args )
-endAugment
-
-# Description
-augment
-  METHODS
-    method Type.cmd_description( t:Token, operand:Cmd)->Cmd
-      return Description( t, operand )
 endAugment
 
 # Subtract
