@@ -976,9 +976,10 @@ parser
   on "+" -> Add
   on "-" -> Subtract
 
-- multiply_divide [binary]
+- multiply_divide_mod [binary]
   on "*" -> Multiply
   on "/" -> Divide
+  on "%" -> Mod
 
 - pre_unary [preUnary]
   on "-"   -> Negate
@@ -1095,6 +1096,10 @@ parser
   create Local(name:String,initial_value)
   create LocalDeclaration( info:Local )
   create Method(type_context:Type,name:String,statements):Procedure
+  create ModInt32(left,right):Binary
+  create ModObject(left,right):Binary
+  create ModReal64(left,right):Binary
+  create ModValue(left,right):Binary
   create MultiplyInt32(left,right):Binary
   create MultiplyObject(left,right):Binary
   create MultiplyReal64(left,right):Binary

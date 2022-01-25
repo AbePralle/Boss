@@ -294,6 +294,32 @@ augment
       Program.execution_result = a xor b
       return true
 
+    method ModInt32.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result.x->Int32
+
+      if (not right.execute) return false
+      local b = Program.execution_result.x->Int32
+      if (b == 0) return Program.error( t, "Illegal integer modulo zero." )
+      Program.execution_result = a % b
+      return true
+
+    method ModReal64.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result.x
+
+      if (not right.execute) return false
+      Program.execution_result = a % Program.execution_result.x
+      return true
+
+    method ModValue.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result
+
+      if (not right.execute) return false
+      Program.execution_result = a % Program.execution_result
+      return true
+
     method MultiplyInt32.execute->Logical
       if (not left.execute) return false
       local a = Program.execution_result.x->Int32

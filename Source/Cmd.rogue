@@ -2023,3 +2023,38 @@ class LogicalXor : Binary
       return "LogicalXor($,$)" (%left,%right)
 
 endClass
+
+class Mod : Binary
+  METHODS
+    method description->String
+      return "Mod($,$)" (%left,%right)
+
+endClass
+
+class ModInt32 : Binary
+  METHODS
+    method description->String
+      return "ModInt32($,$)" (%left,%right)
+
+endClass
+
+class ModObject : Binary
+  METHODS
+    method description->String
+      return "ModObject($,$)" (%left,%right)
+
+endClass
+
+class ModReal64 : Binary
+  METHODS
+    method description->String
+      return "ModReal64($,$)" (%left,%right)
+
+endClass
+
+class ModValue : Binary
+  METHODS
+    method description->String
+      return "ModValue($,$)" (%left,%right)
+
+endClass

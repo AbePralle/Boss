@@ -318,6 +318,34 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
 
       return BossValue()
 
+    method operator%( other:BossValue )->BossValue
+      which (type)
+        case TYPE_CHARACTER, TYPE_INT32
+          which (other.type)
+            case TYPE_CHARACTER,
+                 TYPE_INT32
+              local divisor = other.x->Int32
+              if (divisor) return BossValue( x->Int32 % other.x->Int32 )
+              else         return BossValue( x->Int32 % other.x->Int32 )
+            case TYPE_REAL64:    return BossValue( x % other.x )
+          endWhich
+
+        case TYPE_REAL64
+          which (other.type)
+            case TYPE_CHARACTER,
+                 TYPE_INT32,
+                 TYPE_REAL64:    return BossValue( x % other.x )
+          endWhich
+
+        case TYPE_XY
+          which (other.type)
+            case TYPE_XY
+              return BossValue( XY(x%other.x,y%other.y) )
+          endWhich
+      endWhich
+
+      return BossValue()
+
     method remove_first->BossValue
       if (count == 0) return BossValue()
       which (type)

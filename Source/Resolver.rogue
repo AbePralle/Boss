@@ -209,6 +209,9 @@ class Resolver : Visitor
       endIf
       locals.add( info )
 
+    method on_validate( cmd:Mod )->Cmd
+      return validate( cmd.left.type.cmd_mod(cmd.t, cmd.left, cmd.right) )
+
     method on_validate( cmd:Multiply )->Cmd
       return validate( cmd.left.type.cmd_multiply(cmd.t, cmd.left, cmd.right) )
 
@@ -607,6 +610,23 @@ augment
 
     method TypeValue.cmd_divide( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
       return DivideValue( t, lhs, rhs )
+
+endAugment
+
+# Mod
+augment
+  METHODS
+    method Type.cmd_mod( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      throw t.error( "Values of type $ cannot be mod'd."(name) )
+
+    method TypeInt32.cmd_mod( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return ModInt32( t, lhs, rhs )
+
+    method TypeReal64.cmd_mod( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return ModReal64( t, lhs, rhs )
+
+    method TypeValue.cmd_mod( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return ModValue( t, lhs, rhs )
 
 endAugment
 
