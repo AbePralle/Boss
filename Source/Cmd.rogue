@@ -2191,3 +2191,45 @@ class NegateValue : Unary
       return "NegateValue($)" (%operand)
 
 endClass
+
+class BitwiseAndInt32 : Binary
+  METHODS
+    method description->String
+      return "BitwiseAndInt32($,$)" (%left,%right)
+
+endClass
+
+class BitwiseAndValue : Binary
+  METHODS
+    method description->String
+      return "BitwiseAndValue($,$)" (%left,%right)
+
+endClass
+
+class BitwiseOrInt32 : Binary
+  METHODS
+    method description->String
+      return "BitwiseOrInt32($,$)" (%left,%right)
+
+endClass
+
+class BitwiseOrValue : Binary
+  METHODS
+    method description->String
+      return "BitwiseOrValue($,$)" (%left,%right)
+
+endClass
+
+class BitwiseXorInt32 : Binary
+  METHODS
+    method description->String
+      return "BitwiseXorInt32($,$)" (%left,%right)
+
+endClass
+
+class BitwiseXorValue : Binary
+  METHODS
+    method description->String
+      return "BitwiseXorValue($,$)" (%left,%right)
+
+endClass

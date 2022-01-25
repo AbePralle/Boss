@@ -1052,6 +1052,12 @@ parser
   create AddReal64(left,right):Binary
   create AddString(left,right):Binary
   create AddValue(left,right):Binary
+  create BitwiseAndInt32(left,right):Binary
+  create BitwiseAndValue(left,right):Binary
+  create BitwiseOrInt32(left,right):Binary
+  create BitwiseOrValue(left,right):Binary
+  create BitwiseXorInt32(left,right):Binary
+  create BitwiseXorValue(left,right):Binary
   create CastInt32ToObject(operand):Unary
   create CastInt32ToReal64(operand):Unary
   create CastInt32ToString(operand):Unary

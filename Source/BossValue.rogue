@@ -354,6 +354,36 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
 
       return BossValue()
 
+    method operator&( other:BossValue )->BossValue
+      which (type)
+        case TYPE_CHARACTER, TYPE_INT32
+          which (other.type)
+            case TYPE_CHARACTER, TYPE_INT32
+              return BossValue( x->Int32 & other.x->Int32 )
+          endWhich
+      endWhich
+      return BossValue()
+
+    method operator|( other:BossValue )->BossValue
+      which (type)
+        case TYPE_CHARACTER, TYPE_INT32
+          which (other.type)
+            case TYPE_CHARACTER, TYPE_INT32
+              return BossValue( x->Int32 | other.x->Int32 )
+          endWhich
+      endWhich
+      return BossValue()
+
+    method operator~( other:BossValue )->BossValue
+      which (type)
+        case TYPE_CHARACTER, TYPE_INT32
+          which (other.type)
+            case TYPE_CHARACTER, TYPE_INT32
+              return BossValue( x->Int32 ~ other.x->Int32 )
+          endWhich
+      endWhich
+      return BossValue()
+
     method operator:<<:( other:BossValue )->BossValue
       which (type)
         case TYPE_CHARACTER, TYPE_INT32

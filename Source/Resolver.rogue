@@ -100,15 +100,14 @@ class Resolver : Visitor
       if (right_type is not result_type) cmd.right = validate( result_type.cmd_cast(right) )
       # on_validate() will be called after this method returns
 
-      #method on_visit( cmd:CallProcedure )
-      #  if (cmd.args)
-      #    forEach (arg at i in cmd.args)
-      #      cmd.args[i] = visit(arg)
-      #    endForEach
-      #  endIf
+    method on_validate( cmd:BitwiseAnd )->Cmd
+      return validate( cmd.left.type.cmd_bitwise_and(cmd.t, cmd.left, cmd.right) )
 
-    #method on_visit( cmd:CallRoutine )
-      #on_visit( cmd->(as CallProcedure) )
+    method on_validate( cmd:BitwiseOr )->Cmd
+      return validate( cmd.left.type.cmd_bitwise_or(cmd.t, cmd.left, cmd.right) )
+
+    method on_validate( cmd:BitwiseXor )->Cmd
+      return validate( cmd.left.type.cmd_bitwise_xor(cmd.t, cmd.left, cmd.right) )
 
     method on_validate( cmd:CastToReal64 )->Cmd
       trace "TODO"
@@ -565,6 +564,49 @@ augment
     method IndexAccess.resolve_assignment( t:Token, new_value:Cmd, resolver:Resolver )->Cmd
       return resolver.visit( ContextAccess(t, context, "set", CmdList(t,index,new_value)) )
 endAugment
+
+# BitwiseAnd
+augment
+  METHODS
+    method Type.cmd_bitwise_and( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      throw t.error( "Values of type $ cannot be bitwise-AND'd."(name) )
+
+    method TypeInt32.cmd_bitwise_and( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return BitwiseAndInt32( t, lhs, rhs )
+
+    method TypeValue.cmd_bitwise_and( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return BitwiseAndValue( t, lhs, rhs )
+
+endAugment
+
+# BitwiseOr
+augment
+  METHODS
+    method Type.cmd_bitwise_or( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      throw t.error( "Values of type $ cannot be bitwise-OR'd."(name) )
+
+    method TypeInt32.cmd_bitwise_or( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return BitwiseOrInt32( t, lhs, rhs )
+
+    method TypeValue.cmd_bitwise_or( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return BitwiseOrValue( t, lhs, rhs )
+
+endAugment
+
+# BitwiseXor
+augment
+  METHODS
+    method Type.cmd_bitwise_xor( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      throw t.error( "Values of type $ cannot be bitwise-XOR'd."(name) )
+
+    method TypeInt32.cmd_bitwise_xor( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return BitwiseXorInt32( t, lhs, rhs )
+
+    method TypeValue.cmd_bitwise_xor( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return BitwiseXorValue( t, lhs, rhs )
+
+endAugment
+
 
 # Call
 augment

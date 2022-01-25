@@ -57,6 +57,54 @@ augment
       Program.execution_result = a + Program.execution_result
       return true
 
+    method BitwiseAndInt32.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result.x->Int32
+
+      if (not right.execute) return false
+      Program.execution_result.x = a & Program.execution_result.x->Int32
+      return true
+
+    method BitwiseAndValue.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result
+
+      if (not right.execute) return false
+      Program.execution_result = a & Program.execution_result
+      return true
+
+    method BitwiseOrInt32.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result.x->Int32
+
+      if (not right.execute) return false
+      Program.execution_result.x = a | Program.execution_result.x->Int32
+      return true
+
+    method BitwiseOrValue.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result
+
+      if (not right.execute) return false
+      Program.execution_result = a | Program.execution_result
+      return true
+
+    method BitwiseXorInt32.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result.x->Int32
+
+      if (not right.execute) return false
+      Program.execution_result.x = a ~ Program.execution_result.x->Int32
+      return true
+
+    method BitwiseXorValue.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result
+
+      if (not right.execute) return false
+      Program.execution_result = a ~ Program.execution_result
+      return true
+
     method CallGlobalMethod.execute->Logical
       return Program.execute( procedure, args )
 
