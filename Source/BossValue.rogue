@@ -147,7 +147,6 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
           which (other.type)
             case TYPE_LOGICAL: return BossValue( this->Logical or other->Logical )
             case TYPE_STRING:  return BossValue( this->String + other.object )
-            others:            return BossValue()
           endWhich
 
         case TYPE_CHARACTER
@@ -156,7 +155,6 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
                  TYPE_INT32:     return BossValue( (x + other.x)->Int32 )
             case TYPE_REAL64:    return BossValue( x + other.x )
             case TYPE_STRING:    return BossValue( "$$"(Character(x),other.object) )
-            others:              return BossValue()
           endWhich
 
         case TYPE_INT32
@@ -165,7 +163,6 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
                  TYPE_INT32:     return BossValue( (x + other.x)->Int32 )
             case TYPE_REAL64:    return BossValue( x + other.x )
             case TYPE_STRING:    return BossValue( x->Int32->String + other.object )
-            others:              return BossValue()
           endWhich
 
         case TYPE_REAL64
@@ -174,7 +171,6 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
                  TYPE_INT32,
                  TYPE_REAL64:    return BossValue( x + other.x )
             case TYPE_STRING:    return BossValue( x->String + other.object )
-            others:              return BossValue()
           endWhich
 
         case TYPE_STRING
@@ -190,8 +186,6 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
               local other_list = other.object->(as BossValue[])
               result_list.add( other_list )
               return BossValue.list( result_list )
-            others
-              return BossValue()
           endWhich
 
         case TYPE_TABLE
@@ -203,16 +197,12 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
                 result_table[entry.key] = entry.value
               endForEach
               return BossValue.table( result_table )
-            others
-              return BossValue()
           endWhich
 
         case TYPE_XY
           which (other.type)
             case TYPE_XY
               return BossValue( XY(x+other.x,y+other.y) )
-            others
-              return BossValue()
           endWhich
 
         case TYPE_BOX
@@ -221,8 +211,6 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
               return BossValue( Box(x+other.x,y+other.y,a,b) )
             case TYPE_BOX
               return BossValue( this->Box | other->Box )
-            others
-              return BossValue()
           endWhich
       endWhich
 
@@ -233,7 +221,6 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
         case TYPE_LOGICAL
           which (other.type)
             case TYPE_LOGICAL: return BossValue( this->Logical and other->Logical )
-            others:            return BossValue()
           endWhich
 
         case TYPE_CHARACTER
@@ -241,7 +228,6 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
             case TYPE_CHARACTER,
                  TYPE_INT32:     return BossValue( (x * other.x)->Int32 )
             case TYPE_REAL64:    return BossValue( x * other.x )
-            others:              return BossValue()
           endWhich
 
         case TYPE_INT32
@@ -250,7 +236,6 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
                  TYPE_INT32:     return BossValue( (x * other.x)->Int32 )
             case TYPE_REAL64:    return BossValue( x * other.x )
             case TYPE_STRING:    return BossValue( other->String * x->Int32 )
-            others:              return BossValue()
           endWhich
 
         case TYPE_REAL64
@@ -258,15 +243,12 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
             case TYPE_CHARACTER,
                  TYPE_INT32,
                  TYPE_REAL64:    return BossValue( x + other.x )
-            others:              return BossValue()
           endWhich
 
         case TYPE_XY
           which (other.type)
             case TYPE_XY
               return BossValue( XY(x*other.x,y*other.y) )
-            others
-              return BossValue()
           endWhich
 
         case TYPE_BOX
@@ -275,8 +257,45 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
               return BossValue( Box(x*other.x,y*other.y,a*other.x,b*other.y) )
             case TYPE_BOX
               return BossValue( this->Box & other->Box )
-            others
-              return BossValue()
+          endWhich
+      endWhich
+
+      return BossValue()
+
+    method operator/( other:BossValue )->BossValue
+      which (type)
+        case TYPE_CHARACTER, TYPE_INT32
+          which (other.type)
+            case TYPE_CHARACTER,
+                 TYPE_INT32
+              local divisor = other.x->Int32
+              if (divisor) return BossValue( (x / other.x)->Int32 )
+              else         return BossValue( (x / other.x) )
+            case TYPE_REAL64:    return BossValue( x / other.x )
+          endWhich
+
+        case TYPE_REAL64
+          which (other.type)
+            case TYPE_CHARACTER,
+                 TYPE_INT32,
+                 TYPE_REAL64:    return BossValue( x / other.x )
+          endWhich
+
+        case TYPE_STRING
+          which (other.type)
+            case TYPE_STRING: return BossValue( this->String / other->String )
+          endWhich
+
+        case TYPE_XY
+          which (other.type)
+            case TYPE_XY
+              return BossValue( XY(x/other.x,y/other.y) )
+          endWhich
+
+        case TYPE_BOX
+          which (other.type)
+            case TYPE_XY
+              return BossValue( Box(x/other.x,y/other.y,a/other.x,b/other.y) )
           endWhich
       endWhich
 

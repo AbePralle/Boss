@@ -145,6 +145,40 @@ augment
       Program.execution_result = Program.execution_result.description
       return true
 
+    method DivideInt32.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result.x->Int32
+
+      if (not right.execute) return false
+      local b = Program.execution_result.x->Int32
+      if (b == 0) return Program.error( t, "Illegal integer division by zero." )
+      Program.execution_result = a / b
+      return true
+
+    method DivideReal64.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result.x
+
+      if (not right.execute) return false
+      Program.execution_result = a / Program.execution_result.x
+      return true
+
+    method DivideString.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result->String
+
+      if (not right.execute) return false
+      Program.execution_result = a / Program.execution_result->String
+      return true
+
+    method DivideValue.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result
+
+      if (not right.execute) return false
+      Program.execution_result = a / Program.execution_result
+      return true
+
     method EmptyList.execute->Logical
       Program.execution_result = BossValue.list
       return true

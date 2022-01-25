@@ -1069,6 +1069,11 @@ parser
   create CompareGEReal64(left,right):Compare
   create CreateObject(of_type:Type,m_init:Procedure,args)
   create Description(operand):Unary
+  create DivideInt32(left,right):Binary
+  create DivideObject(left,right):Binary
+  create DivideReal64(left,right):Binary
+  create DivideString(left,right):Binary
+  create DivideValue(left,right):Binary
   create GetLocal(info:Local)
   create GetProperty(context,info:Property)
   create GetSingleton(type:Type)

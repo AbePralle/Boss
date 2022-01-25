@@ -57,9 +57,6 @@ class Resolver : Visitor
     method on_validate( cmd:Add )->Cmd
       return validate( cmd.left.type.cmd_add(cmd.t, cmd.left, cmd.right) )
 
-    method on_validate( cmd:Multiply )->Cmd
-      return validate( cmd.left.type.cmd_multiply(cmd.t, cmd.left, cmd.right) )
-
     method on( cmd:AddAndAssign )->Cmd
       local operand = visit( cmd.operand ).require_value
       return validate( cmd.target.resolve_add_and_assign(cmd.t,operand,this) )
@@ -165,6 +162,9 @@ class Resolver : Visitor
       if (call_description) return call_description
       return cmd
 
+    method on_validate( cmd:Divide )->Cmd
+      return validate( cmd.left.type.cmd_divide(cmd.t, cmd.left, cmd.right) )
+
     method on_visit( cmd:If )
       visit_children( cmd )
       if (cmd.condition) cmd.condition.require_value
@@ -208,6 +208,9 @@ class Resolver : Visitor
         endIf
       endIf
       locals.add( info )
+
+    method on_validate( cmd:Multiply )->Cmd
+      return validate( cmd.left.type.cmd_multiply(cmd.t, cmd.left, cmd.right) )
 
     method on_visit( cmd:Method )
       forEach (v in cmd.parameters step -1)
@@ -584,6 +587,26 @@ augment
 
       #method Access.resolve_increment( t:Token, resolver:Resolver )->Cmd
       #return CallRoutine( t, this, args )
+endAugment
+
+# Divide
+augment
+  METHODS
+    method Type.cmd_divide( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      throw t.error( "Values of type $ cannot be divided."(name) )
+
+    method TypeInt32.cmd_divide( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return DivideInt32( t, lhs, rhs )
+
+    method TypeReal64.cmd_divide( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return DivideReal64( t, lhs, rhs )
+
+    method TypeString.cmd_divide( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return DivideString( t, lhs, rhs )
+
+    method TypeValue.cmd_divide( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return DivideValue( t, lhs, rhs )
+
 endAugment
 
 # Multiply

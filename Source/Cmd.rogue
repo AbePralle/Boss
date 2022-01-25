@@ -1960,3 +1960,38 @@ class LocalDeclaration : Cmd
       return "LocalDeclaration($)" (%info)
 
 endClass
+
+class DivideInt32 : Binary
+  METHODS
+    method description->String
+      return "DivideInt32($,$)" (%left,%right)
+
+endClass
+
+class DivideObject : Binary
+  METHODS
+    method description->String
+      return "DivideObject($,$)" (%left,%right)
+
+endClass
+
+class DivideReal64 : Binary
+  METHODS
+    method description->String
+      return "DivideReal64($,$)" (%left,%right)
+
+endClass
+
+class DivideString : Binary
+  METHODS
+    method description->String
+      return "DivideString($,$)" (%left,%right)
+
+endClass
+
+class DivideValue : Binary
+  METHODS
+    method description->String
+      return "DivideValue($,$)" (%left,%right)
+
+endClass

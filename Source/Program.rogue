@@ -184,6 +184,11 @@ class Program [singleton]
       require stack.is_empty
       require fp == 0
 
+    method error( t:Token, message:String )->Logical
+      execution_error = t.error( message )
+      execution_status = EXE_ERROR
+      return false
+
     method error_null_reference->Logical
       execution_error = Error( "Null reference access." )
       execution_status = EXE_ERROR
