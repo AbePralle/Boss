@@ -18,6 +18,7 @@ IDENTIFIER     identifier   [content]
 ----------------------------------------------------------------------
 tokens Keywords
 ----------------------------------------------------------------------
+KEYWORD_AUGMENT      and
 KEYWORD_AUGMENT      augment
 KEYWORD_CLASS        class       [structural]
 KEYWORD_MODULE       module
@@ -42,8 +43,10 @@ KEYWORD_LOCAL        local
 KEYWORD_METHOD       method      [structural]
 KEYWORD_METHODS      METHODS     [structural]
 KEYWORD_NO_ACTION    noAction
+KEYWORD_NOT          not
 KEYWORD_NULL         null
 KEYWORD_OF           of
+KEYWORD_OR           or
 KEYWORD_PI           pi
 KEYWORD_PRINT        print
 KEYWORD_PRINTLN      println
@@ -56,6 +59,7 @@ KEYWORD_TRUE         true
 KEYWORD_UNDEFINED    undefined
 KEYWORD_USES         uses
 KEYWORD_WHILE        while
+KEYWORD_XOR          xor
 
 ----------------------------------------------------------------------
 tokens Symbols
@@ -939,15 +943,16 @@ parser
   expression
 
 - expression
-  comparison
+  logical_xor
 
-#{
-- logical_xor  [binary]
+- logical_xor [binary]
+  on "xor" -> LogicalXor
 
-- logical_or   [binary]
+- logical_or [binary]
+  on "or" -> LogicalOr
 
-- logical_and  [binary]
-}#
+- logical_and [binary]
+  on "and" -> LogicalAnd
 
 - comparison [binary]
   on "==" -> CompareEQ
@@ -976,9 +981,10 @@ parser
   on "/" -> Divide
 
 - pre_unary [preUnary]
-  on "-"  -> Negate
+  on "-"   -> Negate
+  on "not" -> LogicalNot
 
-- access [binary]
+- access
   term
   access_inner
 

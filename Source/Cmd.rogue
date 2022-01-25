@@ -1995,3 +1995,31 @@ class DivideValue : Binary
       return "DivideValue($,$)" (%left,%right)
 
 endClass
+
+class LogicalAnd : Binary
+  METHODS
+    method description->String
+      return "LogicalAnd($,$)" (%left,%right)
+
+endClass
+
+class LogicalNot : Unary
+  METHODS
+    method description->String
+      return "LogicalNot($)" (%operand)
+
+endClass
+
+class LogicalOr : Binary
+  METHODS
+    method description->String
+      return "LogicalOr($,$)" (%left,%right)
+
+endClass
+
+class LogicalXor : Binary
+  METHODS
+    method description->String
+      return "LogicalXor($,$)" (%left,%right)
+
+endClass

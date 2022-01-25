@@ -174,12 +174,25 @@ class Boss
           if (index < 0 or index >= list.count) return Program.error_oob(index,list.count)
           return list[index]
         endFunction )
+      Program.register( "$.remove_last->$"(name,element_name),
+        function->BossValue
+          BOSS_CONTEXT_OBJECT( context )
+          BOSS_PROPERTY_NATIVE_OBJECT( list, context, 0, $Type[] )
+          return list.remove_last
+        endFunction )
       Program.register( "$.resize(Int32)"(name),
         function->BossValue
           BOSS_CONTEXT_OBJECT( context )
           BOSS_PROPERTY_NATIVE_OBJECT( list, context, 0, $Type[] )
           BOSS_ARG_INT32( new_size, 1 )
           list.resize( new_size )
+          return true
+        endFunction )
+      Program.register( "$.shuffle"(name),
+        function->BossValue
+          BOSS_CONTEXT_OBJECT( context )
+          BOSS_PROPERTY_NATIVE_OBJECT( list, context, 0, $Type[] )
+          list.shuffle
           return true
         endFunction )
 

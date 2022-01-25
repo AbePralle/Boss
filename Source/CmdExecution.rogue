@@ -266,6 +266,34 @@ augment
       Program.execution_result = pi
       return true
 
+    method LogicalAnd.execute->Logical
+      if (not left.execute) return false
+      if (not Program.execution_result) return true # result is already 'false'
+
+      if (not right.execute) return false
+      Program.execution_result = Program.execution_result?
+      return true
+
+    method LogicalOr.execute->Logical
+      if (not left.execute) return false
+      if (Program.execution_result?)
+        Program.execution_result = true
+        return true
+      endIf
+
+      if (not right.execute) return false
+      Program.execution_result = Program.execution_result?
+      return true
+
+    method LogicalXor.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result?
+
+      if (not right.execute) return false
+      local b = Program.execution_result?
+      Program.execution_result = a xor b
+      return true
+
     method MultiplyInt32.execute->Logical
       if (not left.execute) return false
       local a = Program.execution_result.x->Int32
