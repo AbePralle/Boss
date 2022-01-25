@@ -24,14 +24,14 @@ class Organizer : Visitor
           type.add( m_init )
 
           forEach (p in constructor_properties)
-            block p = p->(as LocalDef)->Local
-              p.is_parameter = true
-              p.is_auto_store = true
-              m_init.parameters.add( p )
-              if (p.@type)
-                type.properties[ p.name ] = Property( p.t, type, p.name, p.initial_value, p.@type )
-              endIf
-            endBlock
+            local v = p->(as LocalDef)->Local
+            v.is_parameter = true
+            v.is_auto_store = true
+            m_init.parameters.add( v )
+            collect( v, m_init )
+            if (v.@type)
+              type.properties[ v.name ] = Property( v.t, type, v.name, v.initial_value, v.@type )
+            endIf
           endForEach
         endIf
 
@@ -50,12 +50,8 @@ class Organizer : Visitor
     method visit( this_type, this_procedure )
       visit( this_procedure )
 
-    method on_visit( cmd:Local )
-      if (cmd.fp_offset == -1)
-        cmd.fp_offset = this_procedure.locals.count + which{ this_procedure.is_global:0 || 1 }
-        cmd.is_parameter = cmd.fp_offset < this_procedure.parameters.count
-        this_procedure.locals.add( cmd )
-      endIf
+    method on_visit( cmd:LocalDeclaration )
+      collect( cmd.info )
       visit_children( cmd )
 
     method on( cmd:LocalDeclarations )->Cmd
@@ -64,15 +60,16 @@ class Organizer : Visitor
         forEach (v in cmd.declarations)
           block v = v->(as LocalDef)->Local
             v.type = var_type
-            block v = visit( v )
-              if (v) current_statements_rewriter.write( v )
-            endBlock
+            local decl = LocalDeclaration( cmd.t, v )
+            current_statements_rewriter.write( visit(decl) )
           endBlock
         endForEach
       else
         forEach (v in cmd.declarations)
-          v = visit( v->(as LocalDef)->Local )
-          if (v) current_statements_rewriter.write( v )
+          block v = v->(as LocalDef)->Local
+            local decl = LocalDeclaration( cmd.t, v )
+            current_statements_rewriter.write( visit(decl) )
+          endBlock
         endForEach
       endIf
       return null
@@ -95,6 +92,13 @@ class Organizer : Visitor
     method on( cmd:MethodDef )->Cmd
       return visit( cmd->Method(this_type) )
 
+    method collect( v:Local, proc=this_procedure:Procedure )
+      if (v.fp_offset == -1)
+        v.fp_offset = proc.locals.count + which{ proc.is_global:0 || 1 }
+        v.is_parameter = v.fp_offset < proc.parameters.count
+        proc.locals.add( v )
+      endIf
+
     method on_visit( cmd:Procedure )
       cmd.max_args = cmd.parameters.count
       cmd.min_args = cmd.max_args
@@ -108,6 +112,7 @@ class Organizer : Visitor
       endForEach
 
       forEach (param in cmd.parameters)
+        collect( param )
         if (not param.type)
           if (this_type)
             local p = this_type.find_property( param.name )
@@ -152,6 +157,21 @@ class Organizer : Visitor
 
     method collect( t:Token, p:Property )
       assert this_type
+
+      if (not p.type)
+        if (p.initial_value)
+          p.type = p.initial_value.implicit_type
+          if (not p.type)
+            throw p.t.error(
+              ''Cannot implicitly determine type of property "$" from initial value. ''(p.name) +
+              ''Add an explicit ': Type' at the end of the line.''
+            )
+          endIf
+        else
+          println ''Property "$" must have an initial assignment or a declared ': Type'.''(p.name)
+        endIf
+      endIf
+
       visit( p )
       if (this_type.properties.contains(p.name))
         throw t.error( ''Type $ already defines a property named "$".''(this_type,p.name) )

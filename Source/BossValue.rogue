@@ -10,20 +10,18 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
     TYPE_LOGICAL
     TYPE_CHARACTER
     TYPE_INT32
-    TYPE_LAST_INTEGER = TYPE_INT32
-
     TYPE_REAL64
-    TYPE_LAST_NUMBER  = TYPE_REAL64
-
     TYPE_STRING
     TYPE_BOSS_OBJECT
     TYPE_NATIVE_OBJECT
     TYPE_LIST
     TYPE_TABLE
-    TYPE_LAST_OBJECT  = TYPE_TABLE
-
     TYPE_XY
     TYPE_BOX
+
+    TYPE_LAST_INTEGER = TYPE_INT32
+    TYPE_LAST_NUMBER  = TYPE_REAL64
+    TYPE_LAST_OBJECT  = TYPE_TABLE
 
     # case TYPE_UNDEFINED
     # case TYPE_NULL
@@ -129,6 +127,9 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
         case TYPE_REAL64:    return %x
         case TYPE_XY:        return %this->XY
         case TYPE_BOX:       return %this->Box
+
+        case TYPE_BOSS_OBJECT: return "BossObject($)"(object->(as BossObject).type.name)
+
         others:              return %object
       endWhich
 
@@ -144,7 +145,7 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
 
         case TYPE_LOGICAL
           which (other.type)
-            case TYPE_LOGICAL: return BossValue( this->Logical and other->Logical )
+            case TYPE_LOGICAL: return BossValue( this->Logical or other->Logical )
             case TYPE_STRING:  return BossValue( this->String + other.object )
             others:            return BossValue()
           endWhich
@@ -220,6 +221,60 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
               return BossValue( Box(x+other.x,y+other.y,a,b) )
             case TYPE_BOX
               return BossValue( this->Box | other->Box )
+            others
+              return BossValue()
+          endWhich
+      endWhich
+
+      return BossValue()
+
+    method operator*( other:BossValue )->BossValue
+      which (type)
+        case TYPE_LOGICAL
+          which (other.type)
+            case TYPE_LOGICAL: return BossValue( this->Logical and other->Logical )
+            others:            return BossValue()
+          endWhich
+
+        case TYPE_CHARACTER
+          which (other.type)
+            case TYPE_CHARACTER,
+                 TYPE_INT32:     return BossValue( (x * other.x)->Int32 )
+            case TYPE_REAL64:    return BossValue( x * other.x )
+            others:              return BossValue()
+          endWhich
+
+        case TYPE_INT32
+          which (other.type)
+            case TYPE_CHARACTER,
+                 TYPE_INT32:     return BossValue( (x * other.x)->Int32 )
+            case TYPE_REAL64:    return BossValue( x * other.x )
+            case TYPE_STRING:    return BossValue( other->String * x->Int32 )
+            others:              return BossValue()
+          endWhich
+
+        case TYPE_REAL64
+          which (other.type)
+            case TYPE_CHARACTER,
+                 TYPE_INT32,
+                 TYPE_REAL64:    return BossValue( x + other.x )
+            others:              return BossValue()
+          endWhich
+
+        case TYPE_XY
+          which (other.type)
+            case TYPE_XY
+              return BossValue( XY(x*other.x,y*other.y) )
+            others
+              return BossValue()
+          endWhich
+
+        case TYPE_BOX
+          which (other.type)
+            case TYPE_XY
+              return BossValue( Box(x*other.x,y*other.y,a*other.x,b*other.y) )
+            case TYPE_BOX
+              return BossValue( this->Box & other->Box )
             others
               return BossValue()
           endWhich

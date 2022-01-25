@@ -165,6 +165,7 @@ augment
       return true
 
     method GetThisProperty.execute->Logical
+      assert Program.fp < Program.stack.count
       Program.execution_result = Program.stack[Program.fp].object->(as BossObject).properties[index]
       return true
 
@@ -220,14 +221,39 @@ augment
       Program.execution_result = pi
       return true
 
-    method Local.execute->Logical
+    method LocalDeclaration.execute->Logical
       # Local declaration
-      assert initial_value
-      if (not initial_value.execute) return false
-      Program.stack[ Program.fp + fp_offset ] = Program.execution_result
+      assert info.initial_value
+      if (not info.initial_value.execute) return false
+      assert info.fp_offset >= 0
+      Program.stack[ Program.fp + info.fp_offset ] = Program.execution_result
       return true
 
       Program.execution_result = pi
+      return true
+
+    method MultiplyInt32.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result.x->Int32
+
+      if (not right.execute) return false
+      Program.execution_result = a * Program.execution_result.x->Int32
+      return true
+
+    method MultiplyReal64.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result.x
+
+      if (not right.execute) return false
+      Program.execution_result = a * Program.execution_result.x
+      return true
+
+    method MultiplyValue.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result
+
+      if (not right.execute) return false
+      Program.execution_result = a * Program.execution_result
       return true
 
     method Print.execute->Logical

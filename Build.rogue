@@ -16,7 +16,7 @@ augment Build
 
     RELEASE_MODE      = false
     LAUNCHER_FOLDER   = "/usr/local/bin"  # for Mac/Linux
-    ROGUEC_FLAGS      = ""
+    ROGUEC_FLAGS      = "--gc=manual"
     CPP_FLAGS_UNIX    = ""
     CPP_FLAGS_WINDOWS = ""
 endAugment

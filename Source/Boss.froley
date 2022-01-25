@@ -971,11 +971,9 @@ parser
   on "+" -> Add
   on "-" -> Subtract
 
-#{
 - multiply_divide [binary]
   on "*" -> Multiply
   on "/" -> Divide
-}#
 
 - pre_unary [preUnary]
   on "-"  -> Negate
@@ -1084,7 +1082,13 @@ parser
   create LiteralNull(type:Type):Literal
   create LiteralValueUndefined:Literal
   create Local(name:String,initial_value)
+  create LocalDeclaration( info:Local )
   create Method(type_context:Type,name:String,statements):Procedure
+  create MultiplyInt32(left,right):Binary
+  create MultiplyObject(left,right):Binary
+  create MultiplyReal64(left,right):Binary
+  create MultiplyString(left,right):Binary
+  create MultiplyValue(left,right):Binary
   create OpAndAssign(target,operand)
   create Procedure(module_context:Module,name:String,statements)
   create ProcedureDef(name:String,parameters,return_type_ref,attribute_names,statements)

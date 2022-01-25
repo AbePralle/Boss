@@ -81,7 +81,37 @@ class Boss
       Program.register( "Console:width->Int32",  () => Console.width )
 
     method register_lists
+      register_list_character
       register_list_int32
+
+    method register_list_character
+      register_list<<Character>>
+      Program.register( "Character[].add(Character)",
+        function->BossValue
+          BOSS_CONTEXT_OBJECT( context )
+          BOSS_PROPERTY_NATIVE_OBJECT( list, context, 0, Character[] )
+          local value = Program.arg(1).x->Int32->Character
+          list.add( value )
+          return true
+        endFunction )
+      Program.register( "Character[].fill(Character)",
+        function->BossValue
+          BOSS_CONTEXT_OBJECT( context )
+          BOSS_PROPERTY_NATIVE_OBJECT( list, context, 0, Character[] )
+          local value = Program.arg(1).x->Int32->Character
+          list.fill( value )
+          return true
+        endFunction )
+      Program.register( "Character[].set(Int32,Character)",
+        function->BossValue
+          BOSS_CONTEXT_OBJECT( context )
+          BOSS_PROPERTY_NATIVE_OBJECT( list, context, 0, Character[] )
+          BOSS_ARG_INT32( index, 1 )
+          BOSS_ARG_CHARACTER( new_value, 2 )
+          if (index < 0 or index >= list.count) return Program.error_oob(index,list.count)
+          list[index] = new_value
+          return true
+        endFunction )
 
     method register_list_int32
       register_list<<Int32>>
@@ -91,6 +121,14 @@ class Boss
           BOSS_PROPERTY_NATIVE_OBJECT( list, context, 0, Int32[] )
           local value = Program.arg(1).x->Int32
           list.add( value )
+          return true
+        endFunction )
+      Program.register( "Int32[].fill(Int32)",
+        function->BossValue
+          BOSS_CONTEXT_OBJECT( context )
+          BOSS_PROPERTY_NATIVE_OBJECT( list, context, 0, Int32[] )
+          local value = Program.arg(1).x->Int32
+          list.fill( value )
           return true
         endFunction )
       Program.register( "Int32[].set(Int32,Int32)",
@@ -114,6 +152,12 @@ class Boss
           BOSS_CONTEXT_OBJECT( context )
           context.properties[0] = BossValue( $Type[] )
           return true
+        endFunction )
+      Program.register( "$.count->Int32"(name),
+        function->BossValue
+          BOSS_CONTEXT_OBJECT( context )
+          BOSS_PROPERTY_NATIVE_OBJECT( list, context, 0, $Type[] )
+          return list.count
         endFunction )
       Program.register( "$.description->String"(name),
         function->BossValue

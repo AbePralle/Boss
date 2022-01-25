@@ -126,9 +126,9 @@ class Program [singleton]
         local m = get_module( name.before_first("::") )
         return m.find_type( name.after_first("::") )
       else
-        local type = default_module.find_type( name )
+        local type = default_module.find_type( name, &extended_search )
         if (type) return type
-        return global_module.find_type( name )
+        return null
       endIf
 
     method import( t:Token, filepath:String )->Logical

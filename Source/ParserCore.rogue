@@ -64,12 +64,14 @@ class ParserCore [abstract]
     ip_comparison__inner = 51
     ip_add_subtract = 52
     ip_add_subtract__inner = 53
-    ip_pre_unary = 54
-    ip_access = 55
-    ip_access__inner = 56
-    ip_access_inner = 57
-    ip_term = 58
-    ip_additional_node_types = 59
+    ip_multiply_divide = 54
+    ip_multiply_divide__inner = 55
+    ip_pre_unary = 56
+    ip_access = 57
+    ip_access__inner = 58
+    ip_access_inner = 59
+    ip_term = 60
+    ip_additional_node_types = 61
 
   PROPERTIES
     _tokens          : Token[]
@@ -1181,7 +1183,7 @@ class ParserCore [abstract]
             endIf
             return
           case ip_add_subtract
-            _execute(ip_pre_unary)
+            _execute(ip_multiply_divide)
             _pop_frame
             _execute(ip_add_subtract__inner)
             _pop_frame
@@ -1190,7 +1192,7 @@ class ParserCore [abstract]
             if (_next_t.type == TokenType.SYMBOL_PLUS)
               temporarily _cur_t = _on_t
                 _consume_eols
-                _execute(ip_pre_unary)
+                _execute(ip_multiply_divide)
                 _pop_frame
                 _push( Add(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
                 _execute(ip_add_subtract__inner)
@@ -1201,10 +1203,40 @@ class ParserCore [abstract]
             if (_next_t.type == TokenType.SYMBOL_MINUS)
               temporarily _cur_t = _on_t
                 _consume_eols
-                _execute(ip_pre_unary)
+                _execute(ip_multiply_divide)
                 _pop_frame
                 _push( Subtract(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
                 _execute(ip_add_subtract__inner)
+                _pop_frame
+                return
+              endTemporarily
+            endIf
+            return
+          case ip_multiply_divide
+            _execute(ip_pre_unary)
+            _pop_frame
+            _execute(ip_multiply_divide__inner)
+            _pop_frame
+            return
+          case ip_multiply_divide__inner
+            if (_next_t.type == TokenType.SYMBOL_ASTERISK)
+              temporarily _cur_t = _on_t
+                _consume_eols
+                _execute(ip_pre_unary)
+                _pop_frame
+                _push( Multiply(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
+                _execute(ip_multiply_divide__inner)
+                _pop_frame
+                return
+              endTemporarily
+            endIf
+            if (_next_t.type == TokenType.SYMBOL_SLASH)
+              temporarily _cur_t = _on_t
+                _consume_eols
+                _execute(ip_pre_unary)
+                _pop_frame
+                _push( Divide(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
+                _execute(ip_multiply_divide__inner)
                 _pop_frame
                 return
               endTemporarily
@@ -1397,7 +1429,13 @@ class ParserCore [abstract]
             _push( LiteralNull(_cur_t,_node_arg(-1)->(as Type)), 1 )
             _push( LiteralValueUndefined(_cur_t), 0 )
             _push( Local(_cur_t,_string_arg(-2),_node_arg(-1)), 2 )
+            _push( LocalDeclaration(_cur_t,_node_arg(-1)->(as Local)), 1 )
             _push( Method(_cur_t,_node_arg(-3)->(as Type),_string_arg(-2),_node_arg(-1)), 3 )
+            _push( MultiplyInt32(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
+            _push( MultiplyObject(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
+            _push( MultiplyReal64(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
+            _push( MultiplyString(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
+            _push( MultiplyValue(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( OpAndAssign(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( Procedure(_cur_t,_node_arg(-3)->(as Module),_string_arg(-2),_node_arg(-1)), 3 )
             _push( ProcedureDef(_cur_t,_string_arg(-5),_node_arg(-4),_node_arg(-3),_node_arg(-2),_node_arg(-1)), 5 )

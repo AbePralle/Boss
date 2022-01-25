@@ -17,6 +17,7 @@ class Resolver : Visitor
       if (this_type.is_resolved) return
       this_type.is_resolved = true
       this_type.organize
+
       visit( this_type, forEach in this_type.methods )
 
       if (this_type.properties.count)
@@ -40,6 +41,7 @@ class Resolver : Visitor
       if (not this_procedure.is_resolved)
         this_procedure.is_resolved = true
         visit( this_procedure )
+        locals.clear
       endIf
 
     method find_local( name:String )->Local
@@ -54,6 +56,9 @@ class Resolver : Visitor
 
     method on_validate( cmd:Add )->Cmd
       return validate( cmd.left.type.cmd_add(cmd.t, cmd.left, cmd.right) )
+
+    method on_validate( cmd:Multiply )->Cmd
+      return validate( cmd.left.type.cmd_multiply(cmd.t, cmd.left, cmd.right) )
 
     method on( cmd:AddAndAssign )->Cmd
       local operand = visit( cmd.operand ).require_value
@@ -156,7 +161,6 @@ class Resolver : Visitor
       return resolve_access( cmd.t, cmd.context, cmd.name, cmd.args )
 
     method on_validate( cmd:Description )->Cmd
-      local type = cmd.operand.require_type
       local call_description = resolve_access( cmd.t, cmd.operand, "description", null, &suppress_error )
       if (call_description) return call_description
       return cmd
@@ -187,21 +191,23 @@ class Resolver : Visitor
         throw cmd.t.error( "[INTERNAL] Unhandled IncrementThisProperty for type $."(type) )
       endIf
 
-    method on_visit( cmd:Local )
-      if (not cmd.is_parameter)
-        if (cmd.type)
-          if (not cmd.initial_value) cmd.initial_value = cmd.type.cmd_default_value( cmd.t )
-          cmd.initial_value = validate( visit(cmd.initial_value).cmd_cast_to( cmd.@type ) )
-        elseIf (not cmd.@type)
-          if (not cmd.initial_value)
-            throw cmd.t.error( "Local variable declarations must have an initial value assignment or an assigned ': Type'." )
+    method on_visit( cmd:LocalDeclaration )
+      local info = cmd.info
+      if (not info.is_parameter)
+        if (info.type)
+          if (not info.initial_value) info.initial_value = info.type.cmd_default_value( info.t )
+          info.initial_value = validate( visit(info.initial_value).cmd_cast_to( info.@type ) )
+        elseIf (not info.@type)
+          if (not info.initial_value)
+            throw info.t.error( "Local variable declarations must have an initial value assignment or an assigned ': Type'." )
           endIf
-          cmd.initial_value = visit( cmd.initial_value )
-          cmd.type = cmd.initial_value.require_type
+          info.initial_value = visit( info.initial_value )
+          info.type = info.initial_value.require_type
         else
-          cmd.initial_value = visit( cmd.initial_value )
+          info.initial_value = visit( info.initial_value )
         endIf
       endIf
+      locals.add( info )
 
     method on_visit( cmd:Method )
       forEach (v in cmd.parameters step -1)
@@ -212,14 +218,26 @@ class Resolver : Visitor
           endIf
         endBlock
       endForEach
+      on_visit( cmd->(as Procedure) )
+
+    method on_visit( cmd:Procedure )
       visit_children( cmd )
+
+      cmd.local_stack_slots = cmd.locals.count
+      if (cmd.parameters) cmd.local_stack_slots -= cmd.parameters.count
+      assert cmd.local_stack_slots >= 0
 
     method on_visit_children( cmd:Procedure )
       locals.add( (forEach in cmd.parameters)->(as Local) )
       prior.on_visit_children( cmd )
-      loop (cmd.parameters.count) locals.remove_last
+      loop (cmd.parameters.count)
+        assert locals.count
+        locals.remove_last
+      endLoop
 
     method on_visit( cmd:Print )
+      visit_children( cmd )
+
       forEach (arg in rewriter=cmd.args.list.rewriter)
         arg = validate( Description(arg.t,arg) ).require_value
         if (arg) rewriter.write( arg )
@@ -234,17 +252,6 @@ class Resolver : Visitor
         arg = validate( Description(arg.t,arg) ).require_value
         if (arg) rewriter.write( arg )
       endForEach
-
-    method on_visit( cmd:Procedure )
-      visit_children( cmd )
-
-      #forEach (v at i in cmd.locals)
-      #  v.fp_offset = i
-      #endForEach
-
-      cmd.local_stack_slots = cmd.locals.count
-      if (cmd.parameters) cmd.local_stack_slots -= cmd.parameters.count
-      # TODO: account for object context
 
     method on( cmd:Return )->Cmd
       if (cmd.result) return visit( ReturnResult(cmd.t,cmd.result) )
@@ -287,10 +294,10 @@ class Resolver : Visitor
             return GetSingleton(t,type)
           else
             if (type.name.ends_with(']'))
-              which (type.name)
-                others
-                  return resolve_access( t, null, type.name, CmdList(t) )
-              endWhich
+              #which (type.name)
+              #others
+              return resolve_access( t, null, type.name, CmdList(t) )
+              #endWhich
             else
               return TypeContext(t,type)
             endIf
@@ -577,6 +584,26 @@ augment
 
       #method Access.resolve_increment( t:Token, resolver:Resolver )->Cmd
       #return CallRoutine( t, this, args )
+endAugment
+
+# Multiply
+augment
+  METHODS
+    method Type.cmd_multiply( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      throw t.error( "Values of type $ cannot be multiplied."(name) )
+
+    method TypeInt32.cmd_multiply( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return MultiplyInt32( t, lhs, rhs )
+
+    method TypeReal64.cmd_multiply( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return MultiplyReal64( t, lhs, rhs )
+
+    method TypeString.cmd_multiply( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return MultiplyString( t, lhs, rhs )
+
+    method TypeValue.cmd_multiply( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return MultiplyValue( t, lhs, rhs )
+
 endAugment
 
 # Subtract

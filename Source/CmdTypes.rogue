@@ -27,6 +27,10 @@ augment Cmd
     method organize_element
       throw t.error( "[INTERNAL] $.organize_element() is undefined." (type_name) )
       }#
+
+    method implicit_type->Type
+      return null
+
     method is_type_context->Logical
       return false
 
@@ -97,9 +101,12 @@ augment
 endAugment
 
 
-# type()
+# type() and implicit_type()
 augment
   METHODS
+    method Access.implicit_type->Type
+      return Program.find_type(name)
+
     method Unary.type->Type
       return operand.type
 
@@ -147,6 +154,9 @@ augment
 
     method ImportModule.type->Type
       return Program.type_Value
+
+    method IndexAccess.type->Type
+      return context.type
 
     method LiteralCharacter.type->Type
       return Program.type_Character

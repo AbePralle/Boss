@@ -35,9 +35,6 @@ class Cmd( t:Token )
     method dispatch_on_visit<<$VisitorType>>( visitor:$VisitorType ) [propagated]
       visitor.on_visit( this )
 
-    method dispatch_on_visit_node<<$VisitorType>>( visitor:$VisitorType ) [propagated]
-      visitor.on_visit_node( this )
-
     method dispatch_on_visit_children<<$VisitorType>>( visitor:$VisitorType ) [propagated]
       visitor.on_visit_children( this )
 
@@ -662,9 +659,9 @@ class RoutineDef : ProcedureDef
       result.parameters.add( (forEach in parameters)->(as LocalDef)->Local )
       if (return_type_ref) result.return_type = return_type_ref->Type
       if (attribute_names)
-        forEach (attribute in attribute_names)
+        #forEach (attribute in attribute_names)
           # TOOD
-        endForEach
+        #endForEach
       endIf
       return result
 endClass
@@ -764,9 +761,9 @@ class GlobalMethodDef : MethodDef
       m.is_global = true
       if (return_type_ref) m.return_type = return_type_ref->Type
       if (attribute_names)
-        forEach (attribute in attribute_names)
+        #forEach (attribute in attribute_names)
           # TOOD
-        endForEach
+        #endForEach
       endIf
       type_context.add( m )
       return m
@@ -1195,9 +1192,9 @@ class MethodDef : ProcedureDef
       m.parameters.add( (forEach in parameters)->(as LocalDef)->Local )
       if (return_type_ref) m.return_type = return_type_ref->Type
       if (attribute_names)
-        forEach (attribute in attribute_names)
+        #forEach (attribute in attribute_names)
           # TOOD
-        endForEach
+        #endForEach
       endIf
       type_context.add( m )
       return m
@@ -1292,8 +1289,8 @@ endClass
 
 class GetThisProperty : Cmd
   PROPERTIES
-    info : Property
-    index   : Int32
+    info  : Property
+    index : Int32
 
   METHODS
     method init( t, info )
@@ -1305,7 +1302,7 @@ class GetThisProperty : Cmd
       index = existing.index
 
     method description->String
-      return "GetThisProperty($)" (%info)
+      return "GetThisProperty($,$)" (info.name,index)
 
 endClass
 
@@ -1896,5 +1893,70 @@ class IndexAccess : Cmd
 
     method description->String
       return "IndexAccess($,$)" (%context,%index)
+
+endClass
+
+class Divide : Binary
+  METHODS
+    method description->String
+      return "Divide($,$)" (%left,%right)
+
+endClass
+
+class Multiply : Binary
+  METHODS
+    method description->String
+      return "Multiply($,$)" (%left,%right)
+
+endClass
+
+class MultiplyInt32 : Binary
+  METHODS
+    method description->String
+      return "MultiplyInt32($,$)" (%left,%right)
+
+endClass
+
+class MultiplyObject : Binary
+  METHODS
+    method description->String
+      return "MultiplyObject($,$)" (%left,%right)
+
+endClass
+
+class MultiplyReal64 : Binary
+  METHODS
+    method description->String
+      return "MultiplyReal64($,$)" (%left,%right)
+
+endClass
+
+class MultiplyString : Binary
+  METHODS
+    method description->String
+      return "MultiplyString($,$)" (%left,%right)
+
+endClass
+
+class MultiplyValue : Binary
+  METHODS
+    method description->String
+      return "MultiplyValue($,$)" (%left,%right)
+
+endClass
+
+class LocalDeclaration : Cmd
+  PROPERTIES
+    info : Local
+
+  METHODS
+    method init( t, info )
+
+    method init( existing:LocalDeclaration )
+      prior.init( existing )
+      if (existing.info) info = existing.info.cloned
+
+    method description->String
+      return "LocalDeclaration($)" (%info)
 
 endClass
