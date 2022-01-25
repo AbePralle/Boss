@@ -241,5 +241,57 @@ class Boss
           value.add( arg )
           return true
         endFunction )
+      Program.register( "Value.count->Int32",
+        function->BossValue
+          BOSS_CONTEXT_VALUE( value )
+          return value.count
+        endFunction )
+      Program.register( "Value.description->String",
+        function->BossValue
+          BOSS_CONTEXT_VALUE( value )
+          return %value
+        endFunction )
+      Program.register( "Value.fill(Value)",
+        function->BossValue
+          BOSS_CONTEXT_VALUE( value )
+          BOSS_ARG_VALUE( fill_value, 1 )
+          if (value.type == BossValue.TYPE_LIST)
+            value.object->(as BossValue[]).fill( fill_value )
+          endIf
+          return true
+        endFunction )
+      Program.register( "Value.get(Int32)->Value",
+        function->BossValue
+          BOSS_CONTEXT_VALUE( value )
+          BOSS_ARG_INT32( index, 1 )
+          if (index < 0 or index >= value.count) return Program.error_oob(index,value.count)
+          return value[index]
+        endFunction )
+      Program.register( "Value.remove_last->Value",
+        function->BossValue
+          BOSS_CONTEXT_VALUE( value )
+          return value.remove_last
+        endFunction )
+      Program.register( "Value.resize(Int32)",
+        function->BossValue
+          BOSS_CONTEXT_VALUE( value )
+          BOSS_ARG_INT32( new_size, 1 )
+          value.resize( new_size )
+          return true
+        endFunction )
+      Program.register( "Value.set(Int32,Value)",
+        function->BossValue
+          BOSS_CONTEXT_VALUE( value )
+          BOSS_ARG_INT32( index, 1 )
+          BOSS_ARG_VALUE( new_value, 2 )
+          value[index] = new_value
+          return true
+        endFunction )
+      Program.register( "Value.shuffle",
+        function->BossValue
+          BOSS_CONTEXT_VALUE( value )
+          value.shuffle
+          return true
+        endFunction )
 endClass
 

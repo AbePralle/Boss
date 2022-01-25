@@ -458,6 +458,7 @@ class Resolver : Visitor
         else
           this_module.collect_routines( name, Candidates.list )
         endIf
+        (forEach in Candidates).resolve
         return refine_candidates( type_context, args )
       endUse
 
