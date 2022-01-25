@@ -86,6 +86,7 @@ SYMBOL_GT                    >
 SYMBOL_GT_GT                 >>
 SYMBOL_LE                    <=
 SYMBOL_LEFT_SHIFT            :<<:
+SYMBOL_LEFT_SHIFT_EQUALS     :<<:=
 SYMBOL_LITERAL_OPEN_SQUARE   @[
 SYMBOL_LT                    <
 SYMBOL_LT_LT                 <<
@@ -102,7 +103,9 @@ SYMBOL_PLUS_PLUS             ++
 SYMBOL_QUESTION              ?
 SYMBOL_QUESTION_COLON        ?:
 SYMBOL_RIGHT_SHIFT           :>>:
+SYMBOL_RIGHT_SHIFT_EQUALS    :>>:=
 SYMBOL_RIGHT_SHIFT_X         :>>>:
+SYMBOL_RIGHT_SHIFT_X_EQUALS  :>>>:=
 SYMBOL_SEMICOLON             ;
 SYMBOL_SLASH                 /
 SYMBOL_TILDE                 ~
@@ -865,6 +868,9 @@ parser
   on "&=", expression -> AndAndAssign(target,expression)
   on "|=", expression -> OrAndAssign(target,expression)
 }#
+  on ":<<:="  expression -> LeftShiftAndAssign(target,operand):OpAndAssign
+  on ":>>:="  expression -> RightShiftAndAssign(target,operand):OpAndAssign
+  on ":>>>:=" expression -> RightShiftXAndAssign(target,operand):OpAndAssign
 
 - local_declarations
   beginList
@@ -962,15 +968,19 @@ parser
   on "<=" -> CompareLE
   on ">=" -> CompareGE
 
-#{
 - bitwise_xor [binary]
+  on '~' -> BitwiseXor
 
 - bitwise_or  [binary]
+  on '|' -> BitwiseOr
 
 - bitwise_and [binary]
+  on '&' -> BitwiseAnd
 
 - bitwise_shift [binary]
-}#
+  on ":<<:"  -> LeftShift
+  on ":>>:"  -> RightShift
+  on ":>>>:" -> RightShiftX
 
 - add_subtract [binary]
   on "+" -> Add
@@ -1090,6 +1100,9 @@ parser
   create IncrementThisProperty(info:Property)
   create IncrementThisPropertyInt32(info:Property)
   create Join(a:String,b:String)
+  create LeftShiftInt32(left,right):Binary
+  create LeftShiftObject(left,right):Binary
+  create LeftShiftValue(left,right):Binary
   create Literal
   create LiteralNull(type:Type):Literal
   create LiteralValueUndefined:Literal
@@ -1105,12 +1118,19 @@ parser
   create MultiplyReal64(left,right):Binary
   create MultiplyString(left,right):Binary
   create MultiplyValue(left,right):Binary
+  create NegateInt32(operand):Unary
+  create NegateReal64(operand):Unary
+  create NegateValue(operand):Unary
   create OpAndAssign(target,operand)
   create Procedure(module_context:Module,name:String,statements)
   create ProcedureDef(name:String,parameters,return_type_ref,attribute_names,statements)
   create Property( type_context:Type, name:String, initial_value, type:Type )
   create PushResult(operand):Unary
   create ReturnResult(result)
+  create RightShiftInt32(left,right):Binary
+  create RightShiftValue(left,right):Binary
+  create RightShiftXInt32(left,right):Binary
+  create RightShiftXValue(left,right):Binary
   create Routine(module_context:Module,name:String,statements):Procedure
   create SetLocal(info:Local,new_value)
   create SetThisProperty(info:Property,new_value)

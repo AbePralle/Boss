@@ -231,6 +231,23 @@ augment
       properties[index].x = properties[index].x->Int32 + 1
       return true
 
+    method LeftShiftInt32.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result.x->Int32
+
+      if (not right.execute) return false
+      local b = Program.execution_result.x->Int32
+      Program.execution_result = a :<<: b
+      return true
+
+    method LeftShiftValue.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result
+
+      if (not right.execute) return false
+      Program.execution_result = a :<<: Program.execution_result
+      return true
+
     method LiteralString.execute->Logical
       Program.execution_result = value
       return true
@@ -344,6 +361,21 @@ augment
       Program.execution_result = a * Program.execution_result
       return true
 
+    method NegateInt32.execute->Logical
+      if (not operand.execute) return false
+      Program.execution_result.x = -Program.execution_result.x->Int32
+      return true
+
+    method NegateReal64.execute->Logical
+      if (not operand.execute) return false
+      Program.execution_result.x = -Program.execution_result.x
+      return true
+
+    method NegateValue.execute->Logical
+      if (not operand.execute) return false
+      Program.execution_result = -Program.execution_result
+      return true
+
     method Print.execute->Logical
       forEach (cmd in args.list)
         if (not cmd.execute) return false
@@ -372,6 +404,40 @@ augment
       if (not result.execute) return false
       Program.execution_status = Program.EXE_RETURN
       return false
+
+    method RightShiftInt32.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result.x->Int32
+
+      if (not right.execute) return false
+      local b = Program.execution_result.x->Int32
+      Program.execution_result = a :>>: b
+      return true
+
+    method RightShiftValue.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result
+
+      if (not right.execute) return false
+      Program.execution_result = a :>>: Program.execution_result
+      return true
+
+    method RightShiftXInt32.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result.x->Int32
+
+      if (not right.execute) return false
+      local b = Program.execution_result.x->Int32
+      Program.execution_result = a :>>>: b
+      return true
+
+    method RightShiftXValue.execute->Logical
+      if (not left.execute) return false
+      local a = Program.execution_result
+
+      if (not right.execute) return false
+      Program.execution_result = a :>>>: Program.execution_result
+      return true
 
     method SetThisProperty.execute->Logical
       if (not new_value.execute) return false

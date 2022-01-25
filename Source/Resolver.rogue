@@ -191,6 +191,9 @@ class Resolver : Visitor
         throw cmd.t.error( "[INTERNAL] Unhandled IncrementThisProperty for type $."(type) )
       endIf
 
+    method on_validate( cmd:LeftShift )->Cmd
+      return validate( cmd.left.type.cmd_left_shift(cmd.t, cmd.left, cmd.right) )
+
     method on_visit( cmd:LocalDeclaration )
       local info = cmd.info
       if (not info.is_parameter)
@@ -225,6 +228,9 @@ class Resolver : Visitor
         endBlock
       endForEach
       on_visit( cmd->(as Procedure) )
+
+    method on_validate( cmd:Negate )->Cmd
+      return validate( cmd.operand.type.cmd_negate(cmd.t, cmd.operand) )
 
     method on_visit( cmd:Procedure )
       visit_children( cmd )
@@ -266,6 +272,12 @@ class Resolver : Visitor
     method on_visit( cmd:ReturnResult )
       visit_children( cmd )
       cmd.result.require_value
+
+    method on_validate( cmd:RightShift )->Cmd
+      return validate( cmd.left.type.cmd_right_shift(cmd.t, cmd.left, cmd.right) )
+
+    method on_validate( cmd:RightShiftX )->Cmd
+      return validate( cmd.left.type.cmd_right_shift_x(cmd.t, cmd.left, cmd.right) )
 
     method on_visit( cmd:Statements )
       temporarily current_statements_rewriter = cmd.list.rewriter
@@ -613,6 +625,20 @@ augment
 
 endAugment
 
+# LeftShift
+augment
+  METHODS
+    method Type.cmd_left_shift( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      throw t.error( "Values of type $ cannot be bit-shifted."(name) )
+
+    method TypeInt32.cmd_left_shift( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return LeftShiftInt32( t, lhs, rhs )
+
+    method TypeValue.cmd_left_shift( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return LeftShiftValue( t, lhs, rhs )
+
+endAugment
+
 # Mod
 augment
   METHODS
@@ -647,6 +673,51 @@ augment
 
     method TypeValue.cmd_multiply( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
       return MultiplyValue( t, lhs, rhs )
+
+endAugment
+
+# Negate
+augment
+  METHODS
+    method Type.cmd_negate( t:Token, operand:Cmd )->Cmd
+      throw t.error( "Values of type $ cannot be negated."(name) )
+
+    method TypeInt32.cmd_negate( t:Token, operand:Cmd )->Cmd
+      return NegateInt32( t, operand )
+
+    method TypeReal64.cmd_negate( t:Token, operand:Cmd )->Cmd
+      return NegateReal64( t, operand )
+
+    method TypeValue.cmd_negate( t:Token, operand:Cmd )->Cmd
+      return NegateValue( t, operand )
+
+endAugment
+
+# RightShift
+augment
+  METHODS
+    method Type.cmd_right_shift( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      throw t.error( "Values of type $ cannot be bit-shifted."(name) )
+
+    method TypeInt32.cmd_right_shift( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return RightShiftInt32( t, lhs, rhs )
+
+    method TypeValue.cmd_right_shift( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return RightShiftValue( t, lhs, rhs )
+
+endAugment
+
+# RightShiftX
+augment
+  METHODS
+    method Type.cmd_right_shift_x( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      throw t.error( "Values of type $ cannot be bit-shifted."(name) )
+
+    method TypeInt32.cmd_right_shift_x( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return RightShiftXInt32( t, lhs, rhs )
+
+    method TypeValue.cmd_right_shift_x( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
+      return RightShiftXValue( t, lhs, rhs )
 
 endAugment
 

@@ -2058,3 +2058,136 @@ class ModValue : Binary
       return "ModValue($,$)" (%left,%right)
 
 endClass
+
+class BitwiseAnd : Binary
+  METHODS
+    method description->String
+      return "BitwiseAnd($,$)" (%left,%right)
+
+endClass
+
+class BitwiseOr : Binary
+  METHODS
+    method description->String
+      return "BitwiseOr($,$)" (%left,%right)
+
+endClass
+
+class BitwiseXor : Binary
+  METHODS
+    method description->String
+      return "BitwiseXor($,$)" (%left,%right)
+
+endClass
+
+class LeftShift : Binary
+  METHODS
+    method description->String
+      return "LeftShift($,$)" (%left,%right)
+
+endClass
+
+class LeftShiftAndAssign : OpAndAssign
+  METHODS
+    method description->String
+      return "LeftShiftAndAssign($,$)" (%target,%operand)
+
+endClass
+
+class RightShift : Binary
+  METHODS
+    method description->String
+      return "RightShift($,$)" (%left,%right)
+
+endClass
+
+class RightShiftAndAssign : OpAndAssign
+  METHODS
+    method description->String
+      return "RightShiftAndAssign($,$)" (%target,%operand)
+
+endClass
+
+class RightShiftX : Binary
+  METHODS
+    method description->String
+      return "RightShiftX($,$)" (%left,%right)
+
+endClass
+
+class RightShiftXAndAssign : OpAndAssign
+  METHODS
+    method description->String
+      return "RightShiftXAndAssign($,$)" (%target,%operand)
+
+endClass
+
+class LeftShiftInt32 : Binary
+  METHODS
+    method description->String
+      return "LeftShiftInt32($,$)" (%left,%right)
+
+endClass
+
+class LeftShiftObject : Binary
+  METHODS
+    method description->String
+      return "LeftShiftObject($,$)" (%left,%right)
+
+endClass
+
+class LeftShiftValue : Binary
+  METHODS
+    method description->String
+      return "LeftShiftValue($,$)" (%left,%right)
+
+endClass
+
+class RightShiftInt32 : Binary
+  METHODS
+    method description->String
+      return "RightShiftInt32($,$)" (%left,%right)
+
+endClass
+
+class RightShiftValue : Binary
+  METHODS
+    method description->String
+      return "RightShiftValue($,$)" (%left,%right)
+
+endClass
+
+class RightShiftXInt32 : Binary
+  METHODS
+    method description->String
+      return "RightShiftXInt32($,$)" (%left,%right)
+
+endClass
+
+class RightShiftXValue : Binary
+  METHODS
+    method description->String
+      return "RightShiftXValue($,$)" (%left,%right)
+
+endClass
+
+class NegateInt32 : Unary
+  METHODS
+    method description->String
+      return "NegateInt32($)" (%operand)
+
+endClass
+
+class NegateReal64 : Unary
+  METHODS
+    method description->String
+      return "NegateReal64($)" (%operand)
+
+endClass
+
+class NegateValue : Unary
+  METHODS
+    method description->String
+      return "NegateValue($)" (%operand)
+
+endClass
