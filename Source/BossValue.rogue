@@ -473,6 +473,13 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
     method to->BossObject
       return object->(as BossObject)
 
+    method to->Box
+      which (type)
+        case TYPE_BOX: return Box(x,y,a,b)
+        case TYPE_XY:  return Box(0,0,x,y)
+        others:        return Box(0,0,0,0)
+      endWhich
+
     method to->Int32
       if (type > TYPE_LAST_NUMBER) return 0
       return x->Int32
@@ -480,11 +487,15 @@ class BossValue( type:Int32, x:Real64, y:Real64, a:Real64, b:Real64, object:Obje
     method to->Object
       return object
 
-    method to->XY
-      return XY(x,y)
+    method to->Real64
+      if (type > TYPE_LAST_NUMBER) return 0
+      return x
 
-    method to->Box
-      return Box(x,y,a,b)
+    method to->XY
+      which (type)
+        case TYPE_XY, TYPE_BOX: return XY(x,y)
+        others:                 return XY(x,x)
+      endWhich
 
 endClass
 

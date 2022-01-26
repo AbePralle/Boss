@@ -160,7 +160,7 @@ class Organizer : Visitor
 
       if (not p.type)
         if (p.initial_value)
-          p.type = p.initial_value.implicit_type
+          p.type = p.initial_value.type
           if (not p.type)
             throw p.t.error(
               ''Cannot implicitly determine type of property "$" from initial value. ''(p.name) +

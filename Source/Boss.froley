@@ -1112,6 +1112,11 @@ parser
   create CastToReal64(operand):Unary
   create CastToString(operand):Unary
   create CastToValue(operand):Unary
+  create CastValueToCharacter(operand):Unary
+  create CastValueToInt32(operand):Unary
+  create CastValueToLogical(operand):Unary
+  create CastValueToReal64(operand):Unary
+  create CastValueToXY(operand):Unary
   create CallMethod(context,procedure:Procedure,args):CallProcedure
   create CallGlobalMethod(procedure:Procedure,args):CallProcedure
   create CallGlobalMethodWithContext(context,procedure:Procedure,args):CallProcedure
@@ -1127,6 +1132,9 @@ parser
   create CompareLEReal64(left,right):Compare
   create CompareGEReal64(left,right):Compare
   create CreateObject(of_type:Type,m_init:Procedure,args)
+  create CreateXY0
+  create CreateXY1(value)
+  create CreateXY2(x,y)
   create Description(operand):Unary
   create DivideInt32(left,right):Binary
   create DivideObject(left,right):Binary
@@ -1183,6 +1191,9 @@ parser
   create SubtractValue(left,right):Binary
   create TypeContext(type:Type)
   create TypeRef(name:String)
+  create ValueAsInt32(operand):Unary
+  create XYGetX(context)
+  create XYGetY(context)
 
 --------------------------------------------------------------------------------
 nativeTypes

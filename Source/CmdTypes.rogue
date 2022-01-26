@@ -28,9 +28,6 @@ augment Cmd
       throw t.error( "[INTERNAL] $.organize_element() is undefined." (type_name) )
       }#
 
-    method implicit_type->Type
-      return null
-
     method is_type_context->Logical
       return false
 
@@ -101,10 +98,10 @@ augment
 endAugment
 
 
-# type() and implicit_type()
+# type()
 augment
   METHODS
-    method Access.implicit_type->Type
+    method Access.type->Type
       return Program.find_type(name)
 
     method Unary.type->Type
@@ -115,6 +112,9 @@ augment
 
     method CallProcedure.type->Type
       return procedure.return_type
+
+    method CastReal64ToInt32.type->Type
+      return Program.type_Int32
 
     method CastToInt32.type->Type
       return Program.type_Int32
@@ -131,11 +131,23 @@ augment
     method CastToValue.type->Type
       return Program.type_Value
 
+    method CastValueToXY.type->Type
+      return Program.type_XY
+
     method Compare.type->Type
       return Program.type_Logical
 
     method CreateObject.type->Type
       return of_type
+
+    method CreateXY0.type->Type
+      return Program.type_XY
+
+    method CreateXY1.type->Type
+      return Program.type_XY
+
+    method CreateXY2.type->Type
+      return Program.type_XY
 
     method Description.type->Type
       return Program.type_String
@@ -191,4 +203,9 @@ augment
     method TypeRef.to->Type
       return Type( t, name )
 
+    method XYGetX.type->Type
+      return Program.type_Real64
+
+    method XYGetY.type->Type
+      return Program.type_Real64
 endAugment

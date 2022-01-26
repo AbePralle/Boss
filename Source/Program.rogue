@@ -25,6 +25,7 @@ class Program [singleton]
 
     type_Object    : Type
     type_Global    : Type
+    type_XY        : Type
 
     parsed_files   = StringTable<<AST>>()
 
@@ -56,6 +57,7 @@ class Program [singleton]
       type_Value     = TypeValue(t)
       type_Object    = Type( t, "Object" )
       type_Global    = Type( t, "Global" )
+      type_XY        = Type( t, "XY" ).[ is_built_in=true ]
 
       current_module = default_module
 

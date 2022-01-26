@@ -113,20 +113,23 @@ class Resolver : Visitor
     method on_validate( cmd:BitwiseXor )->Cmd
       return validate( cmd.left.type.cmd_bitwise_xor(cmd.t, cmd.left, cmd.right) )
 
+    method on_validate( cmd:CastToInt32 )->Cmd
+      local type = cmd.operand.require_type
+      if (type is Program.type_Int32)   return cmd.operand
+      if (type is Program.type_Real64)  return validate( CastReal64ToInt32(cmd.t, cmd.operand) )
+      if (type is Program.type_Logical or type is Program.type_Character)
+        return validate( ValueAsInt32(cmd.t,cmd.operand) )
+      endIf
+      if (type is Program.type_Value)  return validate( CastValueToInt32(cmd.t, cmd.operand) )
+      throw cmd.t.error( "Cannot convert type $ to Int32."(type) )
+
     method on_validate( cmd:CastToReal64 )->Cmd
-      trace "TODO"
-      #{
-      local operand = visit( cmd.operand ).require_value
-      local type = operand.type
-      local t = cmd.t
-      which (type.stack_type)
-        case OpType.INT32:  return CastInt32ToReal64(t,operand)
-        case OpType.REAL64: return operand
-        case OpType.STRING: return CastStringToReal64(t,operand)
-        others:             return CastObjectToReal64(t,operand)
-      endWhich
-      }#
-      return cmd
+      local type = cmd.operand.require_type
+      if (type is Program.type_Real64) return cmd.operand
+      if (type is Program.type_Logical or type is Program.type_Character or type is Program.type_Int32)
+        return validate( CastInt32ToReal64(cmd.t, cmd.operand) )
+      endIf
+      throw cmd.t.error( "Cannot convert type $ to Real64."(type) )
 
       #{
     method on_validate( cmd:CastToValue )->Cmd
@@ -314,6 +317,21 @@ class Resolver : Visitor
         context = visit( context )
         is_global = context.is_type_context
         type_context = context.require_type
+
+        if (not args)
+          if (type_context is Program.type_Value)
+            if (name == "x" or name == "y")
+              context = validate( CastValueToXY(t,context) )
+              type_context = Program.type_XY
+            endIf
+          endIf
+
+          if (type_context is Program.type_XY)
+            if (name == "x") return validate( XYGetX(t, context) )
+            if (name == "y") return validate( XYGetY(t, context) )
+          endIf
+        endIf
+
       else
         local type = this_module.find_type( name, &extended_search )
         if (type and not args)
@@ -335,6 +353,17 @@ class Resolver : Visitor
         if (args)
           # Call or constructor
           if (type)
+            if (name == "XY")
+              forEach (arg at i in args)
+                args[i] = validate( arg.cmd_cast_to(Program.type_Real64) )
+              endForEach
+              which (args.count)
+                case 0: return validate( CreateXY0(t) )
+                case 1: return validate( CreateXY1(t,args[0]) )
+                case 2: return validate( CreateXY2(t,args[0],args[1]) )
+                others: throw t.error( "0, 1, or 2 arguments expected for XY() constructor." )
+              endWhich
+            endIf
             return validate( cmd_create_object(t,type,args) )
           endIf
         else

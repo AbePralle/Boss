@@ -2267,3 +2267,118 @@ class LiteralValueList : Cmd
       return "LiteralValueList($)" (%args)
 
 endClass
+
+class CreateXY0 : Cmd
+  METHODS
+    method description->String
+      return "CreateXY0"
+endClass
+
+class CreateXY1 : Cmd
+  PROPERTIES
+    value : Cmd
+
+  METHODS
+    method init( t, value )
+
+    method init( existing:CreateXY1 )
+      prior.init( existing )
+      if (existing.value) value = existing.value.cloned
+
+    method description->String
+      return "CreateXY1($)" (%value)
+
+endClass
+
+class CreateXY2 : Cmd
+  PROPERTIES
+    x : Cmd
+    y : Cmd
+
+  METHODS
+    method init( t, x, y )
+
+    method init( existing:CreateXY2 )
+      prior.init( existing )
+      if (existing.x) x = existing.x.cloned
+      if (existing.y) y = existing.y.cloned
+
+    method description->String
+      return "CreateXY2($,$)" (%x,%y)
+
+endClass
+
+class XYGetX : Cmd
+  PROPERTIES
+    context : Cmd
+
+  METHODS
+    method init( t, context )
+
+    method init( existing:XYGetX )
+      prior.init( existing )
+      if (existing.context) context = existing.context.cloned
+
+    method description->String
+      return "XYGetX($)" (%context)
+
+endClass
+
+class XYGetY : Cmd
+  PROPERTIES
+    context : Cmd
+
+  METHODS
+    method init( t, context )
+
+    method init( existing:XYGetY )
+      prior.init( existing )
+      if (existing.context) context = existing.context.cloned
+
+    method description->String
+      return "XYGetY($)" (%context)
+
+endClass
+
+class CastValueToXY : Unary
+  METHODS
+    method description->String
+      return "CastValueToXY($)" (%operand)
+
+endClass
+
+class CastValueToCharacter : Unary
+  METHODS
+    method description->String
+      return "CastValueToCharacter($)" (%operand)
+
+endClass
+
+class CastValueToInt32 : Unary
+  METHODS
+    method description->String
+      return "CastValueToInt32($)" (%operand)
+
+endClass
+
+class CastValueToLogical : Unary
+  METHODS
+    method description->String
+      return "CastValueToLogical($)" (%operand)
+
+endClass
+
+class CastValueToReal64 : Unary
+  METHODS
+    method description->String
+      return "CastValueToReal64($)" (%operand)
+
+endClass
+
+
+class ValueAsInt32 : Unary
+  METHODS
+    method description->String
+      return "ValueAsInt32($)" (%operand)
+
+endClass

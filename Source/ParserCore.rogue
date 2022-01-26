@@ -1685,6 +1685,11 @@ class ParserCore [abstract]
             _push( CastToReal64(_cur_t,_node_arg(-1)), 1 )
             _push( CastToString(_cur_t,_node_arg(-1)), 1 )
             _push( CastToValue(_cur_t,_node_arg(-1)), 1 )
+            _push( CastValueToCharacter(_cur_t,_node_arg(-1)), 1 )
+            _push( CastValueToInt32(_cur_t,_node_arg(-1)), 1 )
+            _push( CastValueToLogical(_cur_t,_node_arg(-1)), 1 )
+            _push( CastValueToReal64(_cur_t,_node_arg(-1)), 1 )
+            _push( CastValueToXY(_cur_t,_node_arg(-1)), 1 )
             _push( CallMethod(_cur_t,_node_arg(-3),_node_arg(-2)->(as Procedure),_node_arg(-1)), 3 )
             _push( CallGlobalMethod(_cur_t,_node_arg(-2)->(as Procedure),_node_arg(-1)), 2 )
             _push( CallGlobalMethodWithContext(_cur_t,_node_arg(-3),_node_arg(-2)->(as Procedure),_node_arg(-1)), 3 )
@@ -1700,6 +1705,9 @@ class ParserCore [abstract]
             _push( CompareLEReal64(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( CompareGEReal64(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( CreateObject(_cur_t,_node_arg(-3)->(as Type),_node_arg(-2)->(as Procedure),_node_arg(-1)), 3 )
+            _push( CreateXY0(_cur_t), 0 )
+            _push( CreateXY1(_cur_t,_node_arg(-1)), 1 )
+            _push( CreateXY2(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( Description(_cur_t,_node_arg(-1)), 1 )
             _push( DivideInt32(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( DivideObject(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
@@ -1756,6 +1764,9 @@ class ParserCore [abstract]
             _push( SubtractValue(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( TypeContext(_cur_t,_node_arg(-1)->(as Type)), 1 )
             _push( TypeRef(_cur_t,_string_arg(-1)), 1 )
+            _push( ValueAsInt32(_cur_t,_node_arg(-1)), 1 )
+            _push( XYGetX(_cur_t,_node_arg(-1)), 1 )
+            _push( XYGetY(_cur_t,_node_arg(-1)), 1 )
             return
           others
             return

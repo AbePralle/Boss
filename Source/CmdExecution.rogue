@@ -38,7 +38,7 @@ augment
       local a = Program.execution_result.x->Int32
 
       if (not right.execute) return false
-      Program.execution_result = a + Program.execution_result.x->Int32
+      Program.execution_result.x = a + Program.execution_result.x->Int32
       return true
 
     method AddReal64.execute->Logical
@@ -46,7 +46,7 @@ augment
       local a = Program.execution_result.x
 
       if (not right.execute) return false
-      Program.execution_result = a + Program.execution_result.x
+      Program.execution_result.x = a + Program.execution_result.x
       return true
 
     method AddValue.execute->Logical
@@ -129,6 +129,11 @@ augment
       # Program.execution_result is already correct
       return true
 
+    method CastReal64ToInt32.execute->Logical
+      if (not operand.execute) return false
+      Program.execution_result.x = Program.execution_result.x->Int32
+      return true
+
     method CastToValue.execute->Logical
       if (not operand.execute) return false
       return true
@@ -136,6 +141,21 @@ augment
     method CastStringToReal64.execute->Logical
       if (not operand.execute) return false
       Program.execution_result = Program.execution_result.object->(as String)->Real64
+      return true
+
+    method CastValueToInt32.execute->Logical
+      if (not operand.execute) return false
+      Program.execution_result = Program.execution_result->Int32
+      return true
+
+    method CastValueToReal64.execute->Logical
+      if (not operand.execute) return false
+      Program.execution_result = Program.execution_result->Real64
+      return true
+
+    method CastValueToXY.execute->Logical
+      if (not operand.execute) return false
+      Program.execution_result = Program.execution_result->XY
       return true
 
     method CompareEQReal64.execute->Logical
@@ -188,6 +208,24 @@ augment
       Program.execution_result = obj
       return true
 
+    method CreateXY0.execute->Logical
+      Program.execution_result = XY.zero
+      return true
+
+    method CreateXY1.execute->Logical
+      if (not value.execute) return false
+      local n = Program.execution_result.x
+      Program.execution_result = XY(n,n)
+      return true
+
+    method CreateXY2.execute->Logical
+      if (not x.execute) return false
+      local x = Program.execution_result.x
+      if (not y.execute) return false
+      local y = Program.execution_result.x
+      Program.execution_result = XY(x,y)
+      return true
+
     method Description.execute->Logical
       if (not operand.execute) return false
       Program.execution_result = Program.execution_result.description
@@ -208,7 +246,7 @@ augment
       local a = Program.execution_result.x
 
       if (not right.execute) return false
-      Program.execution_result = a / Program.execution_result.x
+      Program.execution_result.x = a / Program.execution_result.x
       return true
 
     method DivideString.execute->Logical
@@ -397,7 +435,7 @@ augment
       local a = Program.execution_result.x
 
       if (not right.execute) return false
-      Program.execution_result = a % Program.execution_result.x
+      Program.execution_result.x = a % Program.execution_result.x
       return true
 
     method ModValue.execute->Logical
@@ -413,7 +451,7 @@ augment
       local a = Program.execution_result.x->Int32
 
       if (not right.execute) return false
-      Program.execution_result = a * Program.execution_result.x->Int32
+      Program.execution_result.x = a * Program.execution_result.x->Int32
       return true
 
     method MultiplyReal64.execute->Logical
@@ -421,7 +459,7 @@ augment
       local a = Program.execution_result.x
 
       if (not right.execute) return false
-      Program.execution_result = a * Program.execution_result.x
+      Program.execution_result.x = a * Program.execution_result.x
       return true
 
     method MultiplyValue.execute->Logical
@@ -525,7 +563,7 @@ augment
       local a = Program.execution_result.x->Int32
 
       if (not right.execute) return false
-      Program.execution_result = a - Program.execution_result.x->Int32
+      Program.execution_result.x = a - Program.execution_result.x->Int32
       return true
 
     method SubtractReal64.execute->Logical
@@ -533,7 +571,11 @@ augment
       local a = Program.execution_result.x
 
       if (not right.execute) return false
-      Program.execution_result = a - Program.execution_result.x
+      Program.execution_result.x = a - Program.execution_result.x
+      return true
+
+    method ValueAsInt32.execute->Logical
+      if (not operand.execute) return false
       return true
 
     method While.execute->Logical
@@ -546,4 +588,15 @@ augment
         if (not condition.execute) return false
       endWhile
       return true
+
+    method XYGetX.execute->Logical
+      if (not context.execute) return false
+      # Program.execution_result is already correct
+      return true
+
+    method XYGetY.execute->Logical
+      if (not context.execute) return false
+      Program.execution_result.x = Program.execution_result.y
+      return true
 endAugment
+
