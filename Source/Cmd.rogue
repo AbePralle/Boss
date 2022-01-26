@@ -2251,3 +2251,19 @@ class Loop : Cmd
       return "Loop($,$)" (%loop_count,%statements)
 
 endClass
+
+class LiteralValueList : Cmd
+  PROPERTIES
+    args : Cmd
+
+  METHODS
+    method init( t, args )
+
+    method init( existing:LiteralValueList )
+      prior.init( existing )
+      if (existing.args) args = existing.args.cloned
+
+    method description->String
+      return "LiteralValueList($)" (%args)
+
+endClass

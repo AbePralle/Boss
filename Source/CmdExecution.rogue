@@ -320,6 +320,15 @@ augment
       Program.execution_result = pi
       return true
 
+    method LiteralValueList.execute->Logical
+      local result = BossValue[]( args.count )
+      forEach (arg in args)
+        if (not arg.execute) return false
+        result.add( Program.execution_result )
+      endForEach
+      Program.execution_result = BossValue.list(result)
+      return true
+
     method LocalDeclaration.execute->Logical
       # Local declaration
       assert info.initial_value

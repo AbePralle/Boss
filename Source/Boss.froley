@@ -1041,11 +1041,12 @@ parser
     access_args
     produce Access( name:String, args )
   endOn
-  on "true"      -> LiteralLogical(value="true":Logical)
-  on "false"     -> LiteralLogical(value="false":Logical)
-  on "pi"        -> LiteralPi
-  on '(', expression, ')': return
-  on "[]"        -> EmptyList
+  on "true"               -> LiteralLogical(value="true":Logical)
+  on "false"              -> LiteralLogical(value="false":Logical)
+  on "pi"                 -> LiteralPi
+  on '(', expression, ')':   return
+  onPeek "[" literal_list -> LiteralValueList(args)
+  on "[]"                 -> EmptyList
 
   on "import"
     if (consume('('))
@@ -1058,6 +1059,22 @@ parser
   endOn
 
   syntaxError
+
+- literal_list
+  on '['
+    beginList
+    if (consume(']')) produceList  # Empty list
+    consume_eols
+    expression
+    consume_eols
+    while (not nextIs(']'))
+      if (consume(',')) consume_eols
+      expression
+      consume_eols
+    endWhile
+    mustConsume( ']' )
+    produceList Args
+  endOn
 
 - additional_node_types
   create AddAndAssignLocal(info:Local,operand):OpAndAssign

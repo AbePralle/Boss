@@ -85,6 +85,10 @@ class Resolver : Visitor
       endIf
       throw cmd.t.error( "[INTERNAL] AddAndAssignThisProperty doesn't handle $."(type) )
 
+    method on_visit( cmd:Args )
+      visit_children( cmd )
+      (forEach in cmd).require_value
+
     method on( cmd:Assign )->Cmd
       local new_value = visit( cmd.new_value ).require_value
       return cmd.target.resolve_assignment( cmd.t, new_value, this )

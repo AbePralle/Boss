@@ -85,7 +85,8 @@ class ParserCore [abstract]
     ip_access = 72
     ip_access_inner = 73
     ip_term = 74
-    ip_additional_node_types = 75
+    ip_literal_list = 75
+    ip_additional_node_types = 76
 
   PROPERTIES
     _tokens          : Token[]
@@ -1588,6 +1589,14 @@ class ParserCore [abstract]
                 return
               endTemporarily
             endIf
+            if (_next_t.type == TokenType.SYMBOL_OPEN_SQUARE)
+              temporarily _cur_t = _next_t
+                _execute(ip_literal_list)
+                _pop_frame
+                _push( LiteralValueList(_cur_t,_node_arg(-1)), 1 )
+                return
+              endTemporarily
+            endIf
             if (_next_t.type == TokenType.SYMBOL_EMPTY_SQUARE_BRACKETS)
               temporarily _cur_t = _on_t
                 _push( EmptyList(_cur_t), 0 )
@@ -1609,6 +1618,36 @@ class ParserCore [abstract]
               endTemporarily
             endIf
             _throw_syntax_error
+            return
+          case ip_literal_list
+            if (_next_t.type == TokenType.SYMBOL_OPEN_SQUARE)
+              temporarily _cur_t = _on_t
+                _begin_list
+                if (_consume(TokenType.SYMBOL_CLOSE_SQUARE))
+                  _push_list( CmdList(_list_t) )
+                  return
+                endIf
+                _execute(ip_consume_eols)
+                _pop_frame
+                _execute(ip_expression)
+                _pop_frame
+                _execute(ip_consume_eols)
+                _pop_frame
+                while ((not (_next_t.type == TokenType.SYMBOL_CLOSE_SQUARE)))
+                  if (_consume(TokenType.SYMBOL_COMMA))
+                    _execute(ip_consume_eols)
+                    _pop_frame
+                  endIf
+                  _execute(ip_expression)
+                  _pop_frame
+                  _execute(ip_consume_eols)
+                  _pop_frame
+                endWhile
+                if (not _consume(TokenType.SYMBOL_CLOSE_SQUARE)) _throw_syntax_error( &expected=TokenType.SYMBOL_CLOSE_SQUARE )
+                _push_list( Args(_list_t) )
+                return
+              endTemporarily
+            endIf
             return
           case ip_additional_node_types
             _push( AddAndAssignLocal(_cur_t,_node_arg(-2)->(as Local),_node_arg(-1)), 2 )

@@ -179,6 +179,9 @@ augment
     method LiteralString.type->Type
       return Program.type_String
 
+    method LiteralValueList.type->Type
+      return Program.type_Value
+
     method LiteralValueUndefined.type->Type
       return Program.type_Value
 
