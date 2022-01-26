@@ -163,6 +163,25 @@ class Resolver : Visitor
       visit( cmd.args )
       return resolve_access( cmd.t, cmd.context, cmd.name, cmd.args )
 
+    method on( cmd:Decrement )->Cmd
+      return cmd.operand.resolve_decrement( cmd.t, this )
+
+    method on_validate( cmd:DecrementLocal )->Cmd
+      local type = cmd.info.type
+      if (type is Program.type_Int32)
+        return validate( DecrementLocalInt32(cmd.t,cmd.info) )
+      else
+        throw cmd.t.error( "[INTERNAL] Unhandled DecrementLocal for type $."(type) )
+      endIf
+
+    method on_validate( cmd:DecrementThisProperty )->Cmd
+      local type = cmd.info.type
+      if (type is Program.type_Int32)
+        return validate( DecrementThisPropertyInt32(cmd.t,cmd.info) )
+      else
+        throw cmd.t.error( "[INTERNAL] Unhandled DecrementThisProperty for type $."(type) )
+      endIf
+
     method on_validate( cmd:Description )->Cmd
       local call_description = resolve_access( cmd.t, cmd.operand, "description", null, &suppress_error )
       if (call_description) return call_description
@@ -678,26 +697,6 @@ augment
       return CallRoutine( t, this, args )
 endAugment
 
-# Increment
-augment
-  METHODS
-    method Cmd.resolve_increment( t:Token, resolver:Resolver )->Cmd
-      throw t.error( "Illegal target for increment." )
-
-    method Access.resolve_increment( t:Token, resolver:Resolver )->Cmd
-      if (not args)
-        local v = resolver.find_local( name )
-        if (v) return resolver.validate( IncrementLocal(t,v) )
-
-        local p = resolver.this_type.find_property( name )
-        if (p) return resolver.validate( IncrementThisProperty(t,p) )
-      endIf
-      throw t.error( "Illegal target for increment." )
-
-      #method Access.resolve_increment( t:Token, resolver:Resolver )->Cmd
-      #return CallRoutine( t, this, args )
-endAugment
-
 # Divide
 augment
   METHODS
@@ -716,6 +715,43 @@ augment
     method TypeValue.cmd_divide( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
       return DivideValue( t, lhs, rhs )
 
+endAugment
+
+# Decrement
+augment
+  METHODS
+    method Cmd.resolve_decrement( t:Token, resolver:Resolver )->Cmd
+      throw t.error( "Illegal target for decrement." )
+
+    method Access.resolve_decrement( t:Token, resolver:Resolver )->Cmd
+      if (not args)
+        local v = resolver.find_local( name )
+        if (v) return resolver.validate( DecrementLocal(t,v) )
+
+        local p = resolver.this_type.find_property( name )
+        if (p) return resolver.validate( DecrementThisProperty(t,p) )
+      endIf
+      throw t.error( "Illegal target for decrement." )
+endAugment
+
+# Increment
+augment
+  METHODS
+    method Cmd.resolve_increment( t:Token, resolver:Resolver )->Cmd
+      throw t.error( "Illegal target for increment." )
+
+    method Access.resolve_increment( t:Token, resolver:Resolver )->Cmd
+      if (not args)
+        local v = resolver.find_local( name )
+        if (v) return resolver.validate( IncrementLocal(t,v) )
+
+        local p = resolver.this_type.find_property( name )
+        if (p) return resolver.validate( IncrementThisProperty(t,p) )
+      endIf
+      throw t.error( "Illegal target for increment." )
+
+      #method Access.resolve_increment( t:Token, resolver:Resolver )->Cmd
+      #return CallRoutine( t, this, args )
 endAugment
 
 # LeftShift

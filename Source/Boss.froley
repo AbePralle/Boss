@@ -1032,10 +1032,13 @@ parser
   endOn
 
 - term
-  on STRING      -> LiteralString(value=content):Literal
-  on INTEGER     -> LiteralInt32(value=content:Integer)
-  on REAL_NUMBER -> LiteralReal64(value=content:Real)
-  on CHARACTER   -> LiteralCharacter(value=content:Character)
+  on STRING         -> LiteralString(value=content):Literal
+  on INTEGER        -> LiteralInt32(value=content:Integer)
+  on HEX_INTEGER    -> LiteralInt32(content=content:String,base="16":Integer)
+  on BINARY_INTEGER -> LiteralInt32(content=content:String,base="2":Integer)
+  on OCTAL_INTEGER  -> LiteralInt32(content=content:String,base="8":Integer)
+  on REAL_NUMBER    -> LiteralReal64(value=content:Real)
+  on CHARACTER      -> LiteralCharacter(value=content:Character)
   onPeek IDENTIFIER
     type_name
     access_args
@@ -1135,6 +1138,10 @@ parser
   create CreateXY0
   create CreateXY1(value)
   create CreateXY2(x,y)
+  create DecrementLocal(info:Local)
+  create DecrementLocalInt32(info:Local)
+  create DecrementThisProperty(info:Property)
+  create DecrementThisPropertyInt32(info:Property)
   create Description(operand):Unary
   create DivideInt32(left,right):Binary
   create DivideObject(left,right):Binary

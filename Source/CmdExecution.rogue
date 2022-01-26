@@ -226,6 +226,17 @@ augment
       Program.execution_result = XY(x,y)
       return true
 
+    method DecrementLocalInt32.execute->Logical
+      local index = Program.fp + info.fp_offset
+      Program.stack[index].x = Program.stack[index].x->Int32 - 1
+      return true
+
+    method DecrementThisPropertyInt32.execute->Logical
+      local properties = Program.stack[ Program.fp ].object->(as BossObject).properties
+      local index = info.index
+      properties[index].x = properties[index].x->Int32 - 1
+      return true
+
     method Description.execute->Logical
       if (not operand.execute) return false
       Program.execution_result = Program.execution_result.description

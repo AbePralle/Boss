@@ -437,6 +437,9 @@ class LiteralInt32 : Cmd
   METHODS
     method init( t, value )
 
+    method init( t, content:String, base:Int32 )
+      value = content->Int32( base )
+
     method init( existing:LiteralInt32 )
       prior.init( existing )
       value = existing.value
@@ -2380,5 +2383,69 @@ class ValueAsInt32 : Unary
   METHODS
     method description->String
       return "ValueAsInt32($)" (%operand)
+
+endClass
+
+class DecrementLocal : Cmd
+  PROPERTIES
+    info : Local
+
+  METHODS
+    method init( t, info )
+
+    method init( existing:DecrementLocal )
+      prior.init( existing )
+      if (existing.info) info = existing.info.cloned
+
+    method description->String
+      return "DecrementLocal($)" (%info)
+
+endClass
+
+class DecrementLocalInt32 : Cmd
+  PROPERTIES
+    info : Local
+
+  METHODS
+    method init( t, info )
+
+    method init( existing:DecrementLocalInt32 )
+      prior.init( existing )
+      if (existing.info) info = existing.info.cloned
+
+    method description->String
+      return "DecrementLocalInt32($)" (%info)
+
+endClass
+
+class DecrementThisProperty : Cmd
+  PROPERTIES
+    info : Property
+
+  METHODS
+    method init( t, info )
+
+    method init( existing:DecrementThisProperty )
+      prior.init( existing )
+      if (existing.info) info = existing.info.cloned
+
+    method description->String
+      return "DecrementThisProperty($)" (%info)
+
+endClass
+
+class DecrementThisPropertyInt32 : Cmd
+  PROPERTIES
+    info : Property
+
+  METHODS
+    method init( t, info )
+
+    method init( existing:DecrementThisPropertyInt32 )
+      prior.init( existing )
+      if (existing.info) info = existing.info.cloned
+
+    method description->String
+      return "DecrementThisPropertyInt32($)" (%info)
 
 endClass
