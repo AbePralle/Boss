@@ -211,6 +211,12 @@ class Resolver : Visitor
       endIf
       locals.add( info )
 
+    method on_visit( cmd:Loop )
+      visit_children( cmd )
+      if (cmd.loop_count)
+        cmd.loop_count = validate( cmd.loop_count.cmd_cast_to(Program.type_Int32) )
+      endIf
+
     method on_validate( cmd:Mod )->Cmd
       return validate( cmd.left.type.cmd_mod(cmd.t, cmd.left, cmd.right) )
 
@@ -333,7 +339,7 @@ class Resolver : Visitor
         endIf
       endIf
 
-      local match = find_procedure( type_context, name, args, &require_global=is_global )
+      local match = find_procedure( t, type_context, context, name, args, &require_global=is_global, &suppress_error )
 
       if (match)
         if (not args and match.min_args == 0) args = CmdList(t)
@@ -353,73 +359,12 @@ class Resolver : Visitor
       endIf
 
       if (suppress_error) return null
+      find_procedure( t, type_context, context, name, args, &require_global=is_global )  # throw an error
+      return null  # never reached
 
-      local sig = name
-      if (args)
-        sig += '('
-        forEach (arg at i in args)
-          if (i > 0) sig += ','
-          sig += arg.require_type
-        endForEach
-        sig += ')'
-      endIf
-
-      local mesg : String
-      if (args)
-        which (Candidates.count)
-          case 0
-            mesg = "No such "
-            if (is_global)     mesg += "global "
-            if (context)       mesg += "method "
-            elseIf (this_type) mesg += "method or routine "
-            else               mesg += "routine "
-
-            if (context)       mesg += context.type + "."
-            elseIf (this_type) mesg += this_type + "."
-
-            mesg += sig + '.'
-
-          case 1
-            mesg = "Call to "
-            if (context)       mesg += context.type + "."
-            elseIf (this_type) mesg += this_type + "."
-
-            mesg += sig
-            mesg += " has arguments that are incompatible with the best candidate:\n\n"
-            mesg += "  " + Candidates[0].context_signature
-
-          others
-            mesg = "Ambiguous call to "
-            if (is_global)     mesg += "global "
-            if (context)       mesg += context.type + "."
-            elseIf (this_type) mesg += this_type + "."
-
-            mesg += sig
-            mesg += ". Candidates:\n\n"
-            forEach (m in Candidates)
-              mesg += "  " + m.context_signature
-            endForEach
-
-        endWhich
-
-      else
-        local g = which{ is_global:"global " || "" }
-        if (context)
-          if (args) mesg = "No such $method '$' exists in type '$'." (g,sig,context.type)
-          else      mesg = "No such $property or method '$' exists in type '$'." (g,sig,context.type)
-        elseIf (this_type)
-          if (args) mesg = "No such $method or routine '$'."(g,sig)
-          else      mesg = "No such $variable, method, or routine '$'."(g,sig)
-        else
-          if (args) mesg = "No such $routine '$'."(g,sig)
-          else      mesg = "No such $variable or routine '$'."(g,sig)
-        endIf
-      endIf
-
-      throw t.error( mesg )
 
     method cmd_create_object( t:Token, type_context:Type, args:Cmd )->Cmd
-      local m_init = find_procedure( type_context, "init", args )
+      local m_init = find_procedure( t, type_context, null, "init", args, &suppress_error )
       if (m_init)
         if (not args and m_init.min_args == 0) args = CmdList(t)
         cast_args_to_parameter_types( args, m_init )
@@ -464,8 +409,12 @@ class Resolver : Visitor
         args[i] = validate( arg.cmd_cast_to(proc.parameters[i].type) )
       endForEach
 
-    method find_procedure( type_context:Type, name:String, args:Cmd, &require_global )->Procedure
+    method find_procedure( t:Token, type_context:Type, context:Cmd, name:String, args:Cmd,
+        &require_global, &suppress_error )->Procedure
+      # 'context' is only passed for error description purposes.
       visit( args )  # resolve args to determine types
+
+      local error_message : String
       use Candidates
         if (type_context)
           type_context.collect_methods( name, Candidates.list, &=require_global )
@@ -473,8 +422,77 @@ class Resolver : Visitor
           this_module.collect_routines( name, Candidates.list )
         endIf
         (forEach in Candidates).resolve
-        return refine_candidates( type_context, args )
+        local result = refine_candidates( type_context, args )
+        if (result or suppress_error) return result
+
+        # Throw an error
+        local sig = name
+        if (args)
+          sig += '('
+          forEach (arg at i in args)
+            if (i > 0) sig += ','
+            sig += arg.require_type
+          endForEach
+          sig += ')'
+        endIf
+
+        local mesg : String
+        if (args)
+          which (Candidates.count)
+            case 0
+              mesg = "No such "
+              if (require_global) mesg += "global "
+              if (context)        mesg += "method "
+              elseIf (this_type)  mesg += "method or routine "
+              else                mesg += "routine "
+
+              if (context)        mesg += context.type + "."
+              elseIf (this_type)  mesg += this_type + "."
+
+              mesg += sig + '.'
+
+            case 1
+              mesg = "Call to "
+              if (context)       mesg += context.type + "."
+              elseIf (this_type) mesg += this_type + "."
+
+              mesg += sig
+              mesg += " has arguments that are incompatible with the best candidate:\n\n"
+              mesg += "  " + Candidates[0].context_signature
+
+            others
+              mesg = "Ambiguous call to "
+              if (require_global) mesg += "global "
+              if (context)        mesg += context.type + "."
+              elseIf (this_type)  mesg += this_type + "."
+
+              mesg += sig
+              mesg += ". Candidates:\n\n"
+              forEach (m in Candidates)
+                mesg += "  " + m.context_signature
+              endForEach
+
+          endWhich
+
+        else
+          local g = which{ require_global:"global " || "" }
+          if (context)
+            if (args) mesg = "No such $method '$' exists in type '$'." (g,sig,context.type)
+            else      mesg = "No such $property or method '$' exists in type '$'." (g,sig,context.type)
+          elseIf (this_type)
+            if (args) mesg = "No such $method or routine '$'."(g,sig)
+            else      mesg = "No such $variable, method, or routine '$'."(g,sig)
+          else
+            if (args) mesg = "No such $routine '$'."(g,sig)
+            else      mesg = "No such $variable or routine '$'."(g,sig)
+          endIf
+
+        endIf
+
+        error_message = mesg
       endUse
+
+      throw t.error( error_message )
 
     method refine_candidates( type_context:Type, args:Cmd )->Procedure
       local arg_count = which{ args:args.count || 0 }

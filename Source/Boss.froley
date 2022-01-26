@@ -18,7 +18,7 @@ IDENTIFIER     identifier   [content]
 ----------------------------------------------------------------------
 tokens Keywords
 ----------------------------------------------------------------------
-KEYWORD_AUGMENT      and
+KEYWORD_AND          and
 KEYWORD_AUGMENT      augment
 KEYWORD_CLASS        class       [structural]
 KEYWORD_MODULE       module
@@ -27,6 +27,7 @@ KEYWORD_ELSE_IF      elseIf
 KEYWORD_END_CLASS    endClass    [structural]
 KEYWORD_END_FOR_EACH endForEach  [structural]
 KEYWORD_END_IF       endIf       [structural]
+KEYWORD_END_LOOP     endLoop     [structural]
 KEYWORD_END_ROUTINE  endRoutine  [structural]
 KEYWORD_END_WHILE    endWhile    [structural]
 KEYWORD_EXPORT       export
@@ -40,6 +41,7 @@ KEYWORD_IN           in
 KEYWORD_IMPORT       import
 KEYWORD_INCLUDE      include
 KEYWORD_LOCAL        local
+KEYWORD_LOOP         loop
 KEYWORD_METHOD       method      [structural]
 KEYWORD_METHODS      METHODS     [structural]
 KEYWORD_NO_ACTION    noAction
@@ -807,6 +809,9 @@ parser
   if (nextIs("if"))
     if_statement
     return
+  elseIf (nextIs("loop"))
+    loop
+    return
   elseIf (nextIs("while"))
     while_loop
     return
@@ -892,6 +897,20 @@ parser
     produce LocalDef( name=content, initial_value, type_ref )
   endOn
   mustConsume IDENTIFIER  # throws error
+
+- loop
+  on "loop"
+    on EOL
+      createNull # loop_count
+      multi_line_statements
+      mustConsume "endLoop"
+    elseOnOthers
+      expression
+      if (consume(EOL)) multi_line_statements; mustConsume "endLoop"
+      else              single_line_statements
+    endOn
+    produce Loop(loop_count,statements)
+  endOn
 
 - while_loop
   on "while"
@@ -1017,11 +1036,11 @@ parser
   on INTEGER     -> LiteralInt32(value=content:Integer)
   on REAL_NUMBER -> LiteralReal64(value=content:Real)
   on CHARACTER   -> LiteralCharacter(value=content:Character)
-  if (nextIs(IDENTIFIER))
+  onPeek IDENTIFIER
     type_name
     access_args
     produce Access( name:String, args )
-  endIf
+  endOn
   on "true"      -> LiteralLogical(value="true":Logical)
   on "false"     -> LiteralLogical(value="false":Logical)
   on "pi"        -> LiteralPi

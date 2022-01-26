@@ -359,6 +359,20 @@ augment
       Program.execution_result = a xor b
       return true
 
+    method Loop.execute->Logical
+      if (loop_count)
+        if (not loop_count.execute) return false
+        local n = Program.execution_result.x->Int32
+        while (n > 0)
+          --n
+          if (not statements.execute) return false
+        endWhile
+        return true
+      else
+        while (statements.execute) noAction
+        return false
+      endIf
+
     method ModInt32.execute->Logical
       if (not left.execute) return false
       local a = Program.execution_result.x->Int32
@@ -485,6 +499,11 @@ augment
 
       if (not right.execute) return false
       Program.execution_result = a :>>>: Program.execution_result
+      return true
+
+    method SetLocal.execute->Logical
+      if (not new_value.execute) return false
+      Program.stack[ Program.fp + info.fp_offset ] = Program.execution_result
       return true
 
     method SetThisProperty.execute->Logical

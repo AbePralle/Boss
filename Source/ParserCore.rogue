@@ -53,38 +53,39 @@ class ParserCore [abstract]
     ip_statement = 40
     ip_local_declarations = 41
     ip_local_declaration = 42
-    ip_while_loop = 43
-    ip_module_path = 44
-    ip_uses_attributes = 45
-    ip_uses_attribute = 46
-    ip_access_args = 47
-    ip_optional_expression = 48
-    ip_expression = 49
-    ip_logical_xor = 50
-    ip_logical_xor__inner = 51
-    ip_logical_or = 52
-    ip_logical_or__inner = 53
-    ip_logical_and = 54
-    ip_logical_and__inner = 55
-    ip_comparison = 56
-    ip_comparison__inner = 57
-    ip_bitwise_xor = 58
-    ip_bitwise_xor__inner = 59
-    ip_bitwise_or = 60
-    ip_bitwise_or__inner = 61
-    ip_bitwise_and = 62
-    ip_bitwise_and__inner = 63
-    ip_bitwise_shift = 64
-    ip_bitwise_shift__inner = 65
-    ip_add_subtract = 66
-    ip_add_subtract__inner = 67
-    ip_multiply_divide_mod = 68
-    ip_multiply_divide_mod__inner = 69
-    ip_pre_unary = 70
-    ip_access = 71
-    ip_access_inner = 72
-    ip_term = 73
-    ip_additional_node_types = 74
+    ip_loop = 43
+    ip_while_loop = 44
+    ip_module_path = 45
+    ip_uses_attributes = 46
+    ip_uses_attribute = 47
+    ip_access_args = 48
+    ip_optional_expression = 49
+    ip_expression = 50
+    ip_logical_xor = 51
+    ip_logical_xor__inner = 52
+    ip_logical_or = 53
+    ip_logical_or__inner = 54
+    ip_logical_and = 55
+    ip_logical_and__inner = 56
+    ip_comparison = 57
+    ip_comparison__inner = 58
+    ip_bitwise_xor = 59
+    ip_bitwise_xor__inner = 60
+    ip_bitwise_or = 61
+    ip_bitwise_or__inner = 62
+    ip_bitwise_and = 63
+    ip_bitwise_and__inner = 64
+    ip_bitwise_shift = 65
+    ip_bitwise_shift__inner = 66
+    ip_add_subtract = 67
+    ip_add_subtract__inner = 68
+    ip_multiply_divide_mod = 69
+    ip_multiply_divide_mod__inner = 70
+    ip_pre_unary = 71
+    ip_access = 72
+    ip_access_inner = 73
+    ip_term = 74
+    ip_additional_node_types = 75
 
   PROPERTIES
     _tokens          : Token[]
@@ -896,6 +897,10 @@ class ParserCore [abstract]
               _execute(ip_if_statement)
               _pop_frame
               return
+            elseIf ((_next_t.type == TokenType.KEYWORD_LOOP))
+              _execute(ip_loop)
+              _pop_frame
+              return
             elseIf ((_next_t.type == TokenType.KEYWORD_WHILE))
               _execute(ip_while_loop)
               _pop_frame
@@ -1071,6 +1076,33 @@ class ParserCore [abstract]
             endIf
             if (not _consume(TokenType.IDENTIFIER)) _throw_syntax_error( &expected=TokenType.IDENTIFIER )
             return
+          case ip_loop
+            if (_next_t.type == TokenType.KEYWORD_LOOP)
+              temporarily _cur_t = _on_t
+                if (_next_t.type == TokenType.EOL)
+                  temporarily _cur_t = _on_t
+                    _push( null, 0 )
+                    _execute(ip_multi_line_statements)
+                    _pop_frame
+                    if (not _consume(TokenType.KEYWORD_END_LOOP)) _throw_syntax_error( &expected=TokenType.KEYWORD_END_LOOP )
+                  endTemporarily
+                else
+                  _execute(ip_expression)
+                  _pop_frame
+                  if (_consume(TokenType.EOL))
+                    _execute(ip_multi_line_statements)
+                    _pop_frame
+                    if (not _consume(TokenType.KEYWORD_END_LOOP)) _throw_syntax_error( &expected=TokenType.KEYWORD_END_LOOP )
+                  else
+                    _execute(ip_single_line_statements)
+                    _pop_frame
+                  endIf
+                endIf
+                _push( Loop(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
+                return
+              endTemporarily
+            endIf
+            return
           case ip_while_loop
             if (_next_t.type == TokenType.KEYWORD_WHILE)
               temporarily _cur_t = _on_t
@@ -1190,7 +1222,7 @@ class ParserCore [abstract]
             _pop_frame
             return
           case ip_logical_and__inner
-            if (_next_t.type == TokenType.KEYWORD_AUGMENT)
+            if (_next_t.type == TokenType.KEYWORD_AND)
               temporarily _cur_t = _on_t
                 _consume_eols
                 _execute(ip_comparison)
@@ -1520,13 +1552,15 @@ class ParserCore [abstract]
                 return
               endTemporarily
             endIf
-            if ((_next_t.type == TokenType.IDENTIFIER))
-              _execute(ip_type_name)
-              _pop_frame
-              _execute(ip_access_args)
-              _pop_frame
-              _push( Access(_cur_t,_string_arg(-2),_node_arg(-1)), 2 )
-              return
+            if (_next_t.type == TokenType.IDENTIFIER)
+              temporarily _cur_t = _next_t
+                _execute(ip_type_name)
+                _pop_frame
+                _execute(ip_access_args)
+                _pop_frame
+                _push( Access(_cur_t,_string_arg(-2),_node_arg(-1)), 2 )
+                return
+              endTemporarily
             endIf
             if (_next_t.type == TokenType.KEYWORD_TRUE)
               temporarily _cur_t = _on_t
