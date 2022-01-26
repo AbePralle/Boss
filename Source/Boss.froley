@@ -866,13 +866,13 @@ parser
 
   on "+=" expression -> AddAndAssign(target,operand):OpAndAssign
 #{
-  on "-=", expression -> SubtractAndAssign(target,expression)
-  on "*=", expression -> MultiplyAndAssign(target,expression)
-  on "/=", expression -> DivideAndAssign(target,expression)
-  on "%=", expression -> ModAndAssign(target,expression)
-  on "&=", expression -> AndAndAssign(target,expression)
-  on "|=", expression -> OrAndAssign(target,expression)
+  on "-=", expression -> SubtractAndAssign(target,operand):OpAndAssign
+  on "*=", expression -> MultiplyAndAssign(target,operand):OpAndAssign
+  on "/=", expression -> DivideAndAssign(target,operand):OpAndAssign
+  on "%=", expression -> ModAndAssign(target,operand):OpAndAssign
+  on "&=", expression -> BitwiseAndAndAssign(target,operand):OpAndAssign
 }#
+  on "|=", expression -> BitwiseOrAndAssign(target,operand):OpAndAssign
   on ":<<:="  expression -> LeftShiftAndAssign(target,operand):OpAndAssign
   on ":>>:="  expression -> RightShiftAndAssign(target,operand):OpAndAssign
   on ":>>>:=" expression -> RightShiftXAndAssign(target,operand):OpAndAssign
@@ -1093,6 +1093,12 @@ parser
   create AddValue(left,right):Binary
   create BitwiseAndInt32(left,right):Binary
   create BitwiseAndValue(left,right):Binary
+  create BitwiseOrAndAssignLocal(info:Local,operand):OpAndAssign
+  create BitwiseOrAndAssignLocalInt32(info:Local,operand):OpAndAssign
+  create BitwiseOrAndAssignProperty(context,info:Property,operand):OpAndAssign
+  create BitwiseOrAndAssignPropertyInt32(context,info:Property,operand):OpAndAssign
+  create BitwiseOrAndAssignThisProperty(info:Property,operand):OpAndAssign
+  create BitwiseOrAndAssignThisPropertyInt32(info:Property,operand):OpAndAssign
   create BitwiseOrInt32(left,right):Binary
   create BitwiseOrValue(left,right):Binary
   create BitwiseXorInt32(left,right):Binary

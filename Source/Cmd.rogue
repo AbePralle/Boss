@@ -2449,3 +2449,110 @@ class DecrementThisPropertyInt32 : Cmd
       return "DecrementThisPropertyInt32($)" (%info)
 
 endClass
+
+class BitwiseOrAndAssignLocal : OpAndAssign
+  PROPERTIES
+    info : Local
+
+  METHODS
+    method init( t, info, operand )
+
+    method init( existing:BitwiseOrAndAssignLocal )
+      prior.init( existing )
+      if (existing.info) info = existing.info.cloned
+
+    method description->String
+      return "BitwiseOrAndAssignLocal($,$)" (%info,%operand)
+
+endClass
+
+class BitwiseOrAndAssignLocalInt32 : OpAndAssign
+  PROPERTIES
+    info : Local
+
+  METHODS
+    method init( t, info, operand )
+
+    method init( existing:BitwiseOrAndAssignLocalInt32 )
+      prior.init( existing )
+      if (existing.info) info = existing.info.cloned
+
+    method description->String
+      return "BitwiseOrAndAssignLocalInt32($,$)" (%info,%operand)
+
+endClass
+
+class BitwiseOrAndAssignProperty : OpAndAssign
+  PROPERTIES
+    context : Cmd
+    info    : Property
+
+  METHODS
+    method init( t, context, info, operand )
+
+    method init( existing:BitwiseOrAndAssignProperty )
+      prior.init( existing )
+      if (existing.context) context = existing.context.cloned
+      if (existing.info) info = existing.info.cloned
+
+    method description->String
+      return "BitwiseOrAndAssignProperty($,$,$)" (%context,%info,%operand)
+
+endClass
+
+class BitwiseOrAndAssignPropertyInt32 : OpAndAssign
+  PROPERTIES
+    context : Cmd
+    info    : Property
+
+  METHODS
+    method init( t, context, info, operand )
+
+    method init( existing:BitwiseOrAndAssignPropertyInt32 )
+      prior.init( existing )
+      if (existing.context) context = existing.context.cloned
+      if (existing.info) info = existing.info.cloned
+
+    method description->String
+      return "BitwiseOrAndAssignPropertyInt32($,$,$)" (%context,%info,%operand)
+
+endClass
+
+class BitwiseOrAndAssignThisProperty : OpAndAssign
+  PROPERTIES
+    info : Property
+
+  METHODS
+    method init( t, info, operand )
+
+    method init( existing:BitwiseOrAndAssignThisProperty )
+      prior.init( existing )
+      if (existing.info) info = existing.info.cloned
+
+    method description->String
+      return "BitwiseOrAndAssignThisProperty($,$)" (%info,%operand)
+
+endClass
+
+class BitwiseOrAndAssignThisPropertyInt32 : OpAndAssign
+  PROPERTIES
+    info : Property
+
+  METHODS
+    method init( t, info, operand )
+
+    method init( existing:BitwiseOrAndAssignThisPropertyInt32 )
+      prior.init( existing )
+      if (existing.info) info = existing.info.cloned
+
+    method description->String
+      return "BitwiseOrAndAssignThisPropertyInt32($,$)" (%info,%operand)
+
+endClass
+
+class BitwiseOrAndAssign : OpAndAssign
+  METHODS
+    method description->String
+      return "BitwiseOrAndAssign($,$)" (%target,%operand)
+
+endClass

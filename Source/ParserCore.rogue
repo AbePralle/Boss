@@ -1023,6 +1023,14 @@ class ParserCore [abstract]
                 return
               endTemporarily
             endIf
+            if (_next_t.type == TokenType.SYMBOL_OR_EQUALS)
+              temporarily _cur_t = _on_t
+                _execute(ip_expression)
+                _pop_frame
+                _push( BitwiseOrAndAssign(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
+                return
+              endTemporarily
+            endIf
             if (_next_t.type == TokenType.SYMBOL_LEFT_SHIFT_EQUALS)
               temporarily _cur_t = _on_t
                 _execute(ip_expression)
@@ -1681,6 +1689,12 @@ class ParserCore [abstract]
             _push( AddValue(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( BitwiseAndInt32(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( BitwiseAndValue(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
+            _push( BitwiseOrAndAssignLocal(_cur_t,_node_arg(-2)->(as Local),_node_arg(-1)), 2 )
+            _push( BitwiseOrAndAssignLocalInt32(_cur_t,_node_arg(-2)->(as Local),_node_arg(-1)), 2 )
+            _push( BitwiseOrAndAssignProperty(_cur_t,_node_arg(-3),_node_arg(-2)->(as Property),_node_arg(-1)), 3 )
+            _push( BitwiseOrAndAssignPropertyInt32(_cur_t,_node_arg(-3),_node_arg(-2)->(as Property),_node_arg(-1)), 3 )
+            _push( BitwiseOrAndAssignThisProperty(_cur_t,_node_arg(-2)->(as Property),_node_arg(-1)), 2 )
+            _push( BitwiseOrAndAssignThisPropertyInt32(_cur_t,_node_arg(-2)->(as Property),_node_arg(-1)), 2 )
             _push( BitwiseOrInt32(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( BitwiseOrValue(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )
             _push( BitwiseXorInt32(_cur_t,_node_arg(-2),_node_arg(-1)), 2 )

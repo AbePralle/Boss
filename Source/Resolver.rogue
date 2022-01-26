@@ -110,6 +110,34 @@ class Resolver : Visitor
     method on_validate( cmd:BitwiseOr )->Cmd
       return validate( cmd.left.type.cmd_bitwise_or(cmd.t, cmd.left, cmd.right) )
 
+    method on( cmd:BitwiseOrAndAssign )->Cmd
+      local operand = visit( cmd.operand ).require_value
+      return validate( cmd.target.resolve_bitwise_or_and_assign(cmd.t,operand,this) )
+
+    method on_validate( cmd:BitwiseOrAndAssignLocal )->Cmd
+      local type = cmd.info.type
+      if (type is Program.type_Int32)
+        local operand = validate( (cmd.operand.cmd_cast_to(type)) )
+        return validate( BitwiseOrAndAssignLocalInt32(cmd.t,cmd.info,operand) )
+      endIf
+      throw cmd.t.error( "[INTERNAL] BitwiseOrAndAssignLocal doesn't handle $."(type) )
+
+    method on_validate( cmd:BitwiseOrAndAssignProperty )->Cmd
+      local type = cmd.info.type
+      if (type is Program.type_Int32)
+        local operand = validate( (cmd.operand.cmd_cast_to(type)) )
+        return validate( BitwiseOrAndAssignPropertyInt32(cmd.t,cmd.context,cmd.info,operand) )
+      endIf
+      throw cmd.t.error( "[INTERNAL] BitwiseOrAndAssignThisProperty doesn't handle $."(type) )
+
+    method on_validate( cmd:BitwiseOrAndAssignThisProperty )->Cmd
+      local type = cmd.info.type
+      if (type is Program.type_Int32)
+        local operand = validate( (cmd.operand.cmd_cast_to(type)) )
+        return validate( BitwiseOrAndAssignThisPropertyInt32(cmd.t,cmd.info,operand) )
+      endIf
+      throw cmd.t.error( "[INTERNAL] BitwiseOrAndAssignThisProperty doesn't handle $."(type) )
+
     method on_validate( cmd:BitwiseXor )->Cmd
       return validate( cmd.left.type.cmd_bitwise_xor(cmd.t, cmd.left, cmd.right) )
 
@@ -660,6 +688,32 @@ augment
 
     method TypeValue.cmd_bitwise_or( t:Token, lhs:Cmd, rhs:Cmd)->Cmd
       return BitwiseOrValue( t, lhs, rhs )
+
+endAugment
+
+# BitwiseOrAndAssign
+augment
+  METHODS
+    method Cmd.resolve_bitwise_or_and_assign( t:Token, operand:Cmd, resolver:Resolver )->Cmd
+      throw t.error( "Illegal target for '|='." )
+
+    method Access.resolve_bitwise_or_and_assign( t:Token, operand:Cmd, resolver:Resolver )->Cmd
+      if (not args)
+        local v = resolver.find_local( name )
+        if (v) return resolver.validate( BitwiseOrAndAssignLocal(t,v,operand) )
+
+        local p = resolver.this_type.find_property( name )
+        if (p) return resolver.validate( BitwiseOrAndAssignThisProperty(t,p,operand) )
+      endIf
+      throw t.error( "Illegal target for '|='." )
+
+    method ContextAccess.resolve_bitwise_or_and_assign( t:Token, operand:Cmd, resolver:Resolver )->Cmd
+      if (not args)
+        context = resolver.visit( context )
+        local p = context.require_type.find_property( name )
+        if (p) return resolver.validate( BitwiseOrAndAssignProperty(t,context,p,operand) )
+      endIf
+      throw t.error( "Illegal target for '|='." )
 
 endAugment
 
