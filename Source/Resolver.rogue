@@ -44,6 +44,24 @@ class Resolver : Visitor
         locals.clear
       endIf
 
+    method add_local( t:Token, name:String, initial_value=null:Cmd, type=null:Type )->Local
+      require this_procedure
+      local v = Local( t, name, initial_value, type )
+      collect( v )
+      return v
+
+    method auto_local( t:Token, base_name:String, initial_value=null:Cmd, type=null:Type )->Local
+      require this_procedure
+      local name = ".auto_$_$"(base_name,this_procedure.locals.count)
+      return add_local( t, name, initial_value, type )
+
+    method collect( v:Local, proc=this_procedure:Procedure )
+      if (v.fp_offset == -1)
+        v.fp_offset = proc.locals.count + which{ proc.is_global:0 || 1 }
+        v.is_parameter = v.fp_offset < proc.parameters.count
+        proc.locals.add( v )
+      endIf
+
     method find_local( name:String )->Local
       forEach (v in locals step -1)
         if (v.name == name) return v
@@ -218,6 +236,57 @@ class Resolver : Visitor
     method on_validate( cmd:Divide )->Cmd
       return validate( cmd.left.type.cmd_divide(cmd.t, cmd.left, cmd.right) )
 
+    method on( cmd:ForEachIn )->Cmd
+      #ForEachInIndexedCollection(control_v:Local,index_v:Local,collection_v:Local,step_size,statements)
+      resolve( cmd.index_v )
+      resolve( cmd.collection_v )
+
+      local collection_type = cmd.collection_v.type
+      collection_type.organize
+
+      local t = cmd.collection_v.t
+      local cmd_count = ContextAccess(
+        t,
+        Access( t, cmd.collection_v.name ),
+        "count"
+      )
+
+      local m_get = collection_type.methods_by_signature[ "get(Int32)" ]
+      require m_get
+      if (not m_get.return_type) throw m_get.t.error( "Return value expected for use with forEach." )
+      cmd.control_v.type = m_get.return_type
+      resolve( cmd.control_v )
+
+      local cmd_get = ContextAccess(
+        t,
+        Access( t, cmd.collection_v.name ),
+        "get",
+        Args( cmd.collection_v.t, Access(cmd.index_v.t,cmd.index_v.name) )
+      )
+
+      return visit(
+        ForEachInIndexedCollection(
+          cmd.t,
+          cmd.control_v,
+          cmd.index_v,
+          cmd.collection_v,
+          cmd_count,
+          cmd_get,
+          cmd.step_size,
+          cmd.statements
+        )
+      )
+
+    method on_visit_children( cmd:ForEachInIndexedCollection ) [override]
+      locals.add( cmd.control_v )
+      locals.add( cmd.index_v )
+      locals.add( cmd.collection_v )
+
+      prior.on_visit_children( cmd )
+      cmd.control_v.type = cmd.cmd_get.require_type
+
+      loop (3) locals.remove_last
+
     method on_visit( cmd:If )
       visit_children( cmd )
       if (cmd.condition) cmd.condition.require_value
@@ -246,6 +315,18 @@ class Resolver : Visitor
 
     method on_validate( cmd:LeftShift )->Cmd
       return validate( cmd.left.type.cmd_left_shift(cmd.t, cmd.left, cmd.right) )
+
+    method on_validate( cmd:Local )->Cmd
+      if (not cmd.type)
+        if (cmd.initial_value)
+          cmd.type = cmd.initial_value.type
+          if (not cmd.type)
+            cmd.initial_value = visit( cmd.initial_value )
+            cmd.type = cmd.initial_value.require_type
+          endIf
+        endIf
+      endIf
+      return cmd
 
     method on_visit( cmd:LocalDeclaration )
       local info = cmd.info
@@ -355,6 +436,12 @@ class Resolver : Visitor
     method on_visit( cmd:While )
       visit_children( cmd )
       cmd.condition.require_value
+
+    method resolve( v:Local )
+      if (v.initial_value)
+        v.initial_value = visit( v.initial_value ).require_value
+        if (not v.type) v.type = v.initial_value.type
+      endIf
 
     method resolve_access( t:Token, context:Cmd, name:String, args:Cmd, &suppress_error )->Cmd
       local is_global = false

@@ -126,6 +126,9 @@ augment
       Program.execution_result = a ~ Program.execution_result
       return true
 
+    method Block.execute->Logical
+      return statements.execute
+
     method CallGlobalMethod.execute->Logical
       return Program.execute( procedure, args )
 
@@ -299,6 +302,33 @@ augment
 
     method EmptyList.execute->Logical
       Program.execution_result = BossValue.list
+      return true
+
+    method ForEachInIndexedCollection.execute->Logical
+      local fp = Program.fp
+
+      if (not collection_v.initial_value.execute) return false
+      local collection = Program.execution_result
+      local collection_fp = fp + collection_v.fp_offset
+      Program.stack[ collection_fp ] = collection
+
+      if (not index_v.initial_value.execute) return false
+      local index = Program.execution_result.x->Int32
+      local index_fp = fp + index_v.fp_offset
+
+      local control_fp = fp + control_v.fp_offset
+
+      if (not cmd_count.execute) return false
+      local count = Program.execution_result.x->Int32
+
+      loop (count - index)
+        Program.stack[ index_fp ] = index
+        if (not cmd_get.execute) return false
+        Program.stack[ control_fp ] = Program.execution_result
+        if (not statements.execute) return false
+        ++index
+      endLoop
+
       return true
 
     method GetLocal.execute->Logical
@@ -588,6 +618,10 @@ augment
     method SetThisProperty.execute->Logical
       if (not new_value.execute) return false
       Program.stack[Program.fp].object->(as BossObject).properties[index] = Program.execution_result
+      return true
+
+    method StackTopInt32.execute->Logical
+      noAction  # stack is already correct
       return true
 
     method SubtractInt32.execute->Logical

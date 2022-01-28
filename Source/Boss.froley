@@ -20,10 +20,12 @@ tokens Keywords
 ----------------------------------------------------------------------
 KEYWORD_AND          and
 KEYWORD_AUGMENT      augment
+KEYWORD_BLOCK        block
 KEYWORD_CLASS        class       [structural]
 KEYWORD_MODULE       module
 KEYWORD_ELSE         else        [structural]
 KEYWORD_ELSE_IF      elseIf
+KEYWORD_END_BLOCK    endBlock    [structural]
 KEYWORD_END_CLASS    endClass    [structural]
 KEYWORD_END_FOR_EACH endForEach  [structural]
 KEYWORD_END_IF       endIf       [structural]
@@ -37,7 +39,6 @@ KEYWORD_GLOBAL       global
 KEYWORD_GLOBAL_PROPERTIES(GLOBAL PROPERTIES) [structural]
 KEYWORD_GLOBAL_METHODS(GLOBAL METHODS)       [structural]
 KEYWORD_IF           if
-KEYWORD_IN           in
 KEYWORD_IMPORT       import
 KEYWORD_INCLUDE      include
 KEYWORD_LOCAL        local
@@ -47,7 +48,6 @@ KEYWORD_METHODS      METHODS     [structural]
 KEYWORD_NO_ACTION    noAction
 KEYWORD_NOT          not
 KEYWORD_NULL         null
-KEYWORD_OF           of
 KEYWORD_OR           or
 KEYWORD_PI           pi
 KEYWORD_PRINT        print
@@ -55,7 +55,6 @@ KEYWORD_PRINTLN      println
 KEYWORD_PROPERTIES   PROPERTIES  [structural]
 KEYWORD_RETURN       return
 KEYWORD_ROUTINE      routine     [structural]
-KEYWORD_STEP         step
 KEYWORD_THIS_CALL    thisCall
 KEYWORD_TRUE         true
 KEYWORD_UNDEFINED    undefined
@@ -569,50 +568,65 @@ parser
 
 - consume_semicolons
   while (consume(';')) noAction
+}#
 
 - forEach_loop
   on "forEach"
-    var has_parens = consume( '(' )
-    name
-    forEach_optional_at
-    if (consume("in"))
-      forEach_collection_and_body
-      produce ForEachIn(name,optional_at:At,collection:ForEachCollection,statements)
-    elseIf (consume("of"))
-      forEach_collection_and_body
-      produce ForEachOf(name,optional_at:At,collection:ForEachCollection,statements)
+    if consume('(')
+      consume_eols
+      forEach_control
+      consume_eols
+      mustConsume(')')
     else
-      syntaxError "Expected 'in' or 'of'."
+      forEach_control
     endIf
+    if (consume(EOL))
+      multi_line_statements
+      mustConsume "endForEach"
+    else
+      single_line_statements
+    endIf
+    produce ForEach(control:ForEachControl,statements)
   endOn
+
+- forEach_control
+  identifier
+  forEach_optional_at
+  if (consume(@"in"))
+    forEach_collection
+    produce ForEachInControl(name:String,optional_at:ForEachAt,collection:ForEachCollection):ForEachControl
+  elseIf (consume(@"of"))
+    forEach_collection
+    produce ForEachOfControl(name:String,optional_at:ForEachAt,collection:ForEachCollection):ForEachControl
+  else
+    syntaxError "Expected 'in' or 'of'."
+  endIf
 
 - forEach_optional_at
   if (not consume(@"at")) produceNull
-  name
-  produce At(name)
+  identifier
+  produce ForEachAt(name:String)
 
-- forEach_collection_and_body
-  expression
-  if (consume('=')) expression         # end of queue: var,  expression
-  else              createNull; swap   # end of queue: null, expression
+- forEach_collection
+  savePosition
+  createNull  # collection_name
+  expression  # collection
+  if (nextIs('='))
+    restorePosition  # whoops
+    identifier       # collection_name
+    mustConsume('=')
+    expression       # collection
+  else
+    discardPosition
+  endIf
 
   if (consume(@"from")) expression
   else                  createNull
 
-  if (consume("step")) expression
-  else                 createNull
+  if (consume(@"step")) expression
+  else                  createNull
 
-  create ForEachCollection(v,expression,from,step_size)
-
-  if (has_parens) mustConsume ')'
-
-  if (consume(EOL))
-    multi_line_statements
-    mustConsume "endForEach"
-  else
-    single_line_statements
-  endIf
-}#
+  produce ForEachCollection(name:String,data,starting_index,step_size)
 
 - if_statement
   on "if"
@@ -805,21 +819,13 @@ parser
   produceList Statements
 
 - control_structure
-  on "local"  local_declarations: return
-  if (nextIs("if"))
-    if_statement
-    return
-  elseIf (nextIs("loop"))
-    loop
-    return
-  elseIf (nextIs("while"))
-    while_loop
-    return
-  endIf
-#{
-  onPeek "forEach", forEach_loop: return
-  on "global", local_declarations -> GlobalDeclarations( declarations, type )
-}#
+  on "local"       local_declarations: return
+  onPeek "block"   block:              return
+  onPeek "forEach" forEach_loop:       return
+  onPeek "if"      if_statement:       return
+  onPeek "loop"    loop:               return
+  onPeek "while"   while_loop:         return
+  #on "global", local_declarations -> GlobalDeclarations( declarations, type )
   statement
 
 - args
@@ -897,6 +903,13 @@ parser
     produce LocalDef( name=content, initial_value, type_ref )
   endOn
   mustConsume IDENTIFIER  # throws error
+
+- block
+  on "block"
+    multi_line_statements
+    mustConsume "endBlock"
+  endOn
+  produce Block(statements)
 
 - loop
   on "loop"
@@ -1154,6 +1167,9 @@ parser
   create DivideReal64(left,right):Binary
   create DivideString(left,right):Binary
   create DivideValue(left,right):Binary
+  create ForEachControl(name:String,optional_at:ForEachAt,collection:ForEachCollection)
+  create ForEachIn(control_v:Local,index_v:Local,collection_v:Local,step_size,statements)
+  create ForEachInIndexedCollection(control_v:Local,index_v:Local,collection_v:Local,cmd_count,cmd_get,step_size,statements)
   create GetLocal(info:Local)
   create GetProperty(context,info:Property)
   create GetSingleton(type:Type)
@@ -1197,6 +1213,7 @@ parser
   create Routine(module_context:Module,name:String,statements):Procedure
   create SetLocal(info:Local,new_value)
   create SetThisProperty(info:Property,new_value)
+  create StackTopInt32
   create SubtractInt32(left,right):Binary
   create SubtractObject(left,right):Binary
   create SubtractReal64(left,right):Binary

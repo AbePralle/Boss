@@ -1255,7 +1255,7 @@ class ContextAccess : Cmd
     args    : Cmd
 
   METHODS
-    method init( t, context, name, args )
+    method init( t, context, name, args=null )
 
     method init( existing:ContextAccess )
       prior.init( existing )
@@ -1955,6 +1955,9 @@ class LocalDeclaration : Cmd
   METHODS
     method init( t, info )
 
+    method init( info )
+      init( info.t, info )
+
     method init( existing:LocalDeclaration )
       prior.init( existing )
       if (existing.info) info = existing.info.cloned
@@ -2555,4 +2558,175 @@ class BitwiseOrAndAssign : OpAndAssign
     method description->String
       return "BitwiseOrAndAssign($,$)" (%target,%operand)
 
+endClass
+
+class ForEach : Cmd
+  PROPERTIES
+    control    : ForEachControl
+    statements : Cmd
+
+  METHODS
+    method init( t, control, statements )
+
+    method init( existing:ForEach )
+      prior.init( existing )
+      if (existing.control) control = existing.control.cloned
+      if (existing.statements) statements = existing.statements.cloned
+
+    method description->String
+      return "ForEach($,$)" (%control,%statements)
+
+endClass
+
+class ForEachAt : Cmd
+  PROPERTIES
+    name : String
+
+  METHODS
+    method init( t, name )
+
+    method init( existing:ForEachAt )
+      prior.init( existing )
+      name = existing.name
+
+    method description->String
+      return "ForEachAt($)" (%name)
+
+    method to->Character
+      return Cmd.to_character(name)
+
+    method to->Int32:  return name
+    method to->Logical: return name?
+    method to->String: return name
+
+endClass
+
+class ForEachCollection : Cmd
+  PROPERTIES
+    name           : String
+    data           : Cmd
+    starting_index : Cmd
+    step_size      : Cmd
+
+  METHODS
+    method init( t, name, data, starting_index, step_size )
+
+    method init( existing:ForEachCollection )
+      prior.init( existing )
+      name = existing.name
+      if (existing.data) data = existing.data.cloned
+      if (existing.starting_index) starting_index = existing.starting_index.cloned
+      if (existing.step_size) step_size = existing.step_size.cloned
+
+    method description->String
+      return "ForEachCollection($,$,$,$)" (%name,%data,%starting_index,%step_size)
+
+endClass
+
+class ForEachControl : Cmd
+  PROPERTIES
+    name        : String
+    optional_at : ForEachAt
+    collection  : ForEachCollection
+
+  METHODS
+    method init( t, name, optional_at, collection )
+
+    method init( existing:ForEachControl )
+      prior.init( existing )
+      name = existing.name
+      if (existing.optional_at) optional_at = existing.optional_at.cloned
+      if (existing.collection) collection = existing.collection.cloned
+
+    method description->String
+      return "ForEachControl($,$,$)" (%name,%optional_at,%collection)
+
+endClass
+
+class ForEachInControl : ForEachControl
+  METHODS
+    method description->String
+      return "ForEachInControl($,$,$)" (%name,%optional_at,%collection)
+
+endClass
+
+class ForEachOfControl : ForEachControl
+  METHODS
+    method description->String
+      return "ForEachOfControl($,$,$)" (%name,%optional_at,%collection)
+
+endClass
+
+class Block : Cmd
+  PROPERTIES
+    statements : Cmd
+
+  METHODS
+    method init( t, statements )
+
+    method init( existing:Block )
+      prior.init( existing )
+      if (existing.statements) statements = existing.statements.cloned
+
+    method description->String
+      return "Block($)" (%statements)
+
+endClass
+
+class ForEachIn : Cmd
+  PROPERTIES
+    control_v    : Local
+    index_v      : Local
+    collection_v : Local
+    step_size    : Cmd
+    statements   : Cmd
+
+  METHODS
+    method init( t, control_v, index_v, collection_v, step_size, statements )
+
+    method init( existing:ForEachIn )
+      prior.init( existing )
+      if (existing.control_v) control_v = existing.control_v.cloned
+      if (existing.index_v) index_v = existing.index_v.cloned
+      if (existing.collection_v) collection_v = existing.collection_v.cloned
+      if (existing.step_size) step_size = existing.step_size.cloned
+      if (existing.statements) statements = existing.statements.cloned
+
+    method description->String
+      return "ForEachIn($,$,$,$,$)" (%control_v,%index_v,%collection_v,%step_size,%statements)
+
+endClass
+
+class ForEachInIndexedCollection : Cmd
+  PROPERTIES
+    control_v    : Local
+    index_v      : Local
+    collection_v : Local
+    cmd_count    : Cmd
+    cmd_get      : Cmd
+    step_size    : Cmd
+    statements   : Cmd
+
+  METHODS
+    method init( t, control_v, index_v, collection_v, cmd_count, cmd_get, step_size, statements )
+
+    method init( existing:ForEachInIndexedCollection )
+      prior.init( existing )
+      if (existing.control_v) control_v = existing.control_v.cloned
+      if (existing.index_v) index_v = existing.index_v.cloned
+      if (existing.collection_v) collection_v = existing.collection_v.cloned
+      if (existing.cmd_count) cmd_count = existing.cmd_count.cloned
+      if (existing.cmd_get) cmd_get = existing.cmd_get.cloned
+      if (existing.step_size) step_size = existing.step_size.cloned
+      if (existing.statements) statements = existing.statements.cloned
+
+    method description->String
+      return "ForEachInIndexedCollection($,$,$,$,$,$,$)" (%control_v,%index_v,%collection_v,%cmd_count,%cmd_get,%step_size,%statements)
+
+endClass
+
+class StackTopInt32 : Cmd
+  METHODS
+    method description->String
+      return "StackTopInt32"
 endClass

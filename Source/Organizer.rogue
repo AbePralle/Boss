@@ -11,6 +11,17 @@ class Organizer : Visitor
   METHODS
     method init( this_module )
 
+    method add_local( t:Token, name:String, initial_value=null:Cmd, type=null:Type )->Local
+      require this_procedure
+      local v = Local( t, name, initial_value, type )
+      collect( v )
+      return v
+
+    method auto_local( t:Token, base_name:String, initial_value=null:Cmd, type=null:Type )->Local
+      require this_procedure
+      local name = ".auto_$_$"(base_name,this_procedure.locals.count)
+      return add_local( t, name, initial_value, type )
+
     method visit( type:Type )
       if (type.is_organized) return
       type.is_organized = true
@@ -49,6 +60,9 @@ class Organizer : Visitor
 
     method visit( this_type, this_procedure )
       visit( this_procedure )
+
+    method on( cmd:ForEach )->Cmd
+      return validate( cmd.control.organize_foreach(cmd,this) )
 
     method on_visit( cmd:LocalDeclaration )
       collect( cmd.info )
@@ -204,6 +218,34 @@ endClass
 
 augment
   METHODS
+    method ForEachControl.organize_foreach( cmd_foreach:ForEach, organizer:Organizer )->Cmd
+      throw UnsupportedOperationError()
+
+    method ForEachInControl.organize_foreach( cmd_foreach:ForEach, organizer:Organizer )->Cmd
+      local control_v = organizer.add_local( t, name )
+
+      local starting_index = collection.starting_index
+      if (not starting_index) starting_index = LiteralInt32( collection.t, 0 )
+      local index_v : Local
+      if (optional_at) index_v = organizer.add_local( optional_at.t, optional_at.name, starting_index )
+      else             index_v = organizer.auto_local( t, "index", starting_index )
+
+      local step_size = collection.step_size
+      if (not step_size) step_size = LiteralInt32( collection.t, 1 )
+
+      local collection_v : Local
+      if (collection.name)
+        collection_v = organizer.add_local( collection.t, collection.name, collection.data )
+      else
+        collection_v = organizer.auto_local( collection.t, "collection", collection.data )
+      endIf
+
+      return ForEachIn( cmd_foreach.t, control_v, index_v, collection_v, step_size, cmd_foreach.statements )
+
+    method ForEachOfControl.organize_foreach( cmd_foreach:ForEach, organizer:Organizer )->Cmd
+      if (optional_at) throw optional_at.t.error( "'at' cannot be used with forEach-of." )
+      throw UnsupportedOperationError()
+
     method Type.organize
       if (is_organized) return
       Organizer( module_context ).visit( this )
